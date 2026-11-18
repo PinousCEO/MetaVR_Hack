@@ -11,7 +11,8 @@
   }
   const ids=["Rapid Fire","Twin Shot","Piercing Shot","Bloom Burst","Chain Lightning","Star Ring","Frost Mist","Giant Bolt","Honey Tea","Gem Magnet","Comet Shot"];
   const notes=["Fire more often","Launch an extra shot","Shoot through another enemy","Flowers burst on impact","Lightning arcs between enemies","Stars circle your aim point","Slow nearby demons","Fire larger, stronger shots","Recover two hearts","Attract experience gems","Fire comets at nearby enemies"];
-  let mesh,ws,awaiting=false,restart=false,paused=false,pick=null,frame,previous,received=0,choiceKey="",saved=false,serial=0;
+  let mesh,ws,awaiting=false,restart=false,paused=false,pick=null,frame,received=0,choiceKey="",saved=false,serial=0;
+  const priorById=new Map(), priorPoses=[], monsters=[], poseFields=[2,3,4,6];
   let startBest=0,cueUntil=0,lastSound=0,ac,fx=[],held=new Set(),left=false,x=0,y=0;
   const wand=new Image();
   wand.src="/demon-gate/art/demon-wand.png";
@@ -64,7 +65,15 @@
   function receive(f){
     const now=performance.now();
     if(frame?.phase!==3&&f.phase===3){paused=false;$("break").hidden=true;}
-    const old=frame;previous=old;frame=f;received=now;
+    const old=frame;frame=f;received=now;
+    priorById.clear();
+    if(old)for(const m of old.monsters)priorById.set(m[0],m);
+    for(let i=0;i<f.monsters.length;i++){
+      const current=f.monsters[i], row=monsters[i]||(monsters[i]=[]);
+      for(let field=0;field<current.length;field++)row[field]=current[field];
+      priorPoses[i]=priorById.get(current[0])||current;
+    }
+    monsters.length=priorPoses.length=f.monsters.length;
     $("over").hidden=f.phase!==4;if(f.phase!==4)saved=false;
     $("hud").hidden=false;$("welcome").hidden=true;
     $("hearts").textContent="♥".repeat(f.hp)+"♡".repeat(Math.max(0,f.maxHp-f.hp));
@@ -94,11 +103,11 @@
     resetInputs();paused=false;saved=false;pick=null;restart=false;x=y=0;fx=[];choiceKey="";
     try{if(!ac)ac=new (window.AudioContext||window.webkitAudioContext)();ac.resume().catch(()=>{});}catch{}
     $("over").hidden=$("choice").hidden=$("break").hidden=true;$("error").textContent="";$("start").disabled=true;
-    if(ws?.readyState===WebSocket.OPEN){restart=true;previous=frame=null;transmit();return;}
+    if(ws?.readyState===WebSocket.OPEN){restart=true;frame=null;transmit();return;}
     ws=new WebSocket(location.origin.replace(/^http/,"ws")+"/demon-gate/play");const current=ws;
     ws.onopen=()=>{awaiting=false;transmit();};
     ws.onmessage=e=>{if(ws!==current)return;awaiting=false;receive(JSON.parse(e.data));};
-    ws.onclose=()=>{if(ws!==current)return;ws=null;awaiting=false;resetInputs();frame=previous=null;
+    ws.onclose=()=>{if(ws!==current)return;ws=null;awaiting=false;resetInputs();frame=null;
       $("welcome").hidden=false;$("over").hidden=$("break").hidden=$("choice").hidden=$("hud").hidden=true;
       $("error").textContent="Disconnected. Reopen the game when the companion is available.";$("start").disabled=false;stage.classList.remove("fighting");};
   }
@@ -161,11 +170,11 @@
   function draw(t){
     requestAnimationFrame(draw);size();if(!frame||!mesh)return;
     const w=canvas.width,h=canvas.height,v=view(),p=v.project,d=h/820;
-    const fraction=Math.min(1,(t-received)/32);
-    const monsters=frame.monsters.map(m=>{
-      const last=previous?.monsters.find(b=>b[0]===m[0]);if(!last)return m;
-      const row=m.slice();for(const i of [2,3,4,6])row[i]=last[i]+(m[i]-last[i])*fraction;return row;
-    });
+    const fraction=Math.max(0,Math.min(1,(t-received)/32));
+    for(let i=0;i<monsters.length;i++){
+      const last=priorPoses[i], current=frame.monsters[i], row=monsters[i];
+      for(const field of poseFields)row[field]=last[field]+(current[field]-last[field])*fraction;
+    }
     shade.clearRect(0,0,w,h);
     for(const m of monsters){
       const floor=Math.min(.89,m[3]-m[5]),spot=p(m[2],floor,m[4]),height=Math.max(0,m[3]-m[5]-floor);

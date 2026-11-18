@@ -157,6 +157,7 @@ namespace LivingPartner.Character
         }
         public void ClearClip()
         {
+            if (!_clipped) return;
             _bodyBlock.SetFloat(ClipSignId, 0); _faceBlock.SetFloat(ClipSignId, 0);
             Flush();
             _shadow.SetClip(Vector4.zero, 0);

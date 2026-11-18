@@ -9,6 +9,7 @@ import {setTimeout as sleep} from "node:timers/promises";
 
 const dll=resolve(process.argv[2] || "Companion/LivingPartner.Mac/bin/Release/net8.0/LivingPartner.Mac.dll");
 const output=process.argv[3];
+const measure=process.env.YONDER_FRAME_AUDIT==="1";
 const candidates=[process.env.CHROME_PATH,"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
   join(process.env.ProgramFiles||".","Google/Chrome/Application/chrome.exe"),"/usr/bin/chromium","/usr/bin/google-chrome"];
 let chrome;
@@ -24,7 +25,7 @@ const options={windowsHide:true,stdio:"ignore"};
 const host=spawn("dotnet",[dll,"--no-browser","--no-beacon","--port",String(port),"--state-dir",join(temporary,"data")],options);
 const profile=join(temporary,"browser");
 const browser=spawn(chrome,["--headless=new","--disable-extensions","--disable-background-networking","--no-first-run",
-  "--use-gl=angle","--use-angle=swiftshader","--enable-unsafe-swiftshader","--remote-debugging-port=0","--user-data-dir="+profile,"about:blank"],options);
+  "--use-gl=angle",...(measure?[]:["--use-angle=swiftshader","--enable-unsafe-swiftshader"]),"--remote-debugging-port=0","--user-data-dir="+profile,"about:blank"],options);
 let cdp,quest,heartbeat;
 async function until(check,label){
   const end=Date.now()+15000;
@@ -59,6 +60,21 @@ try{
   }
   await until(()=>fetch(origin+"/health").then(r=>r.ok,()=>false),"temporary host");
   await command("Page.enable");await command("Runtime.enable");
+  if(measure){
+    await command("Emulation.setDeviceMetricsOverride",{width:1920,height:1080,deviceScaleFactor:1,mobile:false});
+    await command("Page.addScriptToEvaluateOnNewDocument",{source:`
+      const raf=window.requestAnimationFrame.bind(window);
+      window.requestAnimationFrame=fn=>raf(fn.name!=="render"?fn:t=>{
+        const begin=performance.now();fn(t);
+        if(window.sample)window.sample.push([t,performance.now()-begin]);
+      });
+      window.courtStrokes=0;
+      const stroke=CanvasRenderingContext2D.prototype.stroke;
+      CanvasRenderingContext2D.prototype.stroke=function(...args){
+        if(window.sample && (this.canvas.id==="native-court" || this.canvas.id==="native-floor"))window.courtStrokes++;
+        return stroke.apply(this,args);
+      };`});
+  }
   await command("Page.addScriptToEvaluateOnNewDocument",{source:"window.indicesDrawn=new Set();(()=>{const original=WebGLRenderingContext.prototype.drawElements;WebGLRenderingContext.prototype.drawElements=function(...args){window.indicesDrawn.add(args[1]);return original.apply(this,args);};})();"});
   await command("Page.navigate",{url:origin});
   const code=await until(()=>js('document.getElementById("code")?.textContent.match(/^\\d{6}$/)?.[0]'),"pairing code");
@@ -141,6 +157,19 @@ try{
     await js("window.indicesDrawn.clear();window.renderFixture("+JSON.stringify(game)+")");
     await until(()=>js("window.indicesDrawn.has(5760)"),"indexed ball mesh");
     assert.equal(await js('document.getElementById("native-actors").getContext("webgl").getError()'),0);await picture(native);
+    assert.equal(await js('(()=>{const c=document.getElementById("native-floor");return !c.hidden&&c.getContext("2d").getImageData(4,4,1,1).data[3]===255;})()'),true);
+    if(measure){
+      await sleep(1200);await js("window.sample=[];window.courtStrokes=0");await sleep(10000);
+      const result=await js(`(()=>{const f=window.sample;window.sample=null;
+        const gl=document.getElementById('native-actors').getContext('webgl'),info=gl.getExtension('WEBGL_debug_renderer_info');
+        return {f,strokes:window.courtStrokes,renderer:info&&gl.getParameter(info.UNMASKED_RENDERER_WEBGL)}})()`);
+      const intervals=result.f.slice(1).map((row,i)=>row[0]-result.f[i][0]).sort((a,b)=>a-b);
+      assert(intervals.length>30);
+      assert(result.strokes <= result.f.length*2+2, "Static court markings were redrawn during the sample");
+      const elapsed=result.f.at(-1)[0]-result.f[0][0],q=p=>intervals[Math.ceil(intervals.length*p)-1];
+      console.log(JSON.stringify({native,renderer:result.renderer,frames:intervals.length,fps:+(intervals.length*1000/elapsed).toFixed(2),
+        p95ms:q(.95),p99ms:q(.99),msInRender:result.f.reduce((n,f)=>n+f[1],0)/result.f.length,strokesPerFrame:result.strokes/result.f.length}));
+    }
   }
   assert.deepEqual(errors,[]);
   console.log("PASS fullscreen TV, all six Unity meshes, three upgrades, WebGL loss/recovery, 3D football and tennis ball");

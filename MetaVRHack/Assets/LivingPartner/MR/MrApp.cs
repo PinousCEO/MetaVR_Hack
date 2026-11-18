@@ -75,7 +75,9 @@ namespace LivingPartner.MR
         string _prepTid = ""; bool _approachSent, _readySent, _holdSent; int _approachRev = -1; string _landedTid = "";
         double _nextBeat, _nextStatus, _nextHead, _nextPointer;
         float _crossTau, _crossProgress; string _crossPhase = "";
-        float _fps = 72f;
+        float _fps;
+        double _fpsWindowStart;
+        int _fpsWindowFrames;
 
         // pointing / selection
         struct Ptr { public bool valid; public string mon; public float u, v; public int hand; public Vector3 world; public Vector3 from; public int kind; }      // from: where the ray starts; kind: HandState.rayKind
@@ -100,6 +102,7 @@ namespace LivingPartner.MR
             _link.OnTokenIssued += t => SaveToken(t);
             _link.OnConnectionChanged += c => { Debug.Log("[MR] host connection: " + c); _tn = new TennisState(); _tnLocal = null; if (!c) OnHostLost(); };
             if (!LocalAtStart) _link.Start();      // (LocalAtStart: no PC is looked for at all - MrLocalHost)
+            _gardenArtRequest = Resources.LoadAsync<StarGardenMeshes>("StarGarden");
             InitUi();
             InitVoice();
             InitSound();
@@ -109,7 +112,7 @@ namespace LivingPartner.MR
             InitLocal();        // playing without the PC: the card with "Play now", the first steps (MrLocalHost)
         }
 
-        void OnDestroy() { DisposeGarden(); EndGomoku(true); StopTvRally(); _link?.Dispose(); }
+        void OnDestroy() { EndGomoku(true); StopTvRally(); _link?.Dispose(); }
 
         void OnHostLost()
         {
@@ -283,15 +286,22 @@ namespace LivingPartner.MR
             else if (OnDebugDocs(d)) { }      // docFake, docPage, docPick, docSend, docClose (MrDocs)
             else if (OnDebugLocal(d)) { }     // localPick, localMode, localSteps, localDesk, localInfo, localSave (MrLocalHost)
             else if (OnDebugWork(d)) { }      // workFake (MrWork), workStrip (MrWorkStrip)
+            else if (d.cmd == "frameSample")
+            {
+                if (!_samplingFrames) StartCoroutine(SampleFrames(d.text, Mathf.Clamp(d.value, 1f, 180f), d.px));
+            }
             else if (OnDebugEyes(d)) { }      // eyeLook, eyeCut (MrEyes)
             else OnDebugUi(d);
         }
 
         // ------------------------------------------------------------------ monitors
+        readonly HashSet<string> _seenMonitors = new HashSet<string>();
+        readonly List<string> _goneMonitors = new List<string>();
+
         void SyncMonitors(StateSnapshot s)
         {
             bool sim = Input != null && Input.Simulated;
-            var seen = new HashSet<string>();
+            _seenMonitors.Clear();
             foreach (var c in s.calibrations)
             {
                 if (c.simulated != sim) continue;                       // never mix simulator calibrations with real ones
@@ -314,7 +324,7 @@ namespace LivingPartner.MR
                     mv.gameObject.SetActive(true);
                     _mons[c.monitorId] = mv;
                 }
-                seen.Add(c.monitorId);
+                _seenMonitors.Add(c.monitorId);
                 mv.desc = desc; mv.calib = c; mv.frame = MonitorFrame.FromCalibration(c);
                 mv.transform.SetPositionAndRotation(mv.Origin, Quaternion.LookRotation(mv.Z, mv.Y));
                 mv.outline.transform.localScale = new Vector3(mv.frame.widthM, mv.frame.heightM, 1);
@@ -322,9 +332,9 @@ namespace LivingPartner.MR
                 // with a calibration was once a monitor lying back, and it switched the sensing off for good
                 if (c.hasDesk && Input.Simulated) { _deskY = c.deskY; _hasDesk = true; }
             }
-            var gone = new List<string>();
-            foreach (var k in _mons.Keys) if (!seen.Contains(k)) gone.Add(k);
-            foreach (var k in gone) { _mons[k].gameObject.SetActive(false); _mons.Remove(k); }
+            _goneMonitors.Clear();
+            foreach (var k in _mons.Keys) if (!_seenMonitors.Contains(k)) _goneMonitors.Add(k);
+            foreach (var k in _goneMonitors) { _mons[k].gameObject.SetActive(false); _mons.Remove(k); }
             // the resting spot depends on where the screens and the desk are: place it again once they are known
             if (_mons.Count != _lastMonCount || _hasDesk != _lastHasDesk)
             {
@@ -367,11 +377,18 @@ namespace LivingPartner.MR
         {
             if (Input == null) return;
             float dt = Mathf.Min(Time.unscaledDeltaTime, 0.1f);
-            _fps = Mathf.Lerp(_fps, 1f / Mathf.Max(dt, 1e-4f), 0.05f);
+            double now = Time.realtimeSinceStartupAsDouble;
+            if (_fpsWindowStart == 0) _fpsWindowStart = now;
+            else _fpsWindowFrames++;
+            if (now - _fpsWindowStart >= .5)
+            {
+                _fps = (float)(_fpsWindowFrames / (now - _fpsWindowStart));
+                _fpsWindowFrames = 0;
+                _fpsWindowStart = now;
+            }
             Input.Tick(dt);
             LocalTick();      // without the PC: the stand-in's snapshots are due before the link hands them out (MrLocalHost)
             _link.Pump();
-            double now = Time.realtimeSinceStartupAsDouble;
             bool hostOk = _link.Connected && _snap != null;
             UpdateGomoku(hostOk);
             _ring.enabled = false; _portalFx.Begin();
@@ -463,6 +480,33 @@ namespace LivingPartner.MR
             }
         }
         double _nextLinkLog;
+
+        bool _samplingFrames;
+
+        // Opt-in wall-clock frame intervals. Include stalls, including the frame that ends the sample.
+        System.Collections.IEnumerator SampleFrames(string label, float seconds, float targetHz)
+        {
+            _samplingFrames = true;
+            var intervals = new List<double>((int)Math.Ceiling(seconds * 144) + 1);
+            yield return null;
+            double start = Time.realtimeSinceStartupAsDouble, last = start;
+            int collections = GC.CollectionCount(0), missed = 0;
+            double budget = 1000.0 / (targetHz >= 30 ? targetHz : Input.Simulated ? 60 : 72);
+            do
+            {
+                yield return null;
+                double now = Time.realtimeSinceStartupAsDouble, ms = (now - last) * 1000;
+                intervals.Add(ms);
+                if (ms > 1.5 * budget) missed++;
+                last = now;
+            } while (last - start < seconds);
+            int gc = GC.CollectionCount(0) - collections;
+            intervals.Sort();
+            int n = intervals.Count;
+            double Percentile(double p) => intervals[(int)Math.Ceiling(n * p) - 1];
+            Debug.Log(FormattableString.Invariant($"[MR] frames {label} n={n} seconds={last-start:F3} fps={n/(last-start):F2} p50ms={Percentile(.5):F2} p95ms={Percentile(.95):F2} p99ms={Percentile(.99):F2} maxms={intervals[n-1]:F2} over1.5x={missed} gc0={gc}"));
+            _samplingFrames = false;
+        }
 
         // ------------------------------------------------------------------ free behaviour (owner = MR)
         bool Free(float dt)

@@ -1,5 +1,7 @@
 # Yonder release checks
 
+The [performance audit](YONDER_PERFORMANCE.md) includes frame times during a three-minute simulator recording, TV and desktop measurements, and the status of physical headset testing.
+
 | Area | Check performed |
 |---|---|
 | Shared rules and Windows companion | Ran the complete .NET Release suite. It covers wake matching, travel, game rules, the workshop and garden progression, including insufficient funds and repeat purchases. |

@@ -468,4 +468,14 @@ public class SwarmTests
         Assert.Equal(SwarmAug.Count, SwarmAug.Names.Length); Assert.Equal(SwarmAug.Count, SwarmAug.Lines.Length); Assert.Equal(SwarmAug.Count, SwarmAug.Max.Length);
         Assert.True(SwarmAug.Count >= 10);
     }
+
+    [Fact]
+    public void Upgrade_cards_use_the_bundled_English_font()
+    {
+        foreach (var text in SwarmAug.Names.Concat(SwarmAug.Lines))
+        {
+            Assert.False(string.IsNullOrWhiteSpace(text));
+            Assert.All(text, ch => Assert.InRange((int)ch, 32, 126));
+        }
+    }
 }

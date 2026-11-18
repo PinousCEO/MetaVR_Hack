@@ -27,11 +27,11 @@ namespace LivingPartner.Shared
     public static class SwarmAug
     {
         public const int Rapid = 0, Twin = 1, Pierce = 2, Explode = 3, Chain = 4, Orbit = 5, Slow = 6, Big = 7, Heal = 8, Magnet = 9, Comet = 10, Count = 11;
-        public static readonly string[] Names = { "속사", "쌍발", "관통", "꽃불", "연쇄 번개", "별 고리", "감속 안개", "거대 탄환", "꿀차", "보석 자석", "유성탄" };
+        public static readonly string[] Names = { "Rapid Fire", "Twin Shot", "Piercing Shot", "Bloom Burst", "Chain Lightning", "Star Ring", "Frost Mist", "Giant Bolt", "Honey Tea", "Gem Magnet", "Comet Shot" };
         public static readonly string[] Lines =
         {
-            "발사 간격 단축", "탄환 한 발 추가", "적을 뚫고 날아갑니다", "명중 시 주변 폭발", "근처 적에게 번개 전이", "손 주위를 도는 별",
-            "가까운 적의 이동 감속", "탄환 크기와 피해 증가", "생명 두 칸 회복", "보석 흡수 범위와 경험치 증가", "조준 중 가까운 적에게 추가 발사",
+            "Fire more often", "Fire an extra bolt", "Shoot through enemies", "Hits burst into petals", "Lightning jumps to nearby foes", "Stars orbit your hand",
+            "Slow nearby enemies", "Fire bigger, stronger bolts", "Recover two hearts", "Pull in gems for more XP", "Fire comets at nearby foes",
         };
         public static readonly int[] Max = { 5, 2, 3, 3, 3, 3, 3, 3, 99, 3, 3 };
     }
