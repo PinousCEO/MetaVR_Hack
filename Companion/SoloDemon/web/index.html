@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>악마의 문 · 1인 디펜스</title><link rel="icon" href="/demon-gate/art/demon-guard.jpg"><link rel="stylesheet" href="/demon-gate/game.css">
+<script src="/demon-gate/mesh.js" defer></script><script src="/demon-gate/game.js" defer></script></head>
+<body>
+<main id="stage" aria-label="악마의 문 경기장">
+  <div id="backdrop"></div><canvas id="ground" aria-hidden="true"></canvas><canvas id="demons" aria-hidden="true"></canvas><canvas id="spell" aria-label="마우스로 조준하고 클릭해 발사"></canvas>
+  <section id="hud" hidden aria-label="플레이 상태">
+    <div class="vitals"><span>생명</span> <strong id="hearts"></strong></div>
+    <div class="xp"><span id="level"></span><progress id="xp" max="4" value="0" aria-label="경험치"></progress></div>
+    <div class="clock"><span id="timer-label">보스까지</span> <strong id="clock"></strong></div>
+    <button id="pause" aria-label="일시정지">Ⅱ</button>
+  </section>
+  <div id="boss" hidden><span>가시 왕</span><progress id="boss-hp" max="1" value="1" aria-label="보스 생명"></progress></div>
+  <div id="cue" role="status"></div>
+  <section id="welcome" class="sheet">
+    <div class="copy"><h1>악마의 문</h1><p class="pitch">감나무 너머에서 가시 왕이 깨어났어요.<br>부적을 모아 과수원을 지키세요.</p>
+    <dl class="keys"><div><dt>마우스 왼쪽</dt><dd>조준 · 연속 발사</dd></div><div><dt>오른쪽 / Space</dt><dd>방패로 밀쳐내기</dd></div><div><dt>A · D / ← · →</dt><dd>좌우 이동</dd></div></dl>
+    <button class="action" id="start" disabled>준비 중…</button><p id="record"></p><p id="error" role="alert"></p></div>
+  </section>
+  <section id="choice" class="modal" aria-label="강화 선택" hidden><div><h2>부적을 고르세요</h2><div id="cards"></div></div></section>
+  <section id="break" class="modal" hidden><div><h2>일시정지</h2><button class="action" id="resume">계속 플레이</button></div></section>
+  <section id="over" class="modal" hidden><div><img class="seal" src="/demon-gate/art/demon-guard.jpg" alt=""><h2 id="ending"></h2><p id="summary"></p><button class="action" id="again">다시 플레이</button></div></section>
+</main>
+</body></html>

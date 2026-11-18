@@ -1,0 +1,71 @@
+@font-face {
+  font-family: Jua;
+  src: url('/demon-gate/Jua-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+* { box-sizing: border-box; }
+:root { --ink: #322337; --cream: #fff1cf; --paper: #f8dfaa; --gold: #ffbc60; --stamp: #9e4237; color-scheme: dark; }
+body { margin: 0; color: var(--cream); background: var(--ink); font: 16px/1.45 Jua, "Apple SD Gothic Neo", "Malgun Gothic", sans-serif; }
+button { font: inherit; color: inherit; cursor: pointer; border: 0; }
+button:focus-visible { outline: 3px solid #61ddcf; outline-offset: 4px; }
+button:disabled { opacity: .65; cursor: wait; }
+[hidden] { display: none !important; }
+#stage, #backdrop, #ground, #demons, #spell, .sheet, .modal { position: fixed; inset: 0; width: 100%; height: 100%; }
+#stage { isolation: isolate; overflow: hidden; }
+#backdrop { background: #443048 url('/demon-gate/art/demon-gate.jpg') center / cover no-repeat; pointer-events: none; }
+canvas { display: block; }
+#ground, #demons { pointer-events: none; }
+#spell { touch-action: none; cursor: crosshair; }
+#stage.fighting #spell { cursor: none; }
+
+.sheet { display: grid; align-items: center; padding: 5vh 7vw; }
+.copy { position: relative; width: min(100%, 30em); padding: 1.4em 1.8em 1.6em; isolation: isolate; }
+.copy::before { content: ""; position: absolute; inset: -1.3% -1%; z-index: -1; background: #302438f3; clip-path: polygon(1% 1%,92% 0,100% 4%,97.6% 28%,99% 58%,97.5% 97%,9% 100%,0 95%,.7% 44%); }
+h1, h2, p { margin: 0; }
+.copy h1 { font-size: clamp(3.2rem, 7.8vw, 7rem); color: #ffdda0; line-height: 1.1; letter-spacing: -.055em; font-weight: normal; text-shadow: 3px 4px #894435; }
+.pitch { margin: 1em 0; font-size: clamp(1rem, 1.8vw, 1.35rem); }
+.keys { margin: 1em 0 1.4em; font-size: .96em; }
+.keys div { display: flex; align-items: baseline; gap: .8em; margin: .25em 0; }
+.keys dt { min-width: 8.2em; color: #efbe79; }
+.keys dd { margin: 0; }
+.action { padding: .55em 1.45em; background: var(--paper); color: var(--ink); border: 2px solid var(--ink); box-shadow: 3px 4px #ae6341; font-size: 1.23rem; transform: rotate(-1deg); }
+.action:hover { background: #ffe9bc; }
+#record, #error { margin-top: .65em; color: var(--gold); }
+#record:empty, #error:empty { display: none; }
+
+#hud { position: absolute; inset: clamp(.7rem,3vh,2rem) clamp(.75rem,2.6vw,3rem) auto; display: grid; grid-template-columns: max-content 1fr auto auto; align-items: start; gap: 0 .75rem; pointer-events: none; }
+#hud .vitals, #hud .xp, #hud .clock, #boss { background: #322337ed; }
+.vitals { display: flex; align-items: center; gap: .65em; padding: .25em 1.3em .12em .75em; clip-path: polygon(0 2%,100% 0,96% 94%,0 100%); }
+.vitals span, #timer-label { color: #ffe4ad; font-size: .88em; }
+#hearts { color: #ffa16f; font: bold clamp(1.05rem,2.8vh,1.8rem)/1.3 system-ui,sans-serif; letter-spacing: .09em; }
+#hud .xp { grid-row: 2; grid-column: 1; justify-self: start; display: flex; align-items: center; gap: .55em; padding: .2em .85em .25em .8em; clip-path: polygon(0 0,100% 0,96% 92%,1% 100%); }
+#level { font-size: .9em; white-space: nowrap; }
+progress { appearance: none; border: 0; height: .42rem; width: clamp(3.8rem,6vw,7rem); background: #76616e; }
+progress::-webkit-progress-bar { background: #76616e; }
+progress::-webkit-progress-value { background: #ffbd64; }
+progress::-moz-progress-bar { background: #ffbd64; }
+#hud .clock { grid-column: 3; grid-row: 1; display: flex; align-items: baseline; gap: .6em; padding: .25em .9em; clip-path: polygon(2% 3%,100% 0,98% 100%,0 95%); }
+#clock { font-size: 1.25em; font-weight: normal; font-variant-numeric: tabular-nums; }
+#pause { grid-column: 4; grid-row: 1; font: bold 1.05em/1 sans-serif; padding: .46em .58em; background: var(--paper); color: var(--ink); pointer-events: auto; border-radius: 50%; }
+#boss { position: absolute; top: 4vh; left: 50%; transform: translateX(-50%); display: flex; align-items: center; padding: .3em 1em; gap: .65em; }
+#boss progress { width: clamp(4rem,9vw,11rem); }
+#boss progress::-webkit-progress-value { background: #ff946e; }
+#boss progress::-moz-progress-bar { background: #ff946e; }
+#cue { position: absolute; bottom: 10%; left: 50%; transform: translateX(-50%); text-align: center; pointer-events: none; padding: .1em .65em; background: #322337e8; font-size: clamp(1.05rem,2.8vh,1.85rem); white-space: nowrap; }
+#cue:empty { display: none; }
+
+.modal { display: grid; place-items: center; padding: 1rem; background: #281e35c9; text-align: center; }
+.modal h2 { font-weight: normal; font-size: clamp(2rem,4.2vw,4.2rem); line-height: 1; margin-bottom: .6em; color: #ffe1ac; }
+.modal p { margin: .8em 0; }
+#cards { display: flex; align-items: center; gap: clamp(.55rem,2.1vw,2.3rem); }
+#cards button { position: relative; display: grid; align-content: start; justify-items: center; gap: .3em; width: clamp(6.1rem,19vw,14.5rem); min-height: 12rem; padding: .7em .65em 1em; background: var(--paper); color: var(--ink); border: 3px double #a76942; border-radius: 35% 35% 3px 3px / 9% 9% 3px 3px; box-shadow: 3px 5px #20172590; }
+#cards button:first-child { transform: rotate(-3deg); }
+#cards button:last-child { transform: rotate(3deg); }
+#cards button:hover, #cards button:focus-visible { transform: translateY(-.55rem); outline: 3px solid #ffd07c; }
+#cards img { width: 90%; aspect-ratio: 1; mix-blend-mode: multiply; }
+#cards b { font-size: clamp(1.05rem,2.1vw,1.65rem); font-weight: normal; }
+#cards small { font: .83em/1.35 "Apple SD Gothic Neo","Malgun Gothic",sans-serif; }
+#cards kbd { order: -1; font: .78em Jua,sans-serif; color: #7d493c; }
+.seal { height: clamp(5rem,15vh,9rem); aspect-ratio: 1; border-radius: 50%; margin-bottom: 1em; }
+@media (max-width:640px) { .sheet { padding: 3vh 4vw; } .copy { padding: 1.1em; } #cards button { width: 28vw; min-height: 0; } #hud { font-size: .78rem; gap: 0 .35rem; } #boss { top: 15vh; } }
+@media (max-height:510px) { .copy { font-size: .8rem; } .keys, .pitch { margin: .5em 0; } #cards img { max-height: 27vh; object-fit: contain; } }

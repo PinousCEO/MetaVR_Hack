@@ -1,0 +1,38 @@
+# Unity
+MetaVRHack/[Ll]ibrary/
+MetaVRHack/[Tt]emp/
+MetaVRHack/[Oo]bj/
+MetaVRHack/[Ll]ogs/
+MetaVRHack/[Uu]ser[Ss]ettings/
+MetaVRHack/[Bb]uild/
+MetaVRHack/[Bb]uilds/
+MetaVRHack/*.csproj
+MetaVRHack/*.sln
+MetaVRHack/*.slnx
+MetaVRHack/.vs/
+MetaVRHack/.vsconfig
+MetaVRHack/.utmp/
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+crashlytics-build.properties
+
+# .NET
+Companion/**/bin/
+Companion/**/obj/
+*.user
+
+# Build outputs / runtime state (never commit secrets or tokens)
+dist/
+artifacts/tmp/
+*.token
+*.secret
+.env
+.env.*
+
+# OS
+Thumbs.db
+.DS_Store
+__pycache__/

@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)SoloDemon*.cs" Link="DemonGate/%(Filename)%(Extension)" />
+    <Content Include="$(MSBuildThisFileDirectory)web/*" Link="DemonGate/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)../LivingPartner.Host/web/Jua-Regular.ttf;$(MSBuildThisFileDirectory)../LivingPartner.Host/web/Jua-OFL.txt" Link="DemonGate/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,14 @@
+{
+  "name": "LivingPartner.Windows",
+  "rootNamespace": "LivingPartner.Windows",
+  "references": ["LivingPartner.Shared", "LivingPartner.Character", "LivingPartner.MR", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime", "Unity.Collections", "Unity.InputSystem"],
+  "includePlatforms": ["Editor", "WindowsStandalone64"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": true,
+  "overrideReferences": true,
+  "precompiledReferences": ["Newtonsoft.Json.dll"],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

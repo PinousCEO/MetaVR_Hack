@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!--
+    The marketplace hub: one small server that many people's PCs talk to. Accounts with nicknames and stars, listings
+    with their modules and files, buying and selling between people. Plain .NET 8, nothing of Windows in it: it runs
+    next to the host on the user's own PC (the host starts it when no other hub is named) and just the same on a
+    Linux server that a whole group shares.
+  -->
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>LivingPartner.MarketHub</AssemblyName>
+    <RootNamespace>LivingPartner.MarketHub</RootNamespace>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NoWarn>$(NoWarn);CA1416;CS8632</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The same module records the headset, the host and the tests compile ... -->
+    <Compile Include="..\..\MetaVRHack\Assets\LivingPartner\Shared\**\*.cs" LinkBase="Shared" />
+    <!-- ... and the host's own plain rules: what a sound module is, what comes with the partner (the official shop), how a module travels, what the hub and its clients say to each other. -->
+    <Compile Include="..\LivingPartner.Host\WorldRules.cs" Link="Host\WorldRules.cs" />
+    <Compile Include="..\LivingPartner.Host\MarketCatalog.cs" Link="Host\MarketCatalog.cs" />
+    <Compile Include="..\LivingPartner.Host\MarketPack.cs" Link="Host\MarketPack.cs" />
+    <Compile Include="..\LivingPartner.Host\HubContract.cs" Link="Host\HubContract.cs" />
+    <!-- ... and how a module's script is checked by running it: the hub refuses a module whose script breaks. -->
+    <Compile Include="..\LivingPartner.Host\ScriptRules.cs" Link="Host\ScriptRules.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="MoonSharp" Version="2.0.0" />
+  </ItemGroup>
+
+</Project>

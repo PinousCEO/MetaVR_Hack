@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>밤비의 TV · Mac Companion</title><link rel="stylesheet" href="/stage.css">
+<script src="/glass-game.js" defer></script><script src="/native-games.js" defer></script><script src="/game-audio.js" defer></script><script src="/stage.js" defer></script></head>
+<body>
+<main id="scene" aria-label="밤비의 TV">
+  <div class="shore" aria-hidden="true"></div><div id="portal" hidden></div>
+  <img id="bambi" src="/bambi.png" alt="밤비" hidden>
+  <canvas id="glass-game"></canvas>
+  <iframe id="gomoku-board" title="둘이서 오목" hidden></iframe>
+  <section id="native-game" hidden><canvas id="native-court" aria-hidden="true"></canvas><canvas id="native-actors" aria-label="TV 안쪽 3D 경기장"></canvas>
+    <div id="game-hud"><h2 id="game-title"></h2><output id="game-score"></output></div><ol id="swarm-choices" hidden></ol><p id="game-hint" role="status"></p>
+  </section>
+  <aside id="panel">
+    <header><div><h1>밤비의 TV</h1><p id="connection" role="status">헤드셋을 찾는 중</p></div><button id="fold" aria-label="설정 접기" hidden>접기</button></header>
+    <div id="setup">
+      <label for="display">TV로 사용할 화면</label><select id="display"><option value="mac-tv">이 브라우저가 열린 TV</option></select>
+      <details><summary>화면 크기 직접 입력</summary><label for="inches">대각선 길이 (인치)</label><input id="inches" type="number" min="5" max="400" step=".1" placeholder="예: 55"></details>
+      <button id="fullscreen" class="primary">이 화면을 TV로 사용</button>
+      <p id="placement">이 창을 TV로 옮긴 뒤 버튼을 눌러 주세요.</p>
+    </div>
+    <div id="pair"><p>Quest에 표시되는 숫자 키패드에 입력하세요.</p><output id="code" aria-label="페어링 번호">······</output></div>
+    <a class="solo-launch" href="/demon-gate/">악마의 문 · 혼자 플레이</a>
+    <div id="controls" hidden>
+      <p id="instruction"></p>
+      <div class="row"><button data-command="scan">TV 위치 확인</button><button id="travel" class="primary"></button></div>
+      <div class="row"><select id="games" aria-label="TV 게임"><option value="game-keeper">골키퍼</option><option value="game-tennis">테니스</option><option value="game-swarm">악마의 문 · 혼자 플레이</option><option value="game-gomoku">둘이서 오목</option></select><button id="play">게임 시작</button><button data-command="game:stop">게임 종료</button></div>
+      <img id="demon-cover" src="/art/demon-guard.jpg" alt="악마의 문" width="84" height="84" hidden>
+      <form id="talk"><label for="words">밤비에게 말하기</label><div class="row"><input id="words" maxlength="200" placeholder="밤비야" required><button>보내기</button></div></form>
+      <label><input type="checkbox" id="speak"> 밤비의 대답을 소리로 듣기</label>
+    </div>
+    <p id="error" aria-live="polite"></p>
+  </aside>
+  <button id="unfold" hidden>TV 설정</button><output id="bubble" hidden></output>
+  <aside id="queue" hidden><button id="queue-toggle" aria-expanded="false"></button><section id="jobs" hidden></section></aside>
+  <div id="flash" hidden></div>
+</main>
+</body></html>

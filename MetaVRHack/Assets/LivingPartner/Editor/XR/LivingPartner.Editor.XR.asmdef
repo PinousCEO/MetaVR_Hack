@@ -1,0 +1,23 @@
+{
+  "name": "LivingPartner.Editor.XR",
+  "rootNamespace": "LivingPartner.EditorTools",
+  "references": [
+    "Unity.XR.Management",
+    "Unity.XR.Management.Editor",
+    "Unity.XR.OpenXR",
+    "Unity.XR.OpenXR.Editor",
+    "LivingPartner.Editor", "LivingPartner.Shared", "LivingPartner.Character", "LivingPartner.MR", "LivingPartner.Quest",
+    "Unity.XR.CoreUtils", "Unity.XR.ARFoundation", "Unity.InputSystem", "Unity.RenderPipelines.Universal.Runtime", "Unity.RenderPipelines.Core.Runtime"
+  ],
+  "includePlatforms": ["Editor"],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": ["LP_OPENXR"],
+  "versionDefines": [
+    { "name": "com.unity.xr.openxr", "expression": "1.9.0", "define": "LP_OPENXR" }
+  ],
+  "noEngineReferences": false
+}

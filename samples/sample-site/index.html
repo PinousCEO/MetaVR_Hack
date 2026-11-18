@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Momo Notes - Sample Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>Momo Notes</h1>
+    <nav>
+      <a href="#today">Today</a>
+      <a href="#projects">Projects</a>
+      <a href="#archive">Archive</a>
+    </nav>
+  </header>
+
+  <main id="today">
+    <section class="summary" aria-label="Summary">
+      <p id="summary-line">Loading summary...</p>
+    </section>
+
+    <section class="cards" aria-label="Task cards">
+      <article class="card">
+        <h2>Ship landing page</h2>
+        <p class="meta">Due <span data-due="2026-11-18">-</span></p>
+        <p>Finish the hero copy, wire the signup form and check the mobile layout.</p>
+        <button class="action">Open</button>
+      </article>
+      <article class="card">
+        <h2>Fix billing emails</h2>
+        <p class="meta">Due <span data-due="2026-11-17">-</span></p>
+        <p>Receipts are sent twice when a card is retried. Reproduce and patch.</p>
+        <button class="action">Open</button>
+      </article>
+      <article class="card">
+        <h2>Interview two users</h2>
+        <p class="meta">Due <span data-due="2026-11-21">-</span></p>
+        <p>Ask about the onboarding flow and where they dropped off.</p>
+        <button class="action">Open</button>
+      </article>
+      <article class="card">
+        <h2>Plan next sprint</h2>
+        <p class="meta">Due <span data-due="2026-11-24">-</span></p>
+        <p>Pick three goals, write them down, share with the team.</p>
+        <button class="action">Open</button>
+      </article>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <p>Sample project for the Living AI Partner demo. Safe to modify.</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

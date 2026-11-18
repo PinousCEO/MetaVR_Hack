@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bambi Market</title>
+<!--
+  The shop on the PC: a real marketplace, where people sell what they made to each other under their nicknames.
+  One self-contained page. It asks only this host for anything (its font, its sticker art, the state of the shop
+  once a second, and the commands it posts); the host talks to the marketplace hub in the user's name, so their
+  token never reaches a browser. The look is the partner's picture-book world: cream paper, dark-brown ink outlines,
+  pastel badges, soft paper shadows.
+-->
+<style>
+@font-face { font-family: "Jua"; src: url("/market/font/Jua-Regular.ttf") format("truetype"); font-display: swap; }
+:root {
+  --paper: #FFF8EA; --card: #FFFDF6; --ink: #4A2F27; --soft: #86695C; --faint: rgba(74,47,39,.12);
+  --sage: #A8DDB5; --honey: #FFD466; --sky: #8FD3F4; --rose: #F8B4C8; --lav: #C7B8F5; --coral: #FF9B85; --tan: #F1CE96;
+  --head: "Jua", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
+  --body: "Pretendard", "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0; color: var(--ink); font: 15px/1.5 var(--body); -webkit-font-smoothing: antialiased;
+  background-color: var(--paper);
+  background-image: radial-gradient(rgba(74,47,39,.055) 1.2px, transparent 1.3px), radial-gradient(900px 500px at 8% -10%, #FFEFC4 0, transparent 70%), radial-gradient(800px 480px at 100% 0, #FCE0E8 0, transparent 70%);
+  background-size: 22px 22px, auto, auto; background-attachment: fixed;
+  word-break: keep-all; overflow-wrap: anywhere;
+}
+button, input { font: inherit; color: inherit; }
+button { cursor: pointer; }
+h1, h2, h3 { font-family: var(--head); font-weight: 400; margin: 0; letter-spacing: .01em; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 32px; }
+[hidden] { display: none !important; }
+
+/* ---------------------------------------------------------------- header */
+header { position: sticky; top: 0; z-index: 20; background: rgba(255,248,234,.92); backdrop-filter: blur(8px); border-bottom: 2.5px solid var(--ink); }
+header .wrap { display: flex; align-items: center; gap: 14px; height: 76px; }
+.mark { display: flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; flex: none; }
+.mark img { height: 36px; width: 112px; object-fit: cover; display: block; }      /* (the word mark sits in the middle of a wide strip) */
+.mark span { font: 28px/1 var(--head); padding: 5px 14px 3px; border-radius: 999px; background: var(--honey); border: 2.5px solid var(--ink); box-shadow: 0 3px 0 var(--ink); transform: rotate(-2deg); }
+.search { flex: 1; min-width: 160px; margin-left: 10px; position: relative; }
+.search input { width: 100%; height: 44px; padding: 0 18px 0 44px; border-radius: 999px; border: 2.5px solid var(--ink); background: #fff; outline: none; transition: box-shadow .15s; }
+.search input:focus { box-shadow: 0 0 0 4px rgba(143,211,244,.6); }
+.search svg { position: absolute; left: 15px; top: 12px; width: 20px; height: 20px; }
+.seg { display: flex; border: 2.5px solid var(--ink); border-radius: 999px; overflow: hidden; background: #fff; flex: none; }
+.seg button { border: 0; background: none; padding: 0 13px; height: 39px; font: 15px/1 var(--head); color: var(--soft); white-space: nowrap; }
+.seg button + button { border-left: 2px solid var(--faint); }
+.seg button.on { background: var(--ink); color: var(--paper); }
+/* who the user is in the shop: a round face with the first letter of the nickname, the nickname, the stars */
+.me { display: flex; align-items: center; gap: 9px; height: 46px; padding: 0 6px 0 5px; border-radius: 999px; background: #fff; border: 2.5px solid var(--ink); box-shadow: 0 3px 0 var(--ink); flex: none; max-width: 300px; transition: transform .08s, box-shadow .08s; }
+.me:hover { transform: translateY(-1px); box-shadow: 0 4px 0 var(--ink); }
+.me:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.me .nick { font: 17px/1 var(--head); padding-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.me .stars { display: flex; align-items: center; gap: 4px; height: 32px; padding: 0 11px 0 6px; border-radius: 999px; background: #FFF1BF; border: 2px solid var(--ink); flex: none; }
+.me .stars img { width: 22px; height: 22px; }
+.me .stars b { font: 19px/1 var(--head); font-weight: 400; min-width: 2ch; text-align: right; padding-top: 2px; }
+.me .stars.bump { animation: bump .5s; }
+@keyframes bump { 30% { transform: scale(1.14) rotate(-3deg); } 60% { transform: scale(.97); } }
+.av { --s: 34px; width: var(--s); height: var(--s); border-radius: 50%; border: 2px solid var(--ink); background: var(--c, var(--honey)); display: inline-grid; place-items: center; font: calc(var(--s) * .52)/1 var(--head); padding-top: calc(var(--s) * .06); flex: none; position: relative; text-transform: uppercase; }
+.av.dot::after { content: ""; position: absolute; right: -3px; bottom: -3px; width: 11px; height: 11px; border-radius: 50%; border: 2px solid var(--ink); background: var(--sage); }
+.av.dot.off::after { background: #D9CFC7; }
+.official { width: 15px; height: 15px; flex: none; }
+
+/* ---------------------------------------------------------------- banners: no nickname yet, the shop cannot be reached */
+.banner { display: flex; align-items: center; gap: 16px; margin: 22px 0 0; padding: 14px 18px; border-radius: 22px; border: 2.5px solid var(--ink); background: #fff; box-shadow: 0 5px 0 rgba(74,47,39,.16); }
+.banner h3 { font-size: 21px; line-height: 1.2; }
+.banner p { margin: 2px 0 0; font-size: 13.5px; color: var(--soft); }
+.banner .grow { flex: 1; min-width: 0; }
+.banner.name { background: linear-gradient(100deg, #E9F6FD, #F1ECFF); }
+.banner.name .av { --s: 52px; border-width: 2.5px; box-shadow: 0 3px 0 rgba(74,47,39,.2); }
+.banner form { display: flex; gap: 8px; flex: none; }
+.field { height: 44px; padding: 0 16px; border-radius: 999px; border: 2.5px solid var(--ink); background: #fff; outline: none; font-size: 16px; width: 210px; }
+.field:focus { box-shadow: 0 0 0 4px rgba(143,211,244,.6); }
+.banner.off { background: #FFE9E2; }
+.banner.off svg { width: 46px; height: 46px; flex: none; }
+
+/* ---------------------------------------------------------------- the strip: new things are asked of Bambi, not made on this page */
+.ask { margin: 24px 0 8px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 26px; align-items: center; padding: 18px 26px; border-radius: 30px; border: 3px solid var(--ink);
+  background: linear-gradient(120deg, #FFE7A6 0%, #FFDCC6 52%, #F9CADB 100%); box-shadow: 0 6px 0 rgba(74,47,39,.9); position: relative; overflow: hidden; }
+.ask::before { content: ""; position: absolute; width: 220px; height: 220px; right: -70px; top: -120px; border-radius: 50%; background: rgba(255,255,255,.35); pointer-events: none; }
+.askside { display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 1; min-width: 0; }
+.askside .hint { font: 13.5px/1.4 var(--body); color: #6A4A3E; }
+/* talking to Bambi by typing: this is where new things are asked for */
+.talkbox { display: flex; gap: 8px; scroll-margin-top: 96px; }
+.talkbox input { flex: 1; min-width: 0; height: 48px; padding: 0 20px; border-radius: 999px; border: 3px solid var(--ink); background: #fff; font-size: 16px; outline: none; box-shadow: inset 0 3px 0 rgba(74,47,39,.07); }
+.talkbox input:focus { box-shadow: inset 0 3px 0 rgba(74,47,39,.07), 0 0 0 4px rgba(255,255,255,.75); }
+.talkbox .btn { height: 48px; padding: 0 20px; font-size: 17px; border-width: 3px; }
+.tries { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { border: 1.5px dashed var(--ink); border-radius: 999px; background: rgba(255,255,255,.7); padding: 3px 11px 2px; font: 13px/1.4 var(--body); }
+button.chip:hover { background: #fff; }
+.talkcol { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 8px; }
+.mine { align-self: flex-end; max-width: 88%; background: var(--honey); border: 2.5px solid var(--ink); border-radius: 18px 18px 5px 18px; padding: 7px 14px 6px; font-size: 14.5px; line-height: 1.4; box-shadow: 0 3px 0 rgba(74,47,39,.2); overflow-wrap: anywhere; }
+.mine[hidden] { display: none; }
+.bubble .line .dots { vertical-align: middle; }
+.btn { border: 2.5px solid var(--ink); border-radius: 999px; background: #fff; font: 16px/1 var(--head); padding: 9px 16px 7px; box-shadow: 0 3px 0 var(--ink); transition: transform .08s, box-shadow .08s, filter .15s; white-space: nowrap; text-decoration: none; color: inherit; display: inline-flex; align-items: center; gap: 6px; }
+.btn:hover { filter: brightness(1.04); transform: translateY(-1px); box-shadow: 0 4px 0 var(--ink); }
+.btn:active { transform: translateY(2px); box-shadow: 0 1px 0 var(--ink); }
+.btn.go { background: var(--coral); }
+.btn.sun { background: var(--honey); }
+.btn.mint { background: var(--sage); }
+.btn.big { font-size: 20px; padding: 0 26px; height: 56px; border-width: 3px; }
+.btn.quiet { box-shadow: none; border-width: 2px; padding: 7px 13px 5px; font-size: 14.5px; background: transparent; }
+.btn.quiet:hover { background: #fff; transform: none; box-shadow: none; }
+.btn svg { width: 16px; height: 16px; flex: none; }
+.btn[disabled] { cursor: default; filter: grayscale(.5) opacity(.6); transform: none; box-shadow: 0 3px 0 var(--ink); }
+.btn.wait { color: transparent; position: relative; pointer-events: none; }
+.btn.wait > * { visibility: hidden; }
+.btn.wait::after { content: ""; position: absolute; inset: 0; margin: auto; width: 16px; height: 16px; border-radius: 50%; border: 3px solid var(--ink); border-right-color: transparent; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.says { display: flex; align-items: flex-end; gap: 12px; position: relative; z-index: 1; }
+.avatar { width: 76px; height: 76px; flex: none; filter: drop-shadow(0 4px 0 rgba(74,47,39,.25)); animation: bob 3.4s ease-in-out infinite; }
+@keyframes bob { 50% { transform: translateY(-5px) rotate(-2deg); } }
+.bubble { flex: 1; min-width: 0; background: #fff; border: 3px solid var(--ink); border-radius: 24px 24px 24px 6px; padding: 12px 18px; min-height: 64px; box-shadow: 0 5px 0 rgba(74,47,39,.2); display: flex; flex-direction: column; justify-content: center; gap: 6px; }
+.bubble .who { font: 13px/1 var(--head); color: var(--soft); }
+.bubble .line { font-size: 15px; line-height: 1.45; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+.progress { display: none; align-items: center; gap: 10px; font: 15px/1.3 var(--head); color: #6A4A3E; background: rgba(255,255,255,.65); border: 2px solid var(--ink); border-radius: 999px; padding: 7px 14px 6px; }
+.progress.on { display: flex; }
+.progress #making { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.progress .bar { flex: none; width: 96px; height: 10px; border-radius: 999px; border: 2px solid var(--ink); background: #fff; overflow: hidden; }
+.progress .bar i { display: block; height: 100%; width: 0; background: var(--coral); transition: width 1s linear; }
+.progress .bar[hidden] { display: none; }
+/* "I made it - shall I put it up?": the same question the partner asks in the room, as a small card */
+.offer { display: flex; align-items: center; gap: 12px; background: #fff; border: 3px solid var(--ink); border-radius: 22px; padding: 10px 14px; box-shadow: 0 4px 0 rgba(74,47,39,.25); }
+.offer[hidden] { display: none; }
+.offer .badge { width: 54px; height: 54px; flex: none; margin: 0; }
+.offer .what { flex: 1; min-width: 0; }
+.offer .what b { display: block; font: 17px/1.2 var(--head); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.offer .what span { font-size: 13.5px; color: #6A4A3E; }
+.offer .acts { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+.dots { display: inline-flex; gap: 4px; }
+.dots i { width: 8px; height: 8px; border-radius: 50%; background: var(--coral); border: 1.5px solid var(--ink); animation: hop .9s infinite; }
+.dots i:nth-child(2) { animation-delay: .15s; background: var(--honey); } .dots i:nth-child(3) { animation-delay: .3s; background: var(--sage); }
+@keyframes hop { 30% { transform: translateY(-6px); } 60% { transform: none; } }
+
+/* ---------------------------------------------------------------- tabs */
+.tabs { position: sticky; top: 78px; z-index: 15; display: flex; gap: 8px; padding: 18px 0 12px; overflow-x: auto; scrollbar-width: none; background: linear-gradient(var(--paper) 78%, transparent); }
+.tab { border: 2.5px solid var(--ink); border-radius: 999px; background: var(--card); padding: 8px 16px 6px; font: 17px/1 var(--head); display: flex; align-items: center; gap: 8px; white-space: nowrap; transition: transform .1s; }
+.tab:hover { transform: translateY(-2px); }
+.tab i { font-style: normal; font: 12px/1 var(--body); font-weight: 700; padding: 3px 7px; border-radius: 999px; background: var(--faint); }
+.tab.on { background: var(--ink); color: var(--paper); box-shadow: 0 3px 0 rgba(74,47,39,.35); }
+.tab.on i { background: rgba(255,248,234,.22); }
+.tab .dot { width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--ink); }
+.tab.on .dot { border-color: var(--paper); }
+.tab.shop { margin-left: auto; background: #FFE9E2; }
+.tab.shop.on { background: var(--ink); }
+.tab.shop svg { width: 18px; height: 18px; }
+.tab.shop.on svg { stroke: var(--paper); }
+.filter { display: flex; align-items: center; gap: 10px; margin: 2px 0 14px 4px; font-size: 14px; color: var(--soft); }
+.filter .who { display: inline-flex; align-items: center; gap: 7px; border: 2px solid var(--ink); border-radius: 999px; padding: 3px 6px 3px 4px; background: #fff; color: var(--ink); font: 15px/1 var(--head); }
+.filter .who .av { --s: 24px; border-width: 1.5px; }
+.filter .who button { border: 0; background: var(--faint); width: 22px; height: 22px; border-radius: 50%; padding: 0; display: grid; place-items: center; }
+.filter .who button svg { width: 9px; height: 9px; }
+
+/* ---------------------------------------------------------------- shelf */
+.section { margin: 10px 0 34px; }
+.section > h2 { font-size: 26px; display: flex; align-items: baseline; gap: 10px; margin: 0 0 16px 4px; }
+.section > h2 small { font: 14px/1 var(--body); color: var(--soft); }
+.section > h2::after { content: ""; flex: 1; height: 0; border-top: 2.5px dashed rgba(74,47,39,.25); transform: translateY(-5px); }
+.section.people { padding: 20px 22px 24px; margin: 6px -22px 30px; border-radius: 30px; background: rgba(255,255,255,.55); border: 2.5px dashed rgba(74,47,39,.3); }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(236px, 1fr)); gap: 22px; }
+.card { position: relative; display: flex; flex-direction: column; background: var(--card); border: 2.5px solid var(--ink); border-radius: 24px; box-shadow: 0 6px 0 rgba(74,47,39,.16), 0 14px 24px -14px rgba(74,47,39,.35);
+  overflow: hidden; cursor: pointer; transition: transform .16s cubic-bezier(.3,1.4,.5,1), box-shadow .16s; text-align: left; padding: 0; }
+.card:hover { transform: translateY(-6px) rotate(-.4deg); box-shadow: 0 12px 0 rgba(74,47,39,.14), 0 26px 30px -16px rgba(74,47,39,.45); }
+.card:focus-visible, .btn:focus-visible, .tab:focus-visible, .chip:focus-visible, .me:focus-visible, .row:focus-visible { outline: 4px solid rgba(143,211,244,.9); outline-offset: 2px; }
+.card .top { height: 92px; background: var(--tint); border-bottom: 2.5px solid var(--ink); position: relative; }
+.card .top::after { content: ""; position: absolute; inset: 0; background: radial-gradient(rgba(255,255,255,.55) 2px, transparent 2.4px) 0 0 / 18px 18px; opacity: .7; }
+.card > .badge { position: absolute; left: 18px; top: 34px; z-index: 1; }
+.card .body { padding: 46px 18px 16px; display: flex; flex-direction: column; flex: 1; }
+.card h3 { font-size: 21px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.by { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--soft); margin-top: 5px; min-width: 0; }
+.by .av { --s: 20px; border-width: 1.5px; }
+.by span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card .gives { margin: 10px 0 14px; font-size: 14px; line-height: 1.45; color: #5C4036; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 40px; }
+.card .foot { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.price { display: inline-flex; align-items: center; gap: 5px; font: 17px/1 var(--head); padding: 6px 12px 4px 8px; border-radius: 999px; background: #FFF1BF; border: 2px solid var(--ink); white-space: nowrap; }
+.price img { width: 20px; height: 20px; margin-top: -2px; }
+.price.free { background: #DDF3E2; padding-left: 12px; }
+.price.have { background: #fff; padding-left: 12px; color: var(--soft); }
+.price.mine { background: #E4DBFB; }
+.price.gone { background: #F4E9E4; color: var(--soft); padding-left: 12px; }
+.stats { display: inline-flex; align-items: center; gap: 10px; font-size: 12.5px; color: var(--soft); font-weight: 600; }
+.stats span { display: inline-flex; align-items: center; gap: 3px; }
+.stats svg { width: 14px; height: 14px; }
+.kindtag { position: absolute; left: 12px; top: 9px; z-index: 1; font: 12.5px/1 var(--head); padding: 5px 10px 3px; border-radius: 999px; background: rgba(255,255,255,.85); border: 2px solid var(--ink); }
+.ribbon { position: absolute; z-index: 2; right: -44px; top: 20px; width: 168px; text-align: center; transform: rotate(36deg); background: var(--sage); border-block: 2.5px solid var(--ink); font: 14.5px/1 var(--head); padding: 7px 0 5px; box-shadow: 0 3px 0 rgba(74,47,39,.18); }
+.ribbon.mine { background: var(--lav); }
+.card.pop { animation: pop .6s cubic-bezier(.3,1.6,.5,1); }
+@keyframes pop { 0% { transform: scale(.94); } 45% { transform: scale(1.05) rotate(-1deg); } }
+.card.in { animation: rise .45s cubic-bezier(.2,1.2,.4,1) backwards; }
+@keyframes rise { from { opacity: 0; transform: translateY(18px) scale(.97); } }
+
+/* the round sticker a module is shown by: a cream edge, an ink ring, a pastel face, a little gloss */
+.badge { --s: 96px; width: var(--s); height: var(--s); border-radius: 50%; background: #FFF6E1; box-shadow: 0 0 0 1.5px rgba(74,47,39,.14), 0 5px 0 rgba(74,47,39,.2); display: grid; place-items: center; flex: none; }
+.badge .face { width: 82%; height: 82%; border-radius: 50%; border: 3px solid var(--ink); background: radial-gradient(circle at 34% 26%, #fff 0, var(--b1) 40%, var(--b2) 100%); position: relative; overflow: hidden; display: grid; place-items: center; }
+.badge .face::after { content: ""; position: absolute; left: 14%; top: 9%; width: 38%; height: 20%; border-radius: 50%; background: rgba(255,255,255,.6); transform: rotate(-24deg); pointer-events: none; }
+.badge .face img { width: 86%; height: 86%; object-fit: contain; }
+.badge .face svg { width: 70%; height: 70%; overflow: visible; }
+.badge.tile { background: none; box-shadow: none; }
+.badge.tile img { width: 126%; height: 126%; margin: -13%; display: block; filter: drop-shadow(0 4px 0 rgba(74,47,39,.14)); }      /* (the baked stickers carry a margin of their own) */
+.k-item { --tint: #FBE6BD; --b1: #FFF0CF; --b2: #F1CE96; } .k-skill { --tint: #E4DBFB; --b1: #EFE9FF; --b2: #C7B8F5; }
+.k-game { --tint: #FBD3DD; --b1: #FFE4EA; --b2: #F8B4C8; } .k-ambience { --tint: #CDEBFA; --b1: #E5F5FD; --b2: #8FD3F4; }
+.k-ability { --tint: #D2EED8; --b1: #E8F7EB; --b2: #A8DDB5; }
+
+.empty { border: 2.5px dashed rgba(74,47,39,.35); border-radius: 24px; padding: 40px 24px 44px; text-align: center; color: var(--soft); display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.empty img { width: 92px; height: 92px; opacity: .9; filter: drop-shadow(0 4px 0 rgba(74,47,39,.14)); }
+.empty h3 { font-size: 22px; color: var(--ink); margin: 6px 0 2px; }
+.empty p { margin: 0; max-width: 46ch; }
+footer { padding: 10px 0 46px; color: var(--soft); font-size: 13px; text-align: center; }
+
+/* ---------------------------------------------------------------- my shop: what I sell, what I could sell */
+.mystats { display: grid; grid-template-columns: repeat(3, minmax(120px, 170px)) 1fr; gap: 16px; margin: 4px 0 30px; }
+.stat { border: 2.5px solid var(--ink); border-radius: 22px; background: var(--card); padding: 16px 18px 12px; box-shadow: 0 5px 0 rgba(74,47,39,.14); }
+.stat b { display: flex; align-items: center; gap: 6px; font: 34px/1 var(--head); font-weight: 400; }
+.stat b img { width: 30px; height: 30px; margin-top: -4px; }
+.stat span { font-size: 13px; color: var(--soft); }
+.stat.star { background: #FFF6D6; }
+.drop { border: 2.5px dashed var(--ink); border-radius: 22px; background: rgba(255,255,255,.6); padding: 12px 20px; display: flex; align-items: center; gap: 14px; cursor: pointer; transition: background .15s, transform .1s; }
+.drop:hover, .drop.over { background: #fff; transform: translateY(-2px); }
+.drop svg { width: 40px; height: 40px; flex: none; }
+.drop b { display: block; font: 19px/1.2 var(--head); font-weight: 400; }
+.drop span { font-size: 13px; color: var(--soft); }
+.rows { display: flex; flex-direction: column; gap: 12px; }
+.row { display: flex; align-items: center; gap: 16px; padding: 12px 16px 12px 14px; border: 2.5px solid var(--ink); border-radius: 22px; background: var(--card); box-shadow: 0 4px 0 rgba(74,47,39,.13); cursor: pointer; }
+.row .badge { --s: 64px; box-shadow: 0 0 0 1.5px rgba(74,47,39,.14), 0 3px 0 rgba(74,47,39,.18); }
+.row .badge .face { border-width: 2.5px; }
+.row .what { flex: 1; min-width: 0; }
+.row h3 { font-size: 20px; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.row .sub { font-size: 13px; color: var(--soft); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px 10px; align-items: center; }
+.row .sub b { font-weight: 600; color: var(--ink); }
+.row .sub .tag { font: 12px/1 var(--head); padding: 4px 8px 2px; border-radius: 999px; border: 1.5px solid var(--ink); background: var(--tint); color: var(--ink); }
+.row.unsold { border-style: dashed; background: #FFFAEE; box-shadow: none; }
+.stepper { display: flex; align-items: center; border: 2.5px solid var(--ink); border-radius: 999px; background: #FFF1BF; height: 42px; flex: none; overflow: hidden; }
+.stepper button { border: 0; background: rgba(255,255,255,.55); width: 34px; height: 100%; font: 20px/1 var(--head); padding: 2px 0 0; }
+.stepper button:hover { background: #fff; }
+.stepper label { display: flex; align-items: center; gap: 2px; padding: 0 4px 0 8px; }
+.stepper img { width: 20px; height: 20px; }
+.stepper input { width: 46px; border: 0; background: none; outline: none; text-align: center; font: 19px/1 var(--head); padding: 3px 0 0; -moz-appearance: textfield; }
+.stepper input::-webkit-outer-spin-button, .stepper input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.row .acts { display: flex; align-items: center; gap: 8px; flex: none; }
+
+/* ---------------------------------------------------------------- the drawers */
+.scrim { position: fixed; inset: 0; z-index: 40; background: rgba(74,47,39,.38); opacity: 0; pointer-events: none; transition: opacity .2s; }
+.scrim.on { opacity: 1; pointer-events: auto; }
+.drawer { position: fixed; z-index: 41; top: 0; right: 0; bottom: 0; width: min(480px, 100vw); background: var(--paper); border-left: 3px solid var(--ink); box-shadow: -14px 0 40px rgba(74,47,39,.25);
+  transform: translateX(105%); transition: transform .28s cubic-bezier(.2,.9,.3,1); display: flex; flex-direction: column; }
+.drawer.on { transform: none; }
+.drawer .dtop { padding: 26px 28px 22px; background: var(--tint, #FFE7A6); border-bottom: 3px solid var(--ink); position: relative; display: flex; gap: 18px; align-items: center; }
+.drawer .dtop::after { content: ""; position: absolute; inset: 0; background: radial-gradient(rgba(255,255,255,.55) 2px, transparent 2.4px) 0 0 / 18px 18px; pointer-events: none; }
+.drawer .dtop .badge { --s: 132px; position: relative; z-index: 1; }
+.drawer .dtop > div:last-child { position: relative; z-index: 1; min-width: 0; }
+.drawer h2 { font-size: 30px; line-height: 1.15; }
+.drawer .kindline { color: #6A4A3E; font-size: 13.5px; margin-top: 4px; }
+.drawer .x { position: absolute; z-index: 2; right: 14px; top: 14px; width: 38px; height: 38px; padding: 0; display: grid; place-items: center; }
+.drawer .x svg { width: 16px; height: 16px; }
+.sellerline { display: flex; align-items: center; gap: 12px; padding: 12px 28px; border-bottom: 2px dashed rgba(74,47,39,.22); background: var(--card); }
+.sellerline .av { --s: 40px; }
+.sellerline .who { flex: 1; min-width: 0; border: 0; background: none; padding: 0; text-align: left; }
+.sellerline .who b { display: flex; align-items: center; gap: 5px; font: 18px/1.2 var(--head); font-weight: 400; }
+.sellerline .who small { color: var(--soft); font-size: 12.5px; }
+button.who:hover b { text-decoration: underline; text-decoration-style: wavy; text-underline-offset: 4px; }
+.sellerline .stats { font-size: 13px; }
+.like { width: 44px; height: 44px; border-radius: 50%; padding: 0; justify-content: center; }
+.like svg { width: 20px; height: 20px; }
+.like.on { background: var(--rose); }
+.like.on svg { fill: #E4577A; }
+.drawer .dbody { padding: 20px 28px; overflow-y: auto; flex: 1; }
+.drawer .gives { font: 19px/1.4 var(--head); margin: 0 0 10px; }
+.drawer .sum { margin: 0 0 6px; color: #5C4036; }
+.drawer h4 { font: 15px/1 var(--head); font-weight: 400; color: var(--soft); margin: 22px 0 10px; display: flex; align-items: center; gap: 8px; }
+.drawer h4::after { content: ""; flex: 1; border-top: 2px dashed rgba(74,47,39,.22); }
+.steps { display: flex; flex-wrap: wrap; gap: 8px 6px; align-items: center; }
+.step { display: inline-flex; align-items: center; gap: 6px; border: 2px solid var(--ink); border-radius: 999px; padding: 5px 12px 4px; background: #fff; font: 14px/1.2 var(--head); }
+.step b { font-weight: 400; color: var(--soft); font-size: 12px; }
+.steps .arrow { color: var(--soft); font-size: 13px; }
+.quote { border: 2px solid var(--ink); border-radius: 16px 16px 16px 5px; padding: 7px 12px; background: #fff; font-size: 14px; display: inline-block; margin: 0 6px 8px 0; }
+.facts { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.fact { border: 2px solid var(--ink); border-radius: 16px; padding: 10px 8px 8px; text-align: center; background: #fff; }
+.fact b { display: block; font: 22px/1 var(--head); font-weight: 400; }
+.fact span { font-size: 12px; color: var(--soft); }
+.cast { display: flex; gap: 12px; margin-top: 12px; }
+.cast > div { flex: 1; display: flex; align-items: center; gap: 10px; border: 2px solid var(--ink); border-radius: 16px; padding: 8px 10px; background: #fff; min-width: 0; }
+.cast .badge { --s: 46px; box-shadow: none; }
+.cast .badge .face { border-width: 2px; }
+.cast small { display: block; color: var(--soft); font-size: 11.5px; }
+.cast b { font: 15px/1.2 var(--head); font-weight: 400; }
+.tune { display: flex; align-items: center; gap: 12px; border: 2px solid var(--ink); border-radius: 18px; padding: 10px 14px 10px 10px; background: #fff; }
+.tune .play { width: 46px; height: 46px; border-radius: 50%; padding: 0; justify-content: center; background: var(--honey); flex: none; }
+.tune .play svg { width: 18px; height: 18px; }
+.tune b { font: 17px/1.2 var(--head); font-weight: 400; display: block; }
+.tune small { color: var(--soft); }
+.tune .eq { margin-left: auto; display: flex; gap: 3px; align-items: flex-end; height: 22px; opacity: .25; }
+.tune .eq i { width: 5px; border-radius: 3px; background: var(--ink); height: 30%; }
+.tune.playing .eq { opacity: 1; }
+.tune.playing .eq i { animation: eq .6s ease-in-out infinite alternate; }
+.tune .eq i:nth-child(2) { animation-delay: .15s; } .tune .eq i:nth-child(3) { animation-delay: .3s; } .tune .eq i:nth-child(4) { animation-delay: .45s; }
+@keyframes eq { to { height: 100%; } }
+.mood { height: 74px; border-radius: 18px; border: 2px solid var(--ink); position: relative; overflow: hidden; display: flex; align-items: flex-end; padding: 8px 12px; color: #fff; font: 15px/1 var(--head); text-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.mood i { position: absolute; border-radius: 50%; opacity: .9; animation: drift 5s ease-in-out infinite alternate; }
+@keyframes drift { to { transform: translate(14px, -10px); } }
+.dfoot { padding: 16px 28px 22px; border-top: 3px solid var(--ink); background: var(--card); display: flex; align-items: center; gap: 12px; }
+.dfoot .btn.main { margin-left: auto; font-size: 21px; padding: 14px 30px 11px; border-width: 3px; }
+.dfoot .price { font-size: 21px; padding: 8px 15px 6px 10px; }
+.dfoot .price img { width: 24px; height: 24px; }
+.dfoot .note { font-size: 12.5px; color: var(--soft); line-height: 1.35; }
+/* the small sheet that asks before stars are spent */
+.sheet { padding: 18px 28px 22px; border-top: 3px solid var(--ink); background: #FFF6D6; }
+.sheet h3 { font-size: 22px; margin-bottom: 10px; }
+.sheet dl { margin: 0 0 14px; display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; font-size: 15px; }
+.sheet dt { color: #6A4A3E; }
+.sheet dd { margin: 0; text-align: right; font: 17px/1.2 var(--head); display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+.sheet dd img { width: 19px; height: 19px; margin-top: -2px; }
+.sheet dd .av { --s: 22px; border-width: 1.5px; }
+.sheet .after { border-top: 2px dashed rgba(74,47,39,.3); padding-top: 9px; }
+.sheet .acts { display: flex; gap: 10px; justify-content: flex-end; }
+.sheet .acts .btn.go { font-size: 20px; padding: 12px 26px 9px; border-width: 3px; }
+/* the profile drawer */
+.profile .dtop { --tint: #E9F6FD; }
+.profile .dtop .av { --s: 84px; border-width: 3px; box-shadow: 0 4px 0 rgba(74,47,39,.2); position: relative; z-index: 1; }
+.profile form { display: flex; gap: 8px; }
+.profile form .field { flex: 1; min-width: 0; width: auto; }
+.hint { font-size: 12.5px; color: var(--soft); margin: 7px 2px 0; }
+.hubbox { border: 2px solid var(--ink); border-radius: 16px; background: #fff; padding: 10px 14px; display: flex; align-items: center; gap: 10px; }
+.hubbox code { font: 14px/1.3 ui-monospace, "Cascadia Mono", Consolas, monospace; overflow-wrap: anywhere; flex: 1; }
+.led { width: 13px; height: 13px; border-radius: 50%; border: 2px solid var(--ink); background: var(--sage); flex: none; }
+.led.off { background: var(--coral); }
+.hubbox b { font: 14px/1 var(--head); font-weight: 400; }
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bought { display: flex; flex-direction: column; gap: 8px; }
+.bought > div { display: flex; align-items: center; gap: 10px; border: 2px solid var(--ink); border-radius: 16px; padding: 7px 12px 7px 8px; background: #fff; cursor: pointer; }
+.bought .badge { --s: 40px; box-shadow: none; }
+.bought .badge .face { border-width: 2px; }
+.bought b { font: 16px/1.2 var(--head); font-weight: 400; display: block; }
+.bought small { color: var(--soft); font-size: 12px; }
+.bought .price { margin-left: auto; font-size: 14px; padding: 4px 9px 2px 6px; }
+.bought .price img { width: 16px; height: 16px; }
+.bought .price.free { padding-left: 9px; }
+
+/* ---------------------------------------------------------------- small things that move */
+.toast { position: fixed; z-index: 60; left: 50%; bottom: 30px; transform: translate(-50%, 90px); background: var(--ink); color: var(--paper); border-radius: 999px; padding: 12px 22px 10px; font: 17px/1.2 var(--head); box-shadow: 0 8px 24px rgba(74,47,39,.4); transition: transform .3s cubic-bezier(.3,1.4,.5,1); pointer-events: none; max-width: 90vw; }
+.toast.on { transform: translate(-50%, 0); }
+.confetti { position: fixed; z-index: 70; width: 22px; height: 22px; pointer-events: none; left: 0; top: 0; }
+@media (max-width: 1100px) { .seg.sort button { padding: 0 9px; } .mark span { display: none; } .mystats { grid-template-columns: repeat(3, 1fr); } .drop { grid-column: 1 / -1; } }
+@media (max-width: 900px) {
+  .ask { grid-template-columns: 1fr; padding: 18px 18px; gap: 14px; } .offer { flex-wrap: wrap; }
+  header .wrap { gap: 8px; } .me .nick { display: none; } .wrap { padding: 0 16px; } .banner { flex-wrap: wrap; } .row { flex-wrap: wrap; } .section.people { margin-inline: 0; }
+}
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+html.still * { animation: none !important; transition: none !important; }      /* (a preview is a still picture) */
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <a class="mark" href="#top" aria-label="Bambi Market"><img data-art="logo.png" alt="Bambi"><span data-t="market"></span></a>
+    <label class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#4A2F27" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M16 16l5 5"/></svg>
+      <input id="q" type="search" autocomplete="off" spellcheck="false">
+    </label>
+    <div class="seg sort" id="sort" role="group"></div>
+    <button class="me" id="me" type="button"><span class="av dot" id="me-av"></span><span class="nick" id="me-nick"></span><span class="stars" id="stars"><img data-art="star.png" alt=""><b id="starcount">0</b></span></button>
+    <div class="seg" role="group" aria-label="Language"><button id="lang-ko" type="button">한</button><button id="lang-en" type="button">EN</button></div>
+  </div>
+</header>
+
+<main class="wrap" id="top">
+  <nav aria-label="게임" style="display:flex;gap:12px;flex-wrap:wrap;margin:12px 0"><a class="btn" href="/demon-gate/">악마의 문 · 혼자 플레이</a><a class="btn" href="/table/">오목 · Quest와 두 사람</a></nav>
+  <!-- the first visit: the host has made a name up so that everything works at once; the user chooses their own here -->
+  <div class="banner name" id="namebanner" hidden>
+    <span class="av" id="name-av"></span>
+    <div class="grow"><h3 data-t="nameTitle"></h3><p id="name-sub"></p></div>
+    <form id="nameform"><input class="field" id="name-in" maxlength="16" autocomplete="off" spellcheck="false"><button class="btn sun" type="submit" data-t="nameGo"></button></form>
+  </div>
+  <div class="banner off" id="offline" hidden>
+    <svg viewBox="0 0 48 48" fill="#FFF8EA" stroke="#4A2F27" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M14 34a8 8 0 0 1 .6-16A11 11 0 0 1 35.5 17 8.5 8.5 0 0 1 35 34z"/><path d="M19 24l1.6 1.6M20.6 24L19 25.6M28 24l1.6 1.6M29.6 24L28 25.6" stroke-width="2.2"/><path d="M20.5 30q3.5-2.6 7 0" fill="none" stroke-width="2.2"/></svg>
+    <div class="grow"><h3 id="off-title"></h3><p id="off-sub"></p></div>
+  </div>
+
+  <!-- Talking to Bambi. New things are not made with a form: the user ASKS Bambi - in the room by voice, or here by
+       typing - and goes on with other things while it works. On the left what the user typed and what Bambi last
+       said; on the right the box to type in, what it is making just now, and - when it has finished something -
+       its question whether to put that up for sale. -->
+  <section class="ask" id="ask">
+    <div class="says">
+      <svg class="avatar" viewBox="0 0 96 96" aria-hidden="true">
+        <!-- the partner as a sticker: a small face in a yellow bonnet -->
+        <circle cx="48" cy="50" r="40" fill="#FFF6E1" stroke="rgba(74,47,39,.15)" stroke-width="1.5"/>
+        <path d="M16 54C12 28 28 12 48 12s36 16 32 42c-3-16-15-26-32-26S19 38 16 54z" fill="#FFD466" stroke="#4A2F27" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="48" cy="54" r="26" fill="#FFE9D6" stroke="#4A2F27" stroke-width="3"/>
+        <path d="M24 44c6-12 16-17 24-17s18 5 24 17c-8-6-16-9-24-9s-16 3-24 9z" fill="#FFD466" stroke="#4A2F27" stroke-width="3" stroke-linejoin="round"/>
+        <circle cx="39" cy="56" r="3.2" fill="#4A2F27"/><circle cx="57" cy="56" r="3.2" fill="#4A2F27"/>
+        <circle cx="33" cy="63" r="4.2" fill="#F8B4C8" opacity=".85"/><circle cx="63" cy="63" r="4.2" fill="#F8B4C8" opacity=".85"/>
+        <path d="M43.5 64.5q4.5 4 9 0" fill="none" stroke="#4A2F27" stroke-width="2.6" stroke-linecap="round"/>
+        <circle cx="76" cy="20" r="6" fill="#FFF6E1" stroke="#4A2F27" stroke-width="3"/>
+      </svg>
+      <div class="talkcol">
+        <div class="mine" id="mine" hidden></div>
+        <div class="bubble"><span class="who" id="who"></span><span class="line" id="said"></span></div>
+      </div>
+    </div>
+    <div class="askside">
+      <form class="talkbox" id="talk">
+        <input id="talktext" type="text" autocomplete="off" maxlength="300">
+        <button class="btn go" id="talkbtn" type="submit"></button>
+      </form>
+      <div class="tries" id="tries"></div>
+      <p class="hint" id="askhint"></p>
+      <div class="progress" id="progress"><span class="dots"><i></i><i></i><i></i></span><span id="making"></span><span class="bar" id="makingbar"><i></i></span></div>
+      <div class="offer" id="offer" hidden></div>
+    </div>
+  </section>
+
+  <nav class="tabs" id="tabs"></nav>
+  <div id="shelf"></div>
+  <footer data-t="foot"></footer>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" aria-hidden="true"></aside>
+<aside class="drawer profile" id="profile" aria-hidden="true"></aside>
+<div class="toast" id="toast" role="status"></div>
+<audio id="audio" loop preload="none"></audio>
+<input type="file" id="file" accept=".bambi" hidden>
+
+<script>
+"use strict";
+// ------------------------------------------------------------------ where things come from
+// (a preview page bakes a sample of the state in and points the art at files: the page is then looked at without a host)
+const PREVIEW = window.__PREVIEW__ || null;
+const ART = PREVIEW ? PREVIEW.art : "/market/art/";
+const WORLD = PREVIEW ? PREVIEW.world : "/world/";
+if (PREVIEW) document.documentElement.classList.add("still");
+const $ = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+// ------------------------------------------------------------------ words, in the two languages the partner speaks
+const T = {
+  en: {
+    market: "Market", search: "Search things and sellers ...",
+    sorts: { popular: "Popular", new: "New", price: "Price" },
+    hostDown: "Bambi's host is not answering", hostDownSub: "Is the companion running on this PC? The page tries again by itself.",
+    hubDown: "The marketplace cannot be reached right now", hubDownSub: "This is the list as it was last seen. What you have still works; buying and selling come back with the connection.",
+    nameTitle: "Choose your nickname", nameSub: n => `For now you are shown as “${n}”. It is the name on everything you sell.`, namePh: "2 to 16 characters", nameGo: "That's me",
+    askHint: "Ask Bambi for new things - what it makes shows up here under My shop.",
+    talkPh: "Say something to Bambi - e.g. will you make me a little flower pot?", talkSend: "Send", talkDown: "Bambi cannot hear that right now",
+    tries: ["Will you make me an umbrella?", "Make a game about catching stars", "Play some music"],
+    makingNow: (kind, name, pct) => `Making ${kind ? "a " + kind.toLowerCase() : "something"}${name ? " · " + name : ""} · ${pct}%`,
+    offerAsk: "Put it up in the marketplace?", offerYes: "Put it up", offerNo: "Keep it",
+    tabs: { all: "All", item: "Furniture", skill: "Skills", game: "Games", ambience: "Surroundings", ability: "Abilities", mine: "My shop" },
+    kinds: { item: "Thing", skill: "Skill", game: "Game", ambience: "Surroundings", ability: "Ability" },
+    people: "Made by people", peopleSub: "things others made and put up for sale",
+    haveGone: "Yours, no longer on sale",
+    free: "Free", have: "Yours", onSale: "On sale", gone: "Off sale", installed: "Installed", yours: "Mine", official: "Official shop",
+    buy: "Buy", get: "Get", install: "Install", remove: "Remove", manage: "Manage in my shop", short: n => `${n} stars short`, offlineBtn: "Offline", goneBtn: "No longer sold",
+    confirm: "Buy this?", cPrice: "Price", cSeller: "Seller", cAfter: "Your stars after", cancel: "Cancel", buyNow: "Buy",
+    ownedNote: "It is yours: installing it again costs nothing.", removeNote: "It stays yours when removed.",
+    moreBy: "See everything by this seller", sellerFilter: "Seller", got: n => `${n} got it`, likes: "likes", like: "Like",
+    gains: "What Bambi gains", does: "What happens", say: "Ask for it with", how: "How to play", tune: "Its tune", listen: "Listen", stop: "Stop", mood: "Its surroundings", tryIt: "Try saying", goodFor: "Good for",
+    seconds: "seconds", lives: "lives", pace: "pace", enemy: "Watch out for", pickup: "Collect", bpm: "bpm",
+    myOnSale: "On sale", mySales: "Times sold", myEarned: "Stars earned", selling: "What I sell", unsold: "Mine, not on sale yet",
+    sold: n => `sold ${n} time${n === 1 ? "" : "s"}`, earned: n => `${n} stars earned`, notSold: "nobody has bought it yet", away: "put away",
+    start: "Start selling", stopSell: "Stop selling", savePrice: "Save price", exportB: "Export", importB: "Import a module", importSub: "Drop a .bambi file from a friend here, or click to pick one",
+    emptyMine: "Your shop is empty", emptyMineSub: "Ask Bambi to make something - a thing, a game, an ability. It shows up here, and you decide whether to sell it.",
+    emptySearch: "Nothing here matches", emptySearchSub: "Try another word - or have Bambi make it.",
+    foot: "Stars are the shop's own play money: everyone starts with 300, and more come only from selling what you made.",
+    acts: { music: "Music", dance: "Dance", ambience: "Surroundings", activity: "Activity", emote: "Emote", say: "Says", rain: "Rain", goto: "Walks to", wait: "Waits" },
+    uses: { sit: "sitting", table: "working", sleep: "napping", read: "reading", play: "playing", music: "music", light: "light", decor: "decoration", eat: "a treat" },
+    templates: { tennis: "Tennis", rps: "Rock paper scissors", pop: "Pop", redlight: "Red light", survival: "Survival" },
+    bubbleIdle: "Tell me what to make, or pick something from the shop!",
+    profile: "My profile", rename: "Nickname", renameGo: "Change", renameHint: "2 to 16 characters: letters, digits, spaces, - and _. One name per person.",
+    hub: "Marketplace server", online: "connected", offline: "not reachable", hubOwn: "This PC's own marketplace. To share one with friends, run the hub on one PC with --lan and set LP_MARKET_HUB=http://that-pc:47620 on the others.",
+    hubShared: "A shared marketplace: everyone who uses this address buys and sells with each other.",
+    myStars: "Stars", bought: "What I got", noBought: "Nothing yet. What you buy stays yours for good.", paid: "paid", importing: "Importing ...", importBad: "That is not a .bambi file",
+  },
+  ko: {
+    market: "마켓", search: "물건이나 판매자 찾기 ...",
+    sorts: { popular: "인기순", new: "최신순", price: "가격순" },
+    hostDown: "밤비 호스트가 응답하지 않아요", hostDownSub: "이 PC에서 컴패니언이 실행 중인가요? 연결되면 저절로 다시 보여 드려요.",
+    hubDown: "지금은 상점 서버에 연결할 수 없어요", hubDownSub: "마지막으로 본 목록을 보여 드려요. 가지고 있는 건 그대로 쓸 수 있고, 사고파는 건 연결되면 다시 할 수 있어요.",
+    nameTitle: "닉네임을 정해 주세요", nameSub: n => `지금은 임시 이름 “${n}”(으)로 보여요. 상점에서 물건을 팔 때 이 이름이 붙어요.`, namePh: "2~16자", nameGo: "이걸로 할게요",
+    askHint: "새로운 건 밤비에게 말로 부탁하세요 - 다 만들면 여기 '내 상점'에 나타나요.",
+    talkPh: "밤비에게 말해 보세요 - 예: 작은 화분 하나 만들어줄래?", talkSend: "보내기", talkDown: "지금은 밤비가 들을 수 없어요",
+    tries: ["우산 만들어줄래?", "별 잡는 게임 만들어볼래?", "노래 틀어줘"],
+    makingNow: (kind, name, pct) => `${kind || "새로운 것"} 만드는 중${name ? " · " + name : ""} · ${pct}%`,
+    offerAsk: "마켓플레이스에 공개할까요?", offerYes: "올리기", offerNo: "그냥 둘게요",
+    tabs: { all: "전체", item: "가구", skill: "스킬", game: "게임", ambience: "분위기", ability: "능력", mine: "내 상점" },
+    kinds: { item: "물건", skill: "스킬", game: "게임", ambience: "분위기", ability: "능력" },
+    people: "이웃들이 만든 것", peopleSub: "다른 사람들이 만들어서 올린 물건이에요",
+    haveGone: "가지고 있지만 이제 안 파는 것",
+    free: "무료", have: "보유 중", onSale: "판매 중", gone: "판매 종료", installed: "설치됨", yours: "내 것", official: "공식 상점",
+    buy: "구매", get: "받기", install: "설치", remove: "빼기", manage: "내 상점에서 관리", short: n => `별 ${n}개 부족`, offlineBtn: "오프라인", goneBtn: "판매 종료",
+    confirm: "구매할까요?", cPrice: "가격", cSeller: "판매자", cAfter: "구매 후 내 별", cancel: "취소", buyNow: "구매하기",
+    ownedNote: "이미 내 것이에요. 다시 설치해도 별이 들지 않아요.", removeNote: "빼도 계속 내 것이에요.",
+    moreBy: "이 판매자의 다른 물건 보기", sellerFilter: "판매자", got: n => `${n}명이 받음`, likes: "좋아요", like: "좋아요",
+    gains: "밤비가 얻는 것", does: "이렇게 해요", say: "이렇게 말해요", how: "하는 방법", tune: "음악", listen: "듣기", stop: "멈춤", mood: "분위기", tryIt: "이렇게 말해 보세요", goodFor: "쓰임새",
+    seconds: "초", lives: "목숨", pace: "빠르기", enemy: "조심", pickup: "모으기", bpm: "bpm",
+    myOnSale: "판매 중", mySales: "판매 횟수", myEarned: "번 별", selling: "판매 중인 물건", unsold: "아직 안 파는 내 것",
+    sold: n => `${n}번 팔림`, earned: n => `별 ${n}개 벌었어요`, notSold: "아직 아무도 안 샀어요", away: "넣어 둠",
+    start: "판매 시작", stopSell: "판매 중지", savePrice: "가격 저장", exportB: "내보내기", importB: "모듈 가져오기", importSub: "친구에게 받은 .bambi 파일을 여기에 놓거나, 눌러서 골라 주세요",
+    emptyMine: "아직 내 상점이 비어 있어요", emptyMineSub: "밤비에게 물건이나 게임, 능력을 만들어 달라고 말해 보세요. 여기에 나타나고, 팔지 말지는 내가 정해요.",
+    emptySearch: "찾는 게 없어요", emptySearchSub: "다른 말로 찾아보거나, 밤비에게 만들어 달라고 해 보세요.",
+    foot: "별은 상점에서만 쓰는 놀이 돈이에요. 누구나 300개로 시작하고, 내가 만든 걸 팔아야만 더 벌 수 있어요.",
+    acts: { music: "음악", dance: "춤", ambience: "분위기", activity: "행동", emote: "표정", say: "말", rain: "비", goto: "이동", wait: "기다림" },
+    uses: { sit: "앉기", table: "책상", sleep: "낮잠", read: "읽기", play: "놀이", music: "음악", light: "조명", decor: "장식", eat: "간식" },
+    templates: { tennis: "테니스", rps: "가위바위보", pop: "터뜨리기", redlight: "무궁화 꽃이", survival: "서바이벌" },
+    bubbleIdle: "뭘 만들지 말해 주거나, 상점에서 골라 봐!",
+    profile: "내 프로필", rename: "닉네임", renameGo: "바꾸기", renameHint: "2~16자. 글자, 숫자, 띄어쓰기, - 와 _ 를 쓸 수 있어요. 한 사람에 이름 하나예요.",
+    hub: "상점 서버", online: "연결됨", offline: "연결 안 됨", hubOwn: "이 PC 혼자 쓰는 상점이에요. 친구들과 같이 쓰려면 한 PC에서 허브를 --lan 으로 켜고, 다른 PC에는 LP_MARKET_HUB=http://그PC주소:47620 을 설정해 주세요.",
+    hubShared: "여럿이 같이 쓰는 상점이에요. 이 주소를 쓰는 모두가 서로 사고팔아요.",
+    myStars: "가진 별", bought: "내가 산 것", noBought: "아직 없어요. 한 번 산 건 계속 내 것이에요.", paid: "지불", importing: "가져오는 중 ...", importBad: ".bambi 파일이 아니에요",
+  },
+};
+
+// ------------------------------------------------------------------ pictures: inline drawings in the stickers' own hand, for what has no picture of its own
+const INK = "#4A2F27";
+const G = {
+  chair: `<rect x="14" y="7" width="20" height="18" rx="6" fill="#F8B4C8"/><rect x="10" y="24" width="28" height="8" rx="4"/><path d="M15 32l-1 9M33 32l1 9"/>`,
+  desk: `<rect x="5" y="14" width="38" height="8" rx="3.5" fill="#E9C99A"/><path d="M10 22v19M38 22v19"/><rect x="23" y="22" width="15" height="10" rx="2.5"/><path d="M29 27h3"/>`,
+  bed: `<rect x="5" y="10" width="8" height="27" rx="3.5" fill="#E9C99A"/><rect x="9" y="23" width="34" height="12" rx="5" fill="#BFD9F2"/><rect x="14" y="17" width="12" height="8" rx="4"/><path d="M9 35v6M40 35v6"/>`,
+  sofa: `<rect x="10" y="11" width="28" height="18" rx="7" fill="#C7B8F5"/><rect x="4" y="20" width="10" height="16" rx="5" fill="#C7B8F5"/><rect x="34" y="20" width="10" height="16" rx="5" fill="#C7B8F5"/><rect x="13" y="26" width="22" height="9" rx="3.5"/><path d="M13 36v5M35 36v5"/>`,
+  book: `<rect x="10" y="7" width="28" height="34" rx="5" fill="#FFD466"/><path d="M17 7v34"/><path d="M26 7v12l3.5-3 3.5 3V7" fill="#FF9B85"/>`,
+  ball: `<circle cx="24" cy="24" r="16" fill="#FF9B85"/><path d="M9.5 19c9 6 20 6 29 0M12 34c7-5 17-5 24 0" fill="none"/>`,
+  lamp: `<path d="M17 7h14l7 17H10z" fill="#FFD466"/><path d="M24 24v13"/><rect x="14" y="37" width="20" height="5" rx="2.5"/>`,
+  plant: `<path d="M24 28c-11-3-12-14-6-19 7 4 8 12 6 19zM24 28c9-1 14-9 11-17-8 2-12 9-11 17z" fill="#A8DDB5"/><path d="M14 28h20l-3 13H17z" fill="#FF9B85"/>`,
+  cup: `<path d="M9 17h24v12a9 9 0 0 1-9 9h-6a9 9 0 0 1-9-9z"/><path d="M33 21h2.5a5 5 0 0 1 0 10H33" fill="none"/><path d="M16 6c2.5 2.5-2.5 4 0 7M25 6c2.5 2.5-2.5 4 0 7" fill="none"/>`,
+  record: `<rect x="5" y="9" width="38" height="30" rx="7" fill="#E9C99A"/><circle cx="21" cy="24" r="10.5" fill="#4A2F27"/><circle cx="21" cy="24" r="3.2" fill="#FFD466"/><path d="M37 14v9l-6 7" fill="none"/>`,
+  speaker: `<rect x="12" y="5" width="24" height="38" rx="7" fill="#8FD3F4"/><circle cx="24" cy="29" r="7.5"/><circle cx="24" cy="29" r="2" fill="#4A2F27"/><circle cx="24" cy="13.5" r="3"/>`,
+  food: `<path d="M7 38V27l32-9v20z"/><path d="M7 27l32-9v5L7 32z" fill="#F8B4C8"/><circle cx="20" cy="15" r="4.5" fill="#FF9B85"/><path d="M4 42h40"/>`,
+  toy: `<path d="M24 10V5"/><circle cx="24" cy="4.5" r="1.8" fill="#FF9B85"/><rect x="12" y="10" width="24" height="17" rx="6" fill="#FFD466"/><circle cx="19.5" cy="18.5" r="1.6" fill="#4A2F27"/><circle cx="28.5" cy="18.5" r="1.6" fill="#4A2F27"/><rect x="16" y="29" width="16" height="12" rx="3.5"/><path d="M16 32l-5 4M32 32l5 4"/>`,
+  box: `<path d="M7 16l17-9 17 9v17l-17 9-17-9z" fill="#E9C99A"/><path d="M7 16l17 9 17-9M24 25v17" fill="none"/>`,
+  rain: `<path d="M14 27a7.5 7.5 0 0 1 .5-15A10 10 0 0 1 33.5 11 8 8 0 0 1 34 27z"/><path d="M16 33l-2 6M24 33l-2 6M32 33l-2 6" stroke="#4C9BD1"/>`,
+  stars: `<path d="M31 7a16 16 0 1 0 10 25A13 13 0 0 1 31 7z" fill="#FFD466"/><path d="M13 7l1.7 4.3L19 13l-4.3 1.7L13 19l-1.7-4.3L7 13l4.3-1.7z"/>`,
+  spots: `<path d="M24 12V4"/><circle cx="24" cy="26" r="14" fill="#C7B8F5"/><path d="M10 26h28M24 12v28M13 18c7 4 15 4 22 0M13 34c7-4 15-4 22 0" fill="none"/>`,
+  aurora: `<path d="M4 15c7-9 13-9 20 0s13 9 20 0v9c-7 9-13 9-20 0s-13-9-20 0z" fill="#A8DDB5"/><path d="M4 28c7-9 13-9 20 0s13 9 20 0v9c-7 9-13 9-20 0s-13-9-20 0z" fill="#C7B8F5"/>`,
+  petals: `<circle cx="24" cy="12" r="7" fill="#F8B4C8"/><circle cx="35.4" cy="20.3" r="7" fill="#F8B4C8"/><circle cx="31" cy="33.7" r="7" fill="#F8B4C8"/><circle cx="17" cy="33.7" r="7" fill="#F8B4C8"/><circle cx="12.6" cy="20.3" r="7" fill="#F8B4C8"/><circle cx="24" cy="24" r="5.5" fill="#FFD466"/>`,
+  snow: `<path d="M24 5v38M7.5 14.5l33 19M7.5 33.5l33-19M19 9l5 4 5-4M19 39l5-4 5 4" fill="none"/>`,
+  bubbles: `<circle cx="18" cy="28" r="11" fill="#8FD3F4"/><circle cx="34" cy="15" r="6.5"/><circle cx="36" cy="35" r="4"/>`,
+  peak: `<circle cx="35" cy="12" r="5" fill="#FFD466"/><path d="M4 40l14-24 8 12 5-7 13 19z" fill="#BFD9F2"/><path d="M13.5 24l4.5-8 5 7.5-3 1.5-2-2-2.5 2.5z" fill="#fff"/>`,
+  coast: `<circle cx="34" cy="13" r="6" fill="#FFD466"/><path d="M4 30c5-5 9-5 13 0s9 5 13 0 9-5 14 0v10H4z" fill="#8FD3F4"/><path d="M4 39c8-3 30-3 40 0v5H4z" fill="#F1CE96"/>`,
+  none: `<circle cx="24" cy="24" r="9" fill="#FFD466"/><path d="M24 5v6M24 37v6M5 24h6M37 24h6M10.5 10.5l4.3 4.3M33.2 33.2l4.3 4.3M10.5 37.5l4.3-4.3M33.2 14.8l4.3-4.3" fill="none"/>`,
+  calc: `<rect x="10" y="5" width="28" height="38" rx="6" fill="#A8DDB5"/><rect x="15" y="10" width="18" height="9" rx="2.5"/><g fill="#4A2F27" stroke="none"><circle cx="17.5" cy="26.5" r="2"/><circle cx="24" cy="26.5" r="2"/><circle cx="30.5" cy="26.5" r="2"/><circle cx="17.5" cy="34" r="2"/><circle cx="24" cy="34" r="2"/><circle cx="30.5" cy="34" r="2"/></g>`,
+  translate: `<rect x="4" y="6" width="25" height="20" rx="7" fill="#8FD3F4"/><rect x="19" y="22" width="25" height="20" rx="7"/><g font-family="Jua, sans-serif" font-size="13" text-anchor="middle" fill="#4A2F27" stroke="none"><text x="16.5" y="21">가</text><text x="31.5" y="37">A</text></g>`,
+  ideas: `<path d="M24 5a13 13 0 0 1 8 23.2V33H16v-4.8A13 13 0 0 1 24 5z" fill="#FFD466"/><path d="M18 38h12M21 42.5h6" fill="none"/>`,
+  proofread: `<path d="M9 39l3-11L31 9l8 8-19 19z" fill="#FFD466"/><path d="M12 28l8 8M27 13l8 8" fill="none"/>`,
+  ability: `<path d="M8 9h32a4 4 0 0 1 4 4v17a4 4 0 0 1-4 4H22l-9 8v-8H8a4 4 0 0 1-4-4V13a4 4 0 0 1 4-4z" fill="#A8DDB5"/><path d="M24 14l1.9 5 5 1.9-5 1.9-1.9 5-1.9-5-5-1.9 5-1.9z"/>`,
+  headphones: `<path d="M9 30v-6a15 15 0 0 1 30 0v6" fill="none"/><rect x="5" y="27" width="10" height="15" rx="5" fill="#FFD466"/><rect x="33" y="27" width="10" height="15" rx="5" fill="#FFD466"/>`,
+  moon: `<path d="M30 6a17 17 0 1 0 12 26A14 14 0 0 1 30 6z" fill="#FFD466"/><path d="M7 8h8l-8 9h8" fill="none"/>`,
+  bat: `<path d="M18 23C12 14 6 14 3 17c3 1 4 5 3 9 3-2 5-1 6 2 2-2 4-2 6-1z" fill="#C7B8F5"/><path d="M30 23c6-9 12-9 15-6-3 1-4 5-3 9-3-2-5-1-6 2-2-2-4-2-6-1z" fill="#C7B8F5"/><path d="M19 19l-.5-7 5 4M29 19l.5-7-5 4" fill="#C7B8F5"/><ellipse cx="24" cy="27" rx="7.5" ry="9.5" fill="#C7B8F5"/><circle cx="21" cy="25" r="1.5" fill="#4A2F27" stroke="none"/><circle cx="27" cy="25" r="1.5" fill="#4A2F27" stroke="none"/><path d="M21.5 30l1.2 2.6 1.3-2.6 1.3 2.6 1.2-2.6" fill="none" stroke-width="1.8"/>`,
+  bunny: `<ellipse cx="18.5" cy="13" rx="4" ry="9" transform="rotate(-12 18.5 13)" fill="#EFE7DA"/><ellipse cx="29.5" cy="13" rx="4" ry="9" transform="rotate(12 29.5 13)" fill="#EFE7DA"/><circle cx="24" cy="30" r="12.5" fill="#EFE7DA"/><circle cx="19.5" cy="28.5" r="1.6" fill="#4A2F27" stroke="none"/><circle cx="28.5" cy="28.5" r="1.6" fill="#4A2F27" stroke="none"/><path d="M22 33q2 2 4 0" fill="none" stroke-width="2"/>`,
+  ghost: `<path d="M11 41V22a13 13 0 0 1 26 0v19l-4.3-4-4.4 4-4.3-4-4.3 4-4.4-4z"/><circle cx="19.5" cy="22" r="1.9" fill="#4A2F27" stroke="none"/><circle cx="28.5" cy="22" r="1.9" fill="#4A2F27" stroke="none"/><path d="M21 28.5q3 3 6 0" fill="none" stroke-width="2"/>`,
+  gem: `<path d="M14 9h20l8 11-18 20L6 20z" fill="#8FD3F4"/><path d="M6 20h36M14 9l5 11 5 20 5-20 5-11M19 20l5-11 5 11" fill="none" stroke-width="2"/>`,
+};
+const glyph = name => `<svg viewBox="0 0 48 48" fill="#FFF8EA" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${G[name] || G.none}</svg>`;
+const TILES = { tennis: "tile-tennis.png", rps: "tile-rps.png", pop: "tile-pop.png", redlight: "tile-redlight.png" };
+const BY_ID = { "skill-dance": "art:skill-dance.png", "skill-music": "art:skill-music.png", "skill-dj": "headphones", "skill-rainyfocus": "rain", "skill-lullaby": "moon",
+                "game-vampire": "bat", "game-dustbunnies": "bunny", "ability-calc": "calc", "ability-translate": "translate", "ability-ideas": "ideas", "ability-proofread": "proofread" };
+// small signs, drawn in the same ink
+const ICON = {
+  heart: `<svg viewBox="0 0 20 20" fill="none" stroke="${INK}" stroke-width="2.2" stroke-linejoin="round"><path d="M10 17S2.5 12.4 2.5 7.4A4 4 0 0 1 10 5.3a4 4 0 0 1 7.5 2.1C17.5 12.4 10 17 10 17z"/></svg>`,
+  got: `<svg viewBox="0 0 20 20" fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3v9M6 8.5l4 4 4-4M4 16.5h12"/></svg>`,
+  check: `<svg class="official" viewBox="0 0 20 20"><path d="M10 1.5l2.3 1.7 2.9-.2 1 2.7 2.4 1.6-.8 2.7.8 2.7-2.4 1.6-1 2.7-2.9-.2L10 18.5l-2.3-1.7-2.9.2-1-2.7-2.4-1.6.8-2.7-.8-2.7 2.4-1.6 1-2.7 2.9.2z" fill="#8FD3F4" stroke="${INK}" stroke-width="1.6" stroke-linejoin="round"/><path d="M6.6 10.2l2.4 2.3 4.4-4.6" fill="none" stroke="${INK}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
+  x: `<svg viewBox="0 0 16 16" stroke="${INK}" stroke-width="2.8" stroke-linecap="round"><path d="M2 2l12 12M14 2L2 14"/></svg>`,
+  shop: `<svg viewBox="0 0 20 20" fill="none" stroke="${INK}" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 8l1.6-5h11.8l1.6 5M2.5 8a2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0 2.5 2.5 0 0 0 5 0M4 10.5V17h12v-6.5M8 17v-4h4v4"/></svg>`,
+  out: `<svg viewBox="0 0 20 20" fill="none" stroke="${INK}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 12V3M6.5 6.5L10 3l3.5 3.5M4 11v5.5h12V11"/></svg>`,
+  inbox: `<svg viewBox="0 0 48 48" fill="#FFF8EA" stroke="${INK}" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M7 25l5-15h24l5 15v13H7z"/><path d="M7 25h10a7 7 0 0 0 14 0h10" fill="#FFD466"/><path d="M24 4v12M19.5 12l4.5 4.5 4.5-4.5" fill="none"/></svg>`,
+};
+
+/** The round sticker of a module: its own picture when it has one; otherwise one by what it is. */
+function badge(m) {
+  const d = m.detail || {};
+  if (m.icon) return `<div class="badge"><div class="face"><img src="${esc(WORLD + m.icon)}" alt="" loading="lazy"></div></div>`;
+  const known = BY_ID[m.id];
+  if (known && known.startsWith("art:")) return tile(known.slice(4));
+  if (known) return face(glyph(known));
+  if (m.kind === "game") return TILES[m.template] ? tile(TILES[m.template]) : face(glyph("ghost"));
+  if (m.kind === "skill") return tile("skill-any.png");
+  if (m.kind === "ambience") return face(glyph(G[d.pattern] ? d.pattern : "none"));
+  if (m.kind === "ability") return face(glyph("ability"));
+  return d.shape && d.shape !== "box" && G[d.shape] ? face(glyph(d.shape)) : tile("item-any.png");
+}
+// a picture that cannot be fetched (the file is gone) gives way to a plain drawing rather than a broken frame
+document.addEventListener("error", e => { const f = e.target.tagName === "IMG" && e.target.closest(".face"); if (f) f.innerHTML = glyph("none"); }, true);
+const tile = file => `<div class="badge tile"><img src="${ART}${file}" alt="" loading="lazy"></div>`;
+const face = inner => `<div class="badge"><div class="face">${inner}</div></div>`;
+
+/** Somebody's face in the shop: a round patch in a colour that belongs to their name, with its first letter. */
+const FACES = ["#FFD466", "#8FD3F4", "#F8B4C8", "#C7B8F5", "#FF9B85", "#A8DDB5", "#F1CE96"];
+function av(name, cls) {
+  name = String(name || "?").trim() || "?";
+  let h = 0; for (const ch of name) h = (h * 31 + ch.codePointAt(0)) >>> 0;
+  return `<span class="av${cls ? " " + cls : ""}" style="--c:${FACES[h % FACES.length]}">${esc([...name][0])}</span>`;
+}
+const starImg = () => `<img src="${ART}star.png" alt="">`;
+
+// ------------------------------------------------------------------ state
+let state = PREVIEW ? PREVIEW.state : null;
+let lang = localStorage.getItem("bambi-market-lang") || "";      // "" = follow the language the user last spoke to the partner
+let tab = (PREVIEW && PREVIEW.tab) || "all", query = "", sort = (PREVIEW && PREVIEW.sort) || "popular", seller = (PREVIEW && PREVIEW.seller) || "";
+let openId = (PREVIEW && PREVIEW.open) || "", confirmId = PREVIEW && PREVIEW.confirm ? openId : "", profileOpen = !!(PREVIEW && PREVIEW.profile);
+let typed = (PREVIEW && PREVIEW.typed) || "", typedAt = 0, typedSaidAt = -1;      // what the user last typed to Bambi, when, and what Bambi's last line was then (until a newer one comes it is thinking)
+let drawn = "", drawnDrawer = "", drawnProfile = "", drawnOffer = "", waiting = new Set(), seen = null, seenRevision = -1, toastTimer = 0, playing = "", lastNotice = "", shownStars = null, firstDraw = true, hostUp = true;
+const drafts = {};                                                  // prices being set in "my shop", by id, until they are saved
+const L = () => T[lang || (state && state.korean === false ? "en" : "ko")];
+const isKo = () => L() === T.ko;
+/** A listing's words in the page's language (what came with the partner has Korean lines of its own). */
+const nameOf = m => (isKo() && m.alias) || m.name;
+const givesOf = m => (isKo() && m.koGives) || m.gives;
+const sumOf = m => (isKo() && m.koSummary) || m.summary;
+const sellerOf = m => m.seller || "?";
+// A kind goes into class names: only the five kinds there are ever do (a listing comes from a hub, and a hub is somebody else's server).
+const KINDS = ["item", "skill", "game", "ambience", "ability"];
+const kindOf = m => KINDS.includes(m.kind) ? m.kind : "item";
+// A colour goes into a style attribute: only #RRGGBB ever does.
+const colour = c => /^#[0-9a-fA-F]{6}$/.test(c || "") ? c : "#FFF8EA";
+const hangul = s => /[가-힣]/.test(s || "");
+/** What the partner gains, as the drawer's headline. A seller writes that line in their own language: on a Korean page an English one gives way to the seller's own description. */
+const headline = m => { const g = givesOf(m); return !g || (isKo() && !hangul(g) && hangul(sumOf(m))) ? "" : g; };
+
+function chrome() {
+  const t = L();
+  document.documentElement.lang = isKo() ? "ko" : "en";
+  document.querySelectorAll("[data-t]").forEach(e => { e.textContent = t[e.dataset.t]; });
+  $("q").placeholder = t.search; $("name-in").placeholder = t.namePh;
+  $("askhint").textContent = t.askHint;
+  $("talktext").placeholder = t.talkPh; $("talkbtn").textContent = t.talkSend;
+  $("tries").innerHTML = t.tries.map(x => `<button type="button" class="chip" data-try="${esc(x)}">${esc(x)}</button>`).join("");
+  $("lang-ko").classList.toggle("on", isKo()); $("lang-en").classList.toggle("on", !isKo());
+  $("sort").innerHTML = ["popular", "new", "price"].map(s => `<button type="button" class="${sort === s ? "on" : ""}" data-sort="${s}">${esc(t.sorts[s])}</button>`).join("");
+}
+document.querySelectorAll("[data-art]").forEach(e => { e.src = ART + e.dataset.art; });
+
+// ------------------------------------------------------------------ the shop
+function matches(m) {
+  if (seller && sellerOf(m) !== seller) return false;
+  if (!query) return true;
+  const d = m.detail || {};
+  const hay = [m.name, m.summary, m.gives, m.seller, m.kind, m.alias, m.koGives, m.koSummary, d.song, d.howTo, d.enemyName, d.pickupName, ...(d.tags || []), ...(d.phrases || [])].join(" ").toLowerCase();
+  return query.toLowerCase().split(/\s+/).every(w => hay.includes(w));
+}
+const ORDER = {
+  popular: (a, b) => b.installs - a.installs || b.likes - a.likes || b.created - a.created,
+  new: (a, b) => b.created - a.created || b.installs - a.installs,
+  price: (a, b) => a.price - b.price || b.installs - a.installs,
+};
+
+/** What a thing costs - or that it is the user's already. */
+function priceTag(m, t) {
+  if (m.mine) return m.listed ? `<span class="price mine">${starImg()}${m.price || esc(t.free)}</span>` : `<span class="price have">${esc(t.yours)}</span>`;
+  if (m.owned) return `<span class="price have">${esc(t.have)}</span>`;
+  if (!m.listed) return `<span class="price gone">${esc(t.gone)}</span>`;
+  if (!m.price) return `<span class="price free">${esc(t.free)}</span>`;
+  return `<span class="price">${starImg()}${m.price}</span>`;
+}
+const who = (m, t) => `${av(sellerOf(m))}<span>${esc(sellerOf(m))}</span>${m.official ? ICON.check : ""}`;
+
+function card(m, t, i, showKind) {
+  const tag = showKind ? t.kinds[m.kind] : m.kind === "game" && m.template === "survival" ? t.templates.survival : "";
+  return `<article class="card k-${kindOf(m)}${firstDraw ? " in" : ""}" style="animation-delay:${Math.min(i, 14) * 28}ms" data-id="${esc(m.id)}" tabindex="0" role="button">
+    ${m.mine ? `<div class="ribbon mine">${esc(t.yours)}</div>` : m.installed ? `<div class="ribbon">${esc(t.installed)}</div>` : ""}
+    <div class="top">${tag ? `<span class="kindtag">${esc(tag)}</span>` : ""}</div>${badge(m)}
+    <div class="body">
+      <h3>${esc(nameOf(m))}</h3>
+      <div class="by">${who(m, t)}</div>
+      <p class="gives">${esc(m.official ? givesOf(m) || sumOf(m) : sumOf(m) || givesOf(m))}</p>
+      <div class="foot">${priceTag(m, t)}<span class="stats"><span title="${esc(t.got(m.installs))}">${ICON.got}${m.installs}</span><span title="${esc(t.likes)}">${ICON.heart}${m.likes}</span></span></div>
+    </div>
+  </article>`;
+}
+
+/** One line of "my shop": something of the user's own, with what it has earned and the price it is (or could be) sold at. */
+function row(m, t) {
+  const price = drafts[m.id] != null ? drafts[m.id] : m.listed ? m.price : 10;
+  const wait = waiting.has(m.id) ? " wait" : "";
+  const stepper = `<div class="stepper" data-stop><button type="button" data-step="-5" data-id="${esc(m.id)}" aria-label="-5">−</button><label>${starImg()}<input type="number" min="0" max="999" value="${price}" data-price="${esc(m.id)}" aria-label="${esc(t.cPrice)}"></label><button type="button" data-step="5" data-id="${esc(m.id)}" aria-label="+5">+</button></div>`;
+  const sub = m.listed
+    ? (m.sold > 0 ? `<b>${esc(t.sold(m.sold))}</b><span>${esc(t.earned(m.earned))}</span>` : `<span>${esc(t.notSold)}</span>`) + `<span class="stats"><span>${ICON.heart}${m.likes}</span></span>`
+    : `<span>${esc(sumOf(m) || givesOf(m) || "")}</span>`;
+  return `<div class="row k-${kindOf(m)}${m.listed ? "" : " unsold"}" data-id="${esc(m.id)}" tabindex="0" role="button">
+    ${badge(m)}
+    <div class="what"><h3>${esc(nameOf(m))}</h3><div class="sub"><span class="tag">${esc(t.kinds[m.kind])}</span>${!m.installed ? `<span class="tag" style="background:#fff">${esc(t.away)}</span>` : ""}${sub}</div></div>
+    <div class="acts" data-stop>
+      ${stepper}
+      ${m.listed ? `<button class="btn sun${wait}" data-do="setPrice" data-id="${esc(m.id)}" ${price === m.price ? "hidden" : ""}>${esc(t.savePrice)}</button><button class="btn${wait}" data-do="unpublish" data-id="${esc(m.id)}">${esc(t.stopSell)}</button>`
+                 : `<button class="btn go${wait}" data-do="publish" data-id="${esc(m.id)}">${esc(t.start)}</button>`}
+      <a class="btn quiet" href="/market/export/${encodeURIComponent(m.id)}.bambi" download title="${esc(t.exportB)} (.bambi)">${ICON.out}${esc(t.exportB)}</a>
+    </div>
+  </div>`;
+}
+
+function render() {
+  if (!state) return;
+  const t = L();
+  const list = state.list || [];
+  const onSale = list.filter(m => m.listed), mine = list.filter(m => m.mine);
+  const counts = { all: onSale.length, mine: mine.length };
+  for (const k of ["item", "skill", "game", "ambience", "ability"]) counts[k] = onSale.filter(m => m.kind === k).length;
+  const dots = { item: "--tan", skill: "--lav", game: "--rose", ambience: "--sky", ability: "--sage" };
+  const tabsHtml = ["all", "item", "skill", "game", "ambience", "ability"].map(k =>
+    `<button class="tab${tab === k ? " on" : ""}" data-tab="${k}">${dots[k] ? `<span class="dot" style="background:var(${dots[k]})"></span>` : ""}${esc(t.tabs[k])}<i>${counts[k]}</i></button>`).join("") +
+    `<button class="tab shop${tab === "mine" ? " on" : ""}" data-tab="mine">${ICON.shop}${esc(t.tabs.mine)}<i>${counts.mine}</i></button>`;
+
+  let shelf = "";
+  const emptyBox = (title, sub) => `<div class="empty"><img src="${ART}item-any.png" alt=""><h3>${esc(title)}</h3><p>${esc(sub)}</p></div>`;
+  // (whole rows only: one row of them, two when there are enough to fill two)
+  const perRow = Math.max(1, Math.floor(($("shelf").clientWidth + 22) / 258));
+  const peopleStrip = (items, t) => { const n = items.length >= perRow * 2 ? perRow * 2 : Math.min(items.length, perRow);
+    return items.length ? `<section class="section people"><h2>${esc(t.people)}<small>${esc(t.peopleSub)}</small></h2><div class="grid">${items.slice(0, n).map((m, i) => card(m, t, i, true)).join("")}</div></section>` : ""; };
+  const sectionOf = (title, items, sub, cls, showKind) => items.length ? `<section class="section${cls ? " " + cls : ""}"><h2>${esc(title)}<small>${items.length}${sub ? " · " + esc(sub) : ""}</small></h2><div class="grid">${items.map((m, i) => card(m, t, i, showKind)).join("")}</div></section>` : "";
+  if (tab === "mine") {
+    const selling = mine.filter(m => m.listed && matches(m)).sort(ORDER.new), unsold = mine.filter(m => !m.listed && matches(m));
+    shelf = `<div class="mystats">
+        <div class="stat"><b>${mine.filter(m => m.listed).length}</b><span>${esc(t.myOnSale)}</span></div>
+        <div class="stat"><b>${state.sales || 0}</b><span>${esc(t.mySales)}</span></div>
+        <div class="stat star"><b>${starImg()}${state.earned || 0}</b><span>${esc(t.myEarned)}</span></div>
+        <label class="drop" id="drop" for="file">${ICON.inbox}<span><b>${esc(t.importB)}</b><span>${esc(t.importSub)}</span></span></label>
+      </div>` +
+      (selling.length ? `<section class="section"><h2>${esc(t.selling)}<small>${selling.length}</small></h2><div class="rows">${selling.map(m => row(m, t)).join("")}</div></section>` : "") +
+      (unsold.length ? `<section class="section"><h2>${esc(t.unsold)}<small>${unsold.length}</small></h2><div class="rows">${unsold.map(m => row(m, t)).join("")}</div></section>` : "") +
+      (!selling.length && !unsold.length ? (query ? emptyBox(t.emptySearch, t.emptySearchSub) : emptyBox(t.emptyMine, t.emptyMineSub)) : "");
+  } else {
+    const kinds = tab === "all" ? ["item", "skill", "game", "ambience", "ability"] : [tab];
+    const shown = onSale.filter(matches).sort(ORDER[sort]);
+    // what other people made stands in front: this is a marketplace, not a catalogue
+    const people = tab === "all" && !seller ? shown.filter(m => !m.official && !m.mine) : [];
+    const gone = list.filter(m => !m.listed && !m.mine && m.owned && (tab === "all" || m.kind === tab) && matches(m));
+    shelf = (seller ? `<div class="filter">${esc(t.sellerFilter)} <span class="who">${av(seller)}${esc(seller)}<button type="button" data-seller="" aria-label="Clear">${ICON.x}</button></span></div>` : "") +
+      peopleStrip(people, t) +
+      (seller ? sectionOf(seller, shown.filter(m => kinds.includes(m.kind)), "", "", true) : kinds.map(k => sectionOf(t.tabs[k], shown.filter(m => m.kind === k))).join("")) +
+      sectionOf(t.haveGone, gone, "", "", tab === "all");
+    if (!shown.length && !gone.length) shelf += emptyBox(t.emptySearch, t.emptySearchSub);
+  }
+  const sig = tabsHtml + shelf;
+  if (sig !== drawn) {
+    drawn = sig;
+    $("tabs").innerHTML = tabsHtml;
+    $("shelf").innerHTML = shelf;
+    firstDraw = false;
+  }
+  renderDrawer();
+  renderProfile();
+
+  // who the user is here, and whether the shop can be reached
+  const nick = state.nickname || "?";
+  const myFace = av(nick, "dot" + (state.online ? "" : " off"));
+  if ($("me").dataset.face !== myFace) { $("me").dataset.face = myFace; $("me-av").outerHTML = myFace.replace('class="av', 'id="me-av" class="av'); }
+  $("me-nick").textContent = nick;
+  $("me").title = t.profile;
+  setStars(state.stars);
+  const naming = !!state.nicknameGenerated && state.online;
+  $("namebanner").hidden = !naming;
+  if (naming) { $("name-sub").textContent = t.nameSub(nick); const typed = $("name-in").value.trim(); $("name-av").outerHTML = av(typed || nick).replace('class="av', 'id="name-av" class="av'); }
+  $("offline").hidden = hostUp && state.online;
+  $("off-title").textContent = hostUp ? t.hubDown : t.hostDown; $("off-sub").textContent = hostUp ? state.hubProblem || t.hubDownSub : t.hostDownSub;
+
+  // the strip: what Bambi last said about the shop, what it is making just now (kind, name, how far), and its offer
+  $("who").textContent = state.name || "Bambi";
+  // (after something was typed: three dots until Bambi's next line is there - or for as long as it says it is thinking)
+  const waitingForAnswer = (typedAt && state.saidAt === typedSaidAt && Date.now() - typedAt < 25000) || state.talk === "thinking";
+  if (waitingForAnswer) { if (!$("said").firstElementChild) $("said").innerHTML = `<span class="dots"><i></i><i></i><i></i></span>`; }
+  else $("said").textContent = state.said || t.bubbleIdle;
+  $("mine").hidden = !typed; $("mine").textContent = typed;
+  const kindNow = KINDS.includes(state.makingKind) ? state.makingKind : "";
+  const pct = Math.max(0, Math.min(100, Math.round((+state.makingProgress || 0) * 100)));
+  $("progress").classList.toggle("on", !!kindNow || !!state.making);
+  $("making").textContent = kindNow ? t.makingNow(t.kinds[kindNow], state.makingName || "", pct) : state.making || "";
+  $("makingbar").hidden = !kindNow;
+  $("makingbar").firstElementChild.style.width = pct + "%";
+  renderOffer();
+}
+
+/** "I made it - shall I put it up?": drawn once per offer, so that a price being typed is not drawn over by the next poll. */
+function renderOffer() {
+  const el = $("offer"), o = state && state.offer, t = L();
+  const sig = o ? o.seq + "|" + o.id + "|" + (isKo() ? "ko" : "en") : "";
+  if (sig === drawnOffer) return;
+  drawnOffer = sig;
+  el.hidden = !o;
+  if (!o) { el.innerHTML = ""; return; }
+  const m = (state.list || []).find(x => x.id === o.id) || { id: o.id, kind: o.kind, name: o.name, detail: {} };
+  const price = Math.max(0, Math.min(999, parseInt(o.price, 10) || 0));
+  el.innerHTML = `${badge(m)}
+    <div class="what"><b>${esc(m.name ? nameOf(m) : o.name)}</b><span>${esc(t.offerAsk)}</span></div>
+    <div class="acts">
+      <div class="stepper"><button type="button" data-offerstep="-5" aria-label="-5">−</button><label>${starImg()}<input type="number" min="0" max="999" value="${price}" id="offerprice" aria-label="${esc(t.cPrice)}"></label><button type="button" data-offerstep="5" aria-label="+5">+</button></div>
+      <button class="btn go" type="button" data-offer="yes">${esc(t.offerYes)}</button><button class="btn" type="button" data-offer="no">${esc(t.offerNo)}</button>
+    </div>`;
+}
+
+function setStars(n) {
+  const el = $("starcount");
+  if (shownStars === null) { shownStars = n; el.textContent = n; return; }
+  if (n === shownStars) return;
+  const from = shownStars, t0 = performance.now();
+  shownStars = n;
+  $("stars").classList.remove("bump"); void $("stars").offsetWidth; $("stars").classList.add("bump");
+  // the balance counts down (or up, when something was sold) rather than jumping
+  (function step(now) {
+    const k = Math.min(1, (now - t0) / 700);
+    el.textContent = Math.round(from + (n - from) * (1 - Math.pow(1 - k, 3)));
+    if (k < 1) requestAnimationFrame(step);
+  })(t0);
+}
+
+// ------------------------------------------------------------------ the drawer: one module, with what is inside it
+function stepsOf(d, t) {
+  const say = st => st.act === "activity" || st.act === "emote" || st.act === "rain" ? st.arg : st.act === "say" ? "“" + st.arg + "”" : st.act === "music" && st.arg === "stop" ? "stop" : st.act === "ambience" && st.arg === "clear" ? "clear" : "";
+  return `<div class="steps">` + d.steps.map((st, i) => (i ? `<span class="arrow">›</span>` : "") + `<span class="step">${esc(t.acts[st.act] || st.act)}${say(st) ? ` <b>${esc(say(st))}</b>` : ""}${st.seconds > 0 ? ` <b>${esc(st.seconds)}s</b>` : ""}</span>`).join("") + `</div>`;
+}
+
+function moodOf(d) {
+  const [c0, c1, c2] = d.colors.map(colour);
+  let bits = "";
+  for (let i = 0; i < 14; i++) {
+    const s = 6 + (i * 37 % 18), x = (i * 61) % 96, y = (i * 43) % 80;
+    bits += `<i style="left:${x}%;top:${y}%;width:${s}px;height:${d.pattern === "rain" ? s * 2.4 : s}px;background:${esc(i % 2 ? c1 : c2)};animation-delay:${-(i % 5)}s;${d.pattern === "rain" ? "border-radius:6px;width:3px;" : ""}"></i>`;
+  }
+  return `<div class="mood" style="background:${esc(c0)}">${d.pattern === "none" ? "" : bits}<span style="position:relative">${esc(d.moodName)}</span></div>`;
+}
+
+/** The one thing to do with it, and what stands beside the button. */
+function primary(m, t) {
+  const wait = waiting.has(m.id) ? " wait" : "";
+  const main = (cls, label, attrs) => `<button class="btn main ${cls}${wait}" ${attrs}>${esc(label)}</button>`;
+  if (m.id === "game-swarm" && m.installed) return `<a class="btn main go" href="/demon-gate/">${t === T.en ? "Play solo" : "혼자 플레이"}</a>` + main("", t.remove, `data-do="remove" data-id="${esc(m.id)}"`);
+  if (m.mine) return priceTag(m, t) + main("", t.manage, `data-tab="mine"`);
+  if (m.installed) return priceTag(m, t) + `<span class="note">${esc(t.removeNote)}</span>` + main("", t.remove, `data-do="remove" data-id="${esc(m.id)}"`);
+  if (m.owned) return priceTag(m, t) + `<span class="note">${esc(t.ownedNote)}</span>` + main("mint", t.install, `data-do="install" data-id="${esc(m.id)}"`);
+  if (!m.listed) return priceTag(m, t) + main("", t.goneBtn, "disabled");
+  if (!state.online && !(m.builtin && !m.price)) return priceTag(m, t) + main("", t.offlineBtn, "disabled");
+  if (!m.price) return priceTag(m, t) + main("mint", t.get, `data-do="buy" data-id="${esc(m.id)}"`);
+  const short = m.price - state.stars;
+  if (short > 0) return priceTag(m, t) + main("", t.short(short), "disabled");
+  return priceTag(m, t) + main("go", t.buy, `data-confirm="${esc(m.id)}"`);
+}
+
+function renderDrawer() {
+  const el = $("drawer");
+  const m = openId && state ? (state.list || []).find(x => x.id === openId) : null;
+  $("scrim").classList.toggle("on", !!m || profileOpen); el.classList.toggle("on", !!m); el.setAttribute("aria-hidden", m ? "false" : "true");
+  if (!m) { if (openId) openId = ""; confirmId = ""; return; }
+  const t = L(), d = m.detail || {};
+  let inside = "";
+  if (d.steps && d.steps.length) inside += `<h4>${esc(t.does)}</h4>${stepsOf(d, t)}`;
+  if (d.phrases && d.phrases.length) inside += `<h4>${esc(t.say)}</h4>` + d.phrases.slice(0, 5).map(p => `<span class="quote">${esc(p)}</span>`).join("");
+  if (m.kind === "game") {
+    if (d.howTo) inside += `<h4>${esc(t.how)}</h4><p class="sum">${esc(d.howTo)}</p>`;
+    if (m.template === "survival" || m.template === "pop") {
+      if (d.seconds) inside += `<div class="facts"><div class="fact"><b>${Math.round(d.seconds)}</b><span>${esc(t.seconds)}</span></div><div class="fact"><b>${esc(d.lives)}</b><span>${esc(t.lives)}</span></div><div class="fact"><b>×${(+d.speed).toFixed(1)}</b><span>${esc(t.pace)}</span></div></div>`;
+      if (d.enemyName || d.pickupName) inside += `<div class="cast">` +
+        (d.enemyName ? `<div class="k-game">${m.enemyIcon ? `<div class="badge"><div class="face"><img src="${esc(WORLD + m.enemyIcon)}" alt=""></div></div>` : face(glyph(BY_ID[m.id] || "ghost"))}<span><small>${esc(t.enemy)}</small><b>${esc(d.enemyName)}</b></span></div>` : "") +
+        (d.pickupName ? `<div class="k-ambience">${m.pickupIcon ? `<div class="badge"><div class="face"><img src="${esc(WORLD + m.pickupIcon)}" alt=""></div></div>` : face(glyph("gem"))}<span><small>${esc(t.pickup)}</small><b>${esc(d.pickupName)}</b></span></div>` : "") + `</div>`;
+    }
+  }
+  if (d.uses && d.uses.length) inside += `<h4>${esc(t.goodFor)}</h4><div class="steps">${d.uses.map(u => `<span class="step">${esc(t.uses[u] || u)}</span>`).join("")}</div>`;
+  if (d.examples && d.examples.length) inside += `<h4>${esc(t.tryIt)}</h4>` + d.examples.map(p => `<span class="quote">${esc(p)}</span>`).join("");
+  if (d.song) inside += `<h4>${esc(t.tune)}</h4><div class="tune${playing === m.id ? " playing" : ""}"><button class="btn play" data-listen="${esc(m.id)}" aria-label="${esc(playing === m.id ? t.stop : t.listen)}">${playing === m.id
+      ? `<svg viewBox="0 0 20 20" fill="${INK}"><rect x="3" y="3" width="5" height="14" rx="1.5"/><rect x="12" y="3" width="5" height="14" rx="1.5"/></svg>` : `<svg viewBox="0 0 20 20" fill="${INK}"><path d="M5 2.8v14.4a1 1 0 0 0 1.5.9l12-7.2a1 1 0 0 0 0-1.8l-12-7.2A1 1 0 0 0 5 2.8z"/></svg>`}</button><span><b>${esc(d.song)}</b><small>${d.bpm ? esc(d.bpm) + " " + esc(t.bpm) : ""}</small></span><span class="eq"><i></i><i></i><i></i><i></i></span></div>`;
+  if (d.colors) inside += `<h4>${esc(t.mood)}</h4>${moodOf(d)}`;
+
+  const kindLine = `${esc(m.kind === "game" && t.templates[m.template] ? t.kinds.game + " · " + t.templates[m.template] : t.kinds[m.kind])}${d.version ? " · v" + esc(d.version) : ""}`;
+  // the seller: a line of its own, and a way to everything else they sell
+  const sellerLine = `<div class="sellerline">${av(sellerOf(m))}
+      <button class="who" type="button" ${m.listed ? `data-seller="${esc(sellerOf(m))}"` : "disabled"} title="${esc(t.moreBy)}"><b>${esc(sellerOf(m))}${m.official ? ICON.check : ""}</b><small>${esc(m.official ? t.official : m.mine ? t.yours : t.moreBy)}</small></button>
+      <span class="stats"><span>${ICON.got}${esc(t.got(m.installs))}</span><span>${ICON.heart}${m.likes}</span></span>
+      ${m.listed && !m.mine ? `<button class="btn like${m.liked ? " on" : ""}" data-do="like" data-id="${esc(m.id)}" aria-label="${esc(t.like)}" aria-pressed="${m.liked}" ${state.online ? "" : "disabled"}>${ICON.heart}</button>` : ""}
+    </div>`;
+  // before stars are spent: what it costs, who gets them, what is left
+  const foot = confirmId === m.id && !m.owned && m.listed
+    ? `<div class="sheet"><h3>${esc(t.confirm)}</h3>
+        <dl><dt>${esc(t.cPrice)}</dt><dd>${starImg()}${m.price}</dd>
+            <dt>${esc(t.cSeller)}</dt><dd>${av(sellerOf(m))}${esc(sellerOf(m))}${m.official ? ICON.check : ""}</dd>
+            <dt class="after">${esc(t.cAfter)}</dt><dd class="after">${starImg()}${state.stars - m.price}</dd></dl>
+        <div class="acts"><button class="btn" data-confirm="">${esc(t.cancel)}</button><button class="btn go${waiting.has(m.id) ? " wait" : ""}" data-do="buy" data-id="${esc(m.id)}">${esc(t.buyNow)}</button></div></div>`
+    : `<div class="dfoot">${primary(m, t)}</div>`;
+  const html = `<div class="dtop k-${kindOf(m)}"><button class="btn x" data-close aria-label="Close">${ICON.x}</button>${badge(m)}
+      <div><h2>${esc(nameOf(m))}</h2><div class="kindline">${kindLine}</div></div></div>
+    ${sellerLine}
+    <div class="dbody">
+      ${headline(m) ? `<h4 style="margin-top:0">${esc(t.gains)}</h4><p class="gives">${esc(headline(m))}</p><p class="sum">${esc(sumOf(m))}</p>` : `<p class="gives">${esc(sumOf(m))}</p>`}${inside}
+    </div>${foot}`;
+  if (html !== drawnDrawer) { drawnDrawer = html; el.className = `drawer on k-${kindOf(m)}`; el.innerHTML = html; }
+}
+
+// ------------------------------------------------------------------ the profile drawer: the nickname, the hub, what was sold and bought
+function renderProfile() {
+  const el = $("profile");
+  el.classList.toggle("on", profileOpen); el.setAttribute("aria-hidden", profileOpen ? "false" : "true");
+  if (!profileOpen || !state) return;
+  const t = L(), nick = state.nickname || "?";
+  const by = id => (state.list || []).find(x => x.id === id);
+  const bought = (state.purchases || []).map(p => { const m = by(p.id) || { id: p.id, kind: p.kind, icon: p.icon, detail: {} };
+    return `<div data-open="${esc(p.id)}" class="k-${kindOf(p)}">${badge(m)}<span><b>${esc(m.name ? nameOf(m) : p.name)}</b><small>${esc(p.seller)} · ${new Date(p.at).toLocaleDateString(isKo() ? "ko-KR" : "en-US", { month: "short", day: "numeric" })}</small></span>${p.price ? `<span class="price">${starImg()}${p.price}</span>` : `<span class="price free">${esc(t.free)}</span>`}</div>`; }).join("");
+  const sig = JSON.stringify([nick, state.online, state.hub, state.hubLocal, state.stars, state.sales, state.earned, bought, L() === T.ko]);
+  if (sig === drawnProfile) return;
+  const typed = $("rename-in") ? $("rename-in").value : null;
+  drawnProfile = sig;
+  el.innerHTML = `<div class="dtop"><button class="btn x" data-close aria-label="Close">${ICON.x}</button>${av(nick)}
+      <div><h2>${esc(nick)}</h2><div class="kindline">${esc(t.profile)}</div></div></div>
+    <div class="dbody">
+      <h4 style="margin-top:0">${esc(t.rename)}</h4>
+      <form id="renameform"><input class="field" id="rename-in" maxlength="16" autocomplete="off" spellcheck="false" value="${esc(typed != null ? typed : state.nicknameGenerated ? "" : nick)}" placeholder="${esc(t.namePh)}"><button class="btn sun" type="submit" ${state.online ? "" : "disabled"}>${esc(t.renameGo)}</button></form>
+      <p class="hint">${esc(t.renameHint)}</p>
+      <h4>${esc(t.hub)}</h4>
+      <div class="hubbox"><span class="led${state.online ? "" : " off"}"></span><code>${esc(state.hub || "")}</code><b>${esc(state.online ? t.online : t.offline)}</b></div>
+      <p class="hint">${esc(state.hubLocal ? t.hubOwn : t.hubShared)}</p>
+      <h4>${esc(t.tabs.mine)}</h4>
+      <div class="two"><div class="fact"><b>${state.sales || 0}</b><span>${esc(t.mySales)}</span></div><div class="fact" style="background:#FFF6D6"><b>${state.earned || 0}</b><span>${esc(t.myEarned)}</span></div></div>
+      <h4>${esc(t.bought)}</h4>
+      ${bought ? `<div class="bought">${bought}</div>` : `<p class="hint">${esc(t.noBought)}</p>`}
+    </div>
+    <div class="dfoot"><span class="price">${starImg()}${state.stars}</span><span class="note">${esc(t.myStars)}</span><button class="btn main" data-tab="mine">${esc(t.tabs.mine)}</button></div>`;
+}
+
+// ------------------------------------------------------------------ talking to the host
+async function poll() {
+  if (PREVIEW) return;
+  try {
+    const r = await fetch("/market/api/state", { cache: "no-store" });
+    if (!r.ok) throw new Error(r.status);
+    hostUp = true;
+    apply(await r.json());
+  } catch (e) { hostUp = false; if (state) { state.online = false; render(); } else { $("offline").hidden = false; $("off-title").textContent = L().hostDown; $("off-sub").textContent = L().hostDownSub; } }
+}
+
+/** A new state from the host: what changed is shown as it changes - stars where something was installed, a line for what just happened. */
+function apply(next) {
+  const before = seen;
+  state = next;
+  seen = new Set((next.list || []).filter(m => m.installed).map(m => m.id));
+  // a button that was pressed waits (with a little spinner) until the host has answered with a new shop
+  if (next.revision !== seenRevision) { waiting.clear(); for (const id of Object.keys(drafts)) { const m = next.list.find(x => x.id === id); if (!m || (m.listed && m.price === drafts[id])) delete drafts[id]; } }
+  seenRevision = next.revision;
+  if (confirmId) { const m = next.list.find(x => x.id === confirmId); if (!m || m.owned) confirmId = ""; }
+  if (before) {
+    const fresh = [...seen].filter(id => !before.has(id));
+    chromeIfLanguageChanged();
+    render();
+    for (const id of fresh) celebrate(id);
+  } else { chrome(); render(); }
+  if (next.notice && next.notice !== lastNotice) toast(next.notice);
+  lastNotice = next.notice || "";
+}
+let chromeLang = null;
+function chromeIfLanguageChanged() { if (chromeLang !== L()) { chromeLang = L(); chrome(); } }
+
+function send(cmd) {
+  if (PREVIEW) { toast(JSON.stringify(cmd)); return Promise.resolve(); }
+  return fetch("/market/api/command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cmd) }).then(() => setTimeout(poll, 250), () => { hostUp = false; render(); });
+}
+
+/** Something typed to Bambi: it goes into the conversation as if it had been said to it by name (the host: POST /market/api/say). */
+function say(text) {
+  text = String(text || "").trim();
+  if (!text) return;
+  typed = text; typedAt = Date.now(); typedSaidAt = state ? state.saidAt : -1;
+  render();
+  if (PREVIEW) return;
+  fetch("/market/api/say", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text }) })
+    .then(r => { if (!r.ok) { typedAt = 0; toast(L().talkDown); render(); } else setTimeout(poll, 400); }, () => { typedAt = 0; hostUp = false; render(); });
+}
+
+function toast(text) {
+  const el = $("toast");
+  el.textContent = text; el.classList.add("on");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => el.classList.remove("on"), 3200);
+}
+
+/** A confetti of little stars where something has just been bought or installed. */
+function celebrate(id) {
+  const cardEl = document.querySelector(`.card[data-id="${CSS.escape(id)}"]`);
+  const box = (openId === id ? $("drawer").querySelector(".badge") : cardEl || $("stars")).getBoundingClientRect();
+  if (cardEl) { cardEl.classList.remove("pop"); void cardEl.offsetWidth; cardEl.classList.add("pop"); }
+  const cx = box.left + box.width / 2, cy = box.top + Math.min(box.height / 2, 120);
+  for (let i = 0; i < 22; i++) {
+    const s = document.createElement("img");
+    s.src = ART + "star.png"; s.className = "confetti"; s.alt = "";
+    document.body.appendChild(s);
+    const a = Math.random() * Math.PI * 2, r = 90 + Math.random() * 150, size = .5 + Math.random() * .9;
+    s.animate([
+      { transform: `translate(${cx - 11}px, ${cy - 11}px) scale(.2) rotate(0deg)`, opacity: 1 },
+      { transform: `translate(${cx - 11 + Math.cos(a) * r}px, ${cy - 11 + Math.sin(a) * r - 40}px) scale(${size}) rotate(${(Math.random() - .5) * 540}deg)`, opacity: 1, offset: .7 },
+      { transform: `translate(${cx - 11 + Math.cos(a) * r * 1.1}px, ${cy - 11 + Math.sin(a) * r + 60}px) scale(${size * .8}) rotate(${(Math.random() - .5) * 720}deg)`, opacity: 0 },
+    ], { duration: 900 + Math.random() * 500, easing: "cubic-bezier(.2,.8,.3,1)" }).onfinish = () => s.remove();
+  }
+}
+
+function listen(id) {
+  const audio = $("audio");
+  if (playing === id) { audio.pause(); playing = ""; }
+  else if (!PREVIEW) { audio.src = "/market/song/" + encodeURIComponent(id) + ".wav"; audio.play().catch(() => {}); playing = id; }
+  else playing = id;
+  drawnDrawer = ""; renderDrawer();
+}
+
+/** A .bambi file from a friend: its bytes go to the host, which makes it a thing of the user's own. */
+function importFile(file) {
+  if (!file) return;
+  if (!/\.bambi$/i.test(file.name)) { toast(L().importBad); return; }
+  toast(L().importing);
+  if (PREVIEW) return;
+  fetch("/market/api/import?name=" + encodeURIComponent(file.name), { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: file }).then(() => setTimeout(poll, 250), () => { hostUp = false; render(); });
+}
+
+// ------------------------------------------------------------------ hands
+function priceOf(id) {
+  const input = document.querySelector(`input[data-price="${CSS.escape(id)}"]`);
+  return Math.max(0, Math.min(999, parseInt(input ? input.value : drafts[id], 10) || 0));
+}
+/** A price was typed or stepped: remembered until it is saved, and "Save price" shows only when it differs from the one on sale. */
+function drafted(id) {
+  const m = state && state.list.find(x => x.id === id);
+  drafts[id] = priceOf(id);
+  const save = document.querySelector(`[data-do="setPrice"][data-id="${CSS.escape(id)}"]`);
+  if (save && m) save.hidden = drafts[id] === m.price;
+}
+document.addEventListener("click", e => {
+  const st = e.target.closest("[data-step]");
+  if (st) { const input = document.querySelector(`input[data-price="${CSS.escape(st.dataset.id)}"]`); input.value = Math.max(0, Math.min(999, (parseInt(input.value, 10) || 0) + parseInt(st.dataset.step, 10))); drafted(st.dataset.id); return; }
+  const b = e.target.closest("[data-do]");
+  if (b) {
+    e.stopPropagation();
+    const id = b.dataset.id, cmd = { cmd: b.dataset.do, id };
+    if (cmd.cmd === "publish" || cmd.cmd === "setPrice") { cmd.price = priceOf(id); drafts[id] = cmd.price; }
+    if (cmd.cmd !== "like") { waiting.add(id); drawn = ""; drawnDrawer = ""; render(); setTimeout(() => { if (waiting.delete(id)) { drawn = ""; drawnDrawer = ""; render(); } }, 6000); }      // (nothing came back: the button is given back)
+    send(cmd);
+    return;
+  }
+  const cf = e.target.closest("[data-confirm]"); if (cf) { confirmId = cf.dataset.confirm; drawnDrawer = ""; renderDrawer(); return; }
+  const l = e.target.closest("[data-listen]"); if (l) { listen(l.dataset.listen); return; }
+  const sl = e.target.closest("[data-seller]"); if (sl) { seller = sl.dataset.seller; if (seller && tab === "mine") tab = "all"; closeDrawers(); firstDraw = true; render(); if (seller) $("tabs").scrollIntoView({ block: "start" }); return; }
+  if (e.target.closest("[data-close]") || e.target === $("scrim")) { closeDrawers(); return; }
+  const tb = e.target.closest("[data-tab]"); if (tb) { tab = tb.dataset.tab; if (tab === "mine") seller = ""; closeDrawers(); firstDraw = true; render(); return; }
+  const so = e.target.closest("[data-sort]"); if (so) { sort = so.dataset.sort; chrome(); firstDraw = true; render(); return; }
+  // an example under the box: it fills the box (the user sends it, or changes it first)
+  const tr = e.target.closest("[data-try]"); if (tr) { $("talktext").value = tr.dataset.try; $("talktext").focus(); return; }
+  // the offer card: a price stepped, and the answer (the same "offer" command the headset's card sends)
+  const os = e.target.closest("[data-offerstep]");
+  if (os) { const input = $("offerprice"); input.value = Math.max(0, Math.min(999, (parseInt(input.value, 10) || 0) + parseInt(os.dataset.offerstep, 10))); return; }
+  const ob = e.target.closest("[data-offer]");
+  if (ob && state && state.offer) {
+    const yes = ob.dataset.offer === "yes", price = Math.max(0, Math.min(999, parseInt($("offerprice").value, 10) || 0));
+    send({ cmd: "offer", id: state.offer.id, text: yes ? (price === 0 ? "yes free" : "yes") : "no", price: yes ? price : 0 });
+    $("offer").hidden = true; drawnOffer = "~";       // (drawn again by the next state, should the offer still be open)
+    return;
+  }
+  if (e.target.closest("#me")) { profileOpen = true; openId = ""; drawnProfile = ""; render(); return; }
+  const op = e.target.closest("[data-open]"); if (op) { profileOpen = false; openId = op.dataset.open; confirmId = ""; drawnDrawer = ""; render(); return; }
+  if (e.target.closest("[data-stop]")) return;       // (the controls of a row are not the row)
+  const c = e.target.closest(".card, .row"); if (c) { openId = c.dataset.id; confirmId = ""; drawnDrawer = ""; renderDrawer(); }
+});
+document.addEventListener("input", e => { if (e.target.dataset && e.target.dataset.price) drafted(e.target.dataset.price); if (e.target.id === "name-in") render(); });
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") closeDrawers();
+  if ((e.key === "Enter" || e.key === " ") && e.target.classList && (e.target.classList.contains("card") || e.target.classList.contains("row"))) { e.preventDefault(); openId = e.target.dataset.id; drawnDrawer = ""; renderDrawer(); }
+});
+document.addEventListener("submit", e => {
+  const rename = e.target.id === "renameform" ? $("rename-in") : e.target.id === "nameform" ? $("name-in") : null;
+  if (!rename) return;
+  e.preventDefault();
+  const text = rename.value.trim();
+  if (text) { send({ cmd: "nickname", text }); rename.value = ""; drawnProfile = ""; }
+});
+function closeDrawers() { if (playing) { $("audio").pause(); playing = ""; } openId = ""; confirmId = ""; profileOpen = false; renderDrawer(); renderProfile(); }
+$("q").addEventListener("input", e => { query = e.target.value.trim(); render(); });
+$("talk").addEventListener("submit", e => { e.preventDefault(); const box = $("talktext"); say(box.value); box.value = ""; });
+// (the tray's "Talk to Bambi ..." opens the page at #talk: the box is ready to type in)
+if (location.hash === "#talk") setTimeout(() => { $("talk").scrollIntoView({ block: "center" }); $("talktext").focus(); }, 300);
+$("file").addEventListener("change", e => { importFile(e.target.files[0]); e.target.value = ""; });
+// a module file can be dropped anywhere on the page; "my shop" shows where
+document.addEventListener("dragover", e => { if ([...(e.dataTransfer ? e.dataTransfer.types : [])].includes("Files")) { e.preventDefault(); const d = $("drop"); if (d) d.classList.add("over"); } });
+document.addEventListener("dragleave", () => { const d = $("drop"); if (d) d.classList.remove("over"); });
+document.addEventListener("drop", e => { if (!e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); const d = $("drop"); if (d) d.classList.remove("over"); importFile(e.dataTransfer.files[0]); });
+$("lang-ko").addEventListener("click", () => setLang("ko"));
+$("lang-en").addEventListener("click", () => setLang("en"));
+function setLang(l) { lang = l; localStorage.setItem("bambi-market-lang", l); chromeLang = L(); chrome(); drawn = ""; drawnDrawer = ""; drawnProfile = ""; drawnOffer = ""; render(); }
+$("audio").addEventListener("error", () => { playing = ""; drawnDrawer = ""; renderDrawer(); });
+
+chromeLang = L(); chrome();
+if (PREVIEW) { seen = new Set(state.list.filter(m => m.installed).map(m => m.id)); render(); }
+else { poll(); setInterval(poll, 1000); }
+</script>
+</body>
+</html>

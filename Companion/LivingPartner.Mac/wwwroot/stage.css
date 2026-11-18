@@ -1,0 +1,36 @@
+:root{font-family:"Atkinson Hyperlegible Next","Apple SD Gothic Neo","Malgun Gothic",sans-serif;color:#eef4e5;background:#152e30}
+*{box-sizing:border-box}body{margin:0}button,input,select,summary,a{font:inherit}button,select,summary,a{cursor:pointer}
+button,a.primary{border:1px solid #728b80;color:#deeadb;background:#284844;border-radius:.48rem;padding:.65rem .9rem;line-height:1.3}
+button:hover,a:hover{filter:brightness(1.14)}button:disabled{opacity:.45;cursor:default}
+button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible,a:focus-visible{outline:3px solid #ffd377;outline-offset:3px}
+button.primary,a.primary{background:#f9c979;border-color:#f9c979;color:#30231b;font-weight:700}a.primary{display:block;text-align:center;text-decoration:none}
+#scene{position:fixed;inset:0;isolation:isolate;overflow:hidden;background:radial-gradient(ellipse at 73% 57%,#64958b 0,#3f726c 31%,#255656 59%,#153739 100%)}
+.shore{position:absolute;inset:77% -15% -16%;background:#284f4d;border-radius:50% 27% 0 0;transform:rotate(-2deg);box-shadow:0 -.65vh 0 #799c86,0 -1.9vh 0 #597f71}
+#panel{position:absolute;left:clamp(1rem,5vw,7rem);top:50%;transform:translateY(-50%);width:min(24rem,calc(100% - 2rem));max-height:94%;overflow:auto;border:1px solid #739084;background:#173b38f7;border-radius:1.3rem;padding:clamp(1.1rem,2.2vw,2rem);box-shadow:0 .9rem 4rem #102e3755;z-index:3}
+header{display:flex;align-items:flex-start;justify-content:space-between;gap:1rem}h1{font-family:"Bricolage Grotesque","Apple SD Gothic Neo",sans-serif;font-size:clamp(1.8rem,3vw,2.6rem);line-height:1.12;letter-spacing:-.06em;margin:0 0 .72rem}
+p,label,summary{line-height:1.45;margin:.45rem 0;color:#daeadb;font-size:.92rem}label{display:block}#connection{display:flex;align-items:center;gap:.5rem}
+#connection:before{content:"";width:.55rem;height:.55rem;border-radius:50%;background:#f4bd69}body.connected #connection:before{background:#86dbad}
+#setup,#pair,#controls{margin-top:1.25rem}#setup .primary,select#display{width:100%}details{margin:.65rem 0 .9rem}
+input,select{background:#f0f3e8;color:#1b3836;border:0;border-radius:.35rem;padding:.6rem;min-width:0;max-width:100%}
+#code{font:600 clamp(2rem,4vw,2.8rem)/1.2 "IBM Plex Mono",monospace;letter-spacing:.15em;color:#f7d399}#controls button{white-space:nowrap}
+.row{display:flex;gap:.4rem;flex-wrap:wrap;margin:.55rem 0}.row input{flex:1 1 8rem}#talk{margin-top:.8rem}#error:not(:empty){color:#ffdbb9}
+#unfold{position:absolute;left:1rem;bottom:1rem;z-index:5}#bambi{position:absolute;height:20%;width:auto;transform:translate(-50%,-100%);filter:drop-shadow(0 .3vh .2vh #20393580);transition:left .12s linear,top .12s linear,opacity .12s linear;z-index:1}
+#portal{position:absolute;transform:translate(-50%,-50%);width:4.8vh;height:12vh;border-radius:50%;border:.55vh solid #ffdd92;box-shadow:inset 0 0 1.2vh #fff1a9,0 0 2.2vh #ffbc71}
+#glass-game{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}#flash{position:absolute;inset:0;z-index:10}
+#native-game,#native-actors,#native-court{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#native-game{z-index:2;background:#183a3c}#native-game.swarm{background:#261d2e url('/art/demon-gate.jpg') center/cover no-repeat}
+#game-hud{position:absolute;top:4%;left:4%;right:4%;display:flex;align-items:baseline;justify-content:space-between;color:#fff4d6;text-shadow:0 2px 8px #0c141b}
+#game-title{font:800 clamp(1.2rem,3.2vw,3rem)/1 'Apple SD Gothic Neo',sans-serif;margin:0}#game-score{font-size:clamp(1rem,1.7vw,1.6rem);font-weight:750}
+#game-hint{position:absolute;bottom:3%;left:50%;transform:translateX(-50%);max-width:76%;text-align:center;font-size:clamp(.9rem,1.65vw,1.6rem);padding:.35em .75em;background:#161b21c9;border-radius:.4em;color:#fff4d6}
+#demon-cover{border-radius:.5rem;object-fit:cover}
+#gomoku-board{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:3;background:#30251f}
+.table-open #unfold,.table-open #bubble,.table-open #queue{display:none}
+#swarm-choices{position:absolute;inset:auto 10% 18%;display:flex;justify-content:center;gap:1.3vw;list-style:none;padding:0;margin:0}
+#swarm-choices li{padding:.8vh 1.2vw;text-align:center;color:#fce4bc;background:#271d2ee6;border:1px solid #bc925a;border-radius:.5rem;font-weight:700}
+#swarm-choices img{display:block;width:min(8vw,11vh);height:min(8vw,11vh);margin:auto auto .4vh;object-fit:contain}
+#bubble{position:absolute;top:7%;left:50%;transform:translateX(-50%);max-width:78%;text-align:center;padding:.6em 1em;background:#f9f1d7;color:#253633;font-weight:700;border-radius:1em;z-index:2}
+[hidden]{display:none!important}@media(prefers-reduced-motion:reduce){#bambi{transition:none}}@media(max-height:500px){#panel{top:2%;transform:none}}
+#queue{position:absolute;bottom:1rem;right:1rem;text-align:right;z-index:4}
+#queue-toggle{font-weight:650;padding:.5rem .8rem;background:#224441f5}#jobs{position:absolute;bottom:calc(100% + .4rem);right:0;width:min(20rem,88vw);max-height:55vh;overflow:auto;background:#173b38f7;border:1px solid #739084;border-radius:.65rem;padding:.75rem;text-align:left}#jobs article+article{border-top:1px solid #739084;padding-top:.65rem;margin-top:.65rem}#jobs article strong{overflow-wrap:anywhere}#jobs progress{width:100%;accent-color:#f9c979}#jobs button,#jobs a{font-size:.84rem;padding:.3rem .5rem;margin:.15rem}#jobs a{color:#f7d399}
+
+.solo-launch { display:block; color:#ffebc9; background:#48334a; border-radius:10px; padding:10px 12px; margin:8px 0; text-align:center; text-decoration:none; font-weight:700; }

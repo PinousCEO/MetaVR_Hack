@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="ko">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>TV Rally · 밤비</title>
+<style>
+* {box-sizing:border-box}
+:root {color-scheme:light;--ink:#222541;--cream:#fff9eb;--gold:#ffba42;--aqua:#63e0df;--court:#42419a}
+body {margin:0;background:var(--cream);color:var(--ink);font-family:"Barlow","Apple SD Gothic Neo","Malgun Gothic",sans-serif}
+main {min-height:100vh;min-height:100dvh;display:grid;grid-template-rows:auto minmax(32vh,1fr) auto}
+header,footer {display:flex;align-items:center;justify-content:space-between;gap:1.6vw;padding:2.2vh 4vw}
+h1 {font-family:"Archivo Black","Arial Black",sans-serif;letter-spacing:-.075em;line-height:.94;font-size:clamp(1.9rem,4.8vw,5rem);margin:0;font-weight:900}
+.score {font-size:clamp(.9rem,1.5vw,1.5rem);font-weight:700;white-space:nowrap}
+.score b {font:900 clamp(1.75rem,3.2vw,4rem)/1 "Archivo Black","Arial Black",sans-serif;vertical-align:middle;margin-left:.5em}
+.court {position:relative;overflow:hidden;isolation:isolate;background:var(--court);min-height:36vh;border-block:.5vh solid var(--ink)}
+canvas {position:absolute;inset:0;width:100%;height:100%}
+.hud {position:absolute;inset:auto 2vw 1.7vh;display:flex;justify-content:space-between;align-items:center;color:white;font-weight:800;font-size:clamp(.8rem,1.6vw,1.8rem);text-shadow:0 1px 3px #242139}
+.hud i {display:inline-block;width:.75em;height:.75em;border:2px solid white;border-radius:50%;margin-inline:.35em}
+.hud .gold {background:var(--gold)} .hud .aqua {background:var(--aqua)}
+footer {align-items:center;padding-block:2.7vh}
+.text {min-width:0}
+h2 {font-weight:850;letter-spacing:-.048em;line-height:1.15;font-size:clamp(1.5rem,3.35vw,4.3rem);margin:0;word-break:keep-all}
+p {font-size:clamp(.93rem,1.35vw,1.65rem);margin:.65em 0 0;color:#46455d;line-height:1.52;word-break:keep-all}
+.controls {display:flex;gap:.5rem;align-items:center;flex-shrink:0;flex-wrap:wrap}
+button {border:2px solid var(--ink);background:var(--cream);color:var(--ink);border-radius:6px;padding:.8em 1em;font-family:inherit;font-weight:700;font-size:clamp(.85rem,1.2vw,1.3rem);line-height:1.12;cursor:pointer;white-space:nowrap}
+#ready {background:var(--ink);color:white}
+button:focus-visible {outline:4px solid #ce5715;outline-offset:3px}
+button:disabled {opacity:.55}
+@media(max-width:700px){main{grid-template-rows:auto minmax(35vh,1fr) auto}footer{align-items:flex-start;flex-direction:column;gap:1rem}.hud{inset:auto 3vw 1vh}.controls{width:100%}}
+</style>
+<main>
+ <header><h1>TV Rally</h1><div class="score">함께 넣은 공 <b><span id="score">0</span> / 6</b></div></header>
+ <section class="court" aria-label="밤비와 공을 주고받는 코트"><canvas id="court"></canvas><div class="hud" aria-hidden="true"><span><i class="gold"></i> 왼쪽</span><span>오른쪽 <i class="aqua"></i></span></div></section>
+ <footer><div class="text" aria-live="polite"><h2 id="cue">Quest 연결 중</h2><p id="help">같은 Wi-Fi에서 헤드셋의 TV Rally를 열어 주세요.</p></div>
+ <div class="controls"><button id="ready" disabled>함께 시작</button><button id="full">전체 화면</button></div></footer>
+</main>
+<script>
+'use strict';
+const el = id => document.getElementById(id);
+const base = location.pathname.replace(/\/$/,'');
+const canvas = el('court'), ctx = canvas.getContext('2d'), bambi = new Image();
+bambi.src = base + '/bambi.png';
+let state = {phase:'Join',side:-1,score:0,elapsed:0,marks:0,notice:''}, connected = false, stamp = performance.now(), lastGood = 0;
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const phases = {
+ Join:['TV 옆에 서 주세요','착용자는 한 걸음 뒤에서 TV와 상대방의 양팔이 함께 보이게 서세요. 오른손 엄지와 검지를 맞대거나 여기서 함께 시작을 누르세요.'],
+ Align:['코트 위치 맞추기','헤드셋 착용자는 TV 중앙을 보고 오른손으로 엄지와 검지를 맞대세요.'],
+ Serve:['밤비가 서브해요','TV 앞 플레이어는 양팔을 내리고 날아오는 공을 보세요.'],
+ Reach:['','해당 방향으로 팔을 뻗은 후 내려 주세요. 헤드셋 착용자는 파트너를 계속 바라봅니다.'],
+ Volley:['Quest 차례!','헤드셋 착용자가 날아오는 공을 손으로 받아쳐 밤비에게 돌려주세요.'],
+ Return:['두 사람이 한 점!','밤비에게 공이 돌아옵니다. 양팔을 내리고 다음 서브를 준비하세요.'],
+ Miss:['다시 받아볼까요?','양팔을 내리면 밤비가 다시 서브합니다.'],
+ Won:['여섯 번의 랠리 성공!','두 사람이 손을 이어 밤비에게 공을 여섯 번 돌려줬어요.']
+};
+function write(id, str) { if (el(id).textContent !== str) el(id).textContent = str; }
+function layout() {
+ const s=state, words=(phases[s.phase]||phases.Join).slice();
+ if(s.phase==='Reach') words[0]=s.side<0?'왼쪽으로 손을 뻗어요!':'오른쪽으로 손을 뻗어요!';
+ if(s.phase==='Align' && s.marks===1) words[1]='TV 옆에 서서 양팔을 내려 주세요. 착용자는 파트너의 가슴을 바라보고 오른손으로 한 번 더 핀치하세요.';
+ if(s.phase==='Align' && s.marks===2) words[1]='가만히 선 자세를 읽고 있어요. 착용자는 파트너의 양쪽 어깨가 보이게 해 주세요.';
+ const notice=s.notice||'';
+ if(notice.startsWith('Allow camera')) words[1]='Quest에서 Living AI Partner의 카메라 권한을 허용해 주세요. 이전에 거부했다면 앱 권한 설정에서 바꿀 수 있어요.';
+ if(notice.startsWith('Enable camera')) words[1]='Quest 가방의 설정에서 카메라 사용을 켜 주세요.';
+ if(notice.startsWith('Waiting for color')) words[1]='헤드셋을 착용하고 패스스루를 켜 주세요. 컬러 카메라가 준비되면 경기가 이어집니다.';
+ if(notice.startsWith('Body play')) words[1]='두 사람의 동작을 보려면 Quest 3 또는 3S에서 게임을 열어 주세요.';
+ if(notice.indexOf('steadily')>=0) words[1]='착용자는 파트너 양쪽 어깨의 링을 바라보세요. 다시 보이면 경기가 이어집니다.';
+ if(/[가-힣]/.test(notice)) words[1]=notice.replace(/\s+/g,' ').trim();
+ if(!connected){ words[0]='Quest 연결을 기다려요'; words[1]='헤드셋의 TV Rally 화면을 열고 같은 Wi-Fi인지 확인해 주세요.'; }
+ write('cue',words[0]);write('help',words[1]);write('score',String(s.score));
+ write('ready',s.phase==='Won'?'다시 플레이':s.phase==='Join'?'함께 시작':'위치 다시 맞추기');
+ el('ready').disabled=!connected;
+}
+async function request(path, options){
+ const controller=new AbortController(), deadline=setTimeout(()=>controller.abort(),2200);
+ try{const response=await fetch(base+path,{...options,cache:'no-store',signal:controller.signal});
+ if(!response.ok)throw Error(response.status); return await response.json();}finally{clearTimeout(deadline);}
+}
+async function poll() {
+ try {state=await request('/state'); connected=true; stamp=lastGood=performance.now();}
+ catch(e){if(performance.now()-lastGood>2500) connected=false;}
+ layout();setTimeout(poll,180);
+}
+el('ready').onclick=async()=>{el('ready').disabled=true;try{await request('/ready',{method:'POST'});}catch(e){connected=false;layout();}};
+el('full').onclick=async()=>{try{
+ if(document.fullscreenElement||document.webkitFullscreenElement)await (document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen());
+ else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else document.documentElement.webkitRequestFullscreen();
+ }catch(e){write('help','Mac에서 브라우저의 보기 메뉴로 전체 화면을 선택하세요.');}};
+for(const event of ['fullscreenchange','webkitfullscreenchange']) document.addEventListener(event,()=>write('full',(document.fullscreenElement||document.webkitFullscreenElement)?'전체 화면 종료':'전체 화면'));
+function render(now){
+ const w=canvas.clientWidth,h=canvas.clientHeight,dpr=Math.min(2,devicePixelRatio||1);
+ if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
+ ctx.setTransform(dpr,0,0,dpr,0,0);
+ const theme=ctx.createLinearGradient(0,0,0,h);theme.addColorStop(0,'#343577');theme.addColorStop(.62,'#4f509a');theme.addColorStop(1,'#686db6');
+ ctx.fillStyle=theme;ctx.fillRect(0,0,w,h);
+ const floor=h*.68;
+ ctx.strokeStyle='rgba(245,245,255,.24)';ctx.lineWidth=Math.max(1,w*.0018);
+ for(let i=-3;i<=3;i++){ctx.beginPath();ctx.moveTo(w*.5+i*w*.12,floor);ctx.lineTo(w*.5+i*w*.36,h);ctx.stroke();}
+ for(const y of [floor,h*.76,h*.9]){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();}
+ const mid=w*.5, gateY=h*.48,r=Math.min(w*.104,h*.2);
+ const gateX=side=>mid+side*w*.33;
+ const phase=state.phase, active=connected && (phase==='Serve'||phase==='Reach');
+ for(const side of [-1,1]){
+   const x=gateX(side),isLit=active&&side===state.side;
+   ctx.save();ctx.globalAlpha=active&&!isLit?.26:.85;
+   ctx.strokeStyle=side<0?'#ffbe44':'#68e7e5';ctx.lineWidth=Math.max(4,r*(isLit?.12:.052));
+   ctx.beginPath();ctx.arc(x,gateY,r,0,Math.PI*2);ctx.stroke();
+   if(isLit){ctx.fillStyle=ctx.strokeStyle;ctx.beginPath();ctx.moveTo(x+side*r*.46,gateY);ctx.lineTo(x-side*r*.2,gateY-r*.36);ctx.lineTo(x-side*r*.2,gateY+r*.36);ctx.fill();}
+   ctx.restore();
+ }
+ const t=state.elapsed+Math.min(.35,(now-stamp)/1000);
+ const jump=(phase==='Serve'||phase==='Return')&&!reduce?Math.sin(Math.PI*Math.min(1,t))*.045*h:0;
+ ctx.fillStyle='rgba(29,27,65,.37)';ctx.beginPath();ctx.ellipse(mid,h*.82,w*.085,h*.022,0,0,Math.PI*2);ctx.fill();
+ if(bambi.complete&&bambi.naturalWidth){
+   const bh=Math.min(h*.71,w*.34),bw=bh*bambi.naturalWidth/bambi.naturalHeight;
+   ctx.drawImage(bambi,mid-bw/2,h*.83-bh-jump,bw,bh);
+ }
+ let x=mid+w*.055,y=h*.58,visible=connected&&phase!=='Align'&&phase!=='Join';
+ const side=state.side, cap=(n)=>Math.max(0,Math.min(1,n));
+ if(phase==='Serve'){const u=cap(t);x+=(gateX(side)-x)*u;y+=(gateY-y)*u-Math.sin(u*Math.PI)*h*.22;}
+ else if(phase==='Reach'){x=gateX(side);y=gateY;}
+ else if(phase==='Volley'){const u=cap(t/.55);x=gateX(side);y=gateY+(h-gateY)*u;visible=u<.99;}
+ else if(phase==='Return'){const u=cap(t/.85);x=gateX(side)+(x-gateX(side))*u;y=h+(h*.58-h)*u-Math.sin(Math.PI*u)*h*.22;}
+ else visible=false;
+ if(visible){const br=Math.max(5,Math.min(w,h)*.036);ctx.fillStyle='#fff6ba';ctx.strokeStyle='#f4ac2b';ctx.lineWidth=br*.19;ctx.beginPath();ctx.arc(x,y,br,0,Math.PI*2);ctx.fill();ctx.stroke();}
+ requestAnimationFrame(render);
+}
+layout();poll();requestAnimationFrame(render);
+</script>
+</html>

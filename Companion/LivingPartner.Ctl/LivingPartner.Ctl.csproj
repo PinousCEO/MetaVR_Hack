@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>lpctl</AssemblyName>
+    <RootNamespace>LivingPartner.Ctl</RootNamespace>
+    <NoWarn>$(NoWarn);CA1416;CS8632</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\MetaVRHack\Assets\LivingPartner\Shared\**\*.cs" LinkBase="Shared" />
+    <!-- The marketplace hub's contract and the calls a client makes to it: the same source the host uses (lpctl's hub-as test helper talks to the hub directly, as a second account). -->
+    <Compile Include="..\LivingPartner.Host\HubContract.cs" Link="Host\HubContract.cs" />
+    <Compile Include="..\LivingPartner.Host\HubApi.cs" Link="Host\HubApi.cs" />
+    <!-- `lpctl script check`: the same checker of scripts the host runs (ScriptRules; WorldRules is where its small text helpers are). -->
+    <Compile Include="..\LivingPartner.Host\WorldRules.cs" Link="Host\WorldRules.cs" />
+    <Compile Include="..\LivingPartner.Host\ScriptRules.cs" Link="Host\ScriptRules.cs" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="MoonSharp" Version="2.0.0" />
+  </ItemGroup>
+
+</Project>

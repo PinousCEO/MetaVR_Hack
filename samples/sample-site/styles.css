@@ -1,0 +1,67 @@
+:root {
+  --bg: #f4f1ff;
+  --text: #2a2440;
+  --accent: #7c4dff;
+  --card: #7c4dff;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.topbar {
+  background: var(--accent);
+  color: #ffffff;
+  padding: 6px 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topbar h1 { margin: 0; font-size: 20px; }
+.topbar nav a { color: #ffffff; margin-left: 6px; text-decoration: underline; }
+
+.summary {
+  background: var(--accent);
+  color: #ffffff;
+  margin: 6px;
+  padding: 6px;
+}
+
+.cards {
+  display: flex;
+  flex-wrap: wrap;
+  margin: 2px;
+}
+
+.card {
+  background: var(--card);
+  color: #ffffff;
+  border: 2px solid var(--accent);
+  margin: 2px;
+  padding: 6px;
+  width: 24%;
+}
+
+.card h2 { margin: 0; font-size: 15px; color: #ffffff; }
+.card .meta { margin: 0; font-size: 11px; color: #ffffff; }
+.card p { margin: 2px 0; font-size: 12px; }
+
+.action {
+  background: var(--accent);
+  color: #ffffff;
+  border: 1px solid #ffffff;
+  padding: 2px 6px;
+}
+
+.footer {
+  background: var(--accent);
+  color: #ffffff;
+  padding: 6px;
+  font-size: 11px;
+}

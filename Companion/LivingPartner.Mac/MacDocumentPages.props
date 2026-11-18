@@ -1,0 +1,7 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <EmbeddedResource Include="$(MSBuildThisFileDirectory)../../MetaVRHack/Assets/LivingPartner/Art/Fonts/Jua-Regular.ttf" LogicalName="LivingPartner.Mac.Jua.ttf" />
+    <Content Include="$(MSBuildThisFileDirectory)../../MetaVRHack/Assets/LivingPartner/Art/Fonts/Jua-OFL.txt" Link="Licenses/Jua-OFL.txt" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

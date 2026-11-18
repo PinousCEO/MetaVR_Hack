@@ -1,0 +1,65 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <IsPackable>false</IsPackable>
+    <NoWarn>$(NoWarn);CA1416;CS8632;xUnit1031</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Tests run against the SAME shared sources that the Unity clients and the host compile. -->
+    <Compile Include="..\..\MetaVRHack\Assets\LivingPartner\Shared\**\*.cs" LinkBase="Shared" />
+    <Compile Include="..\..\MetaVRHack\Assets\LivingPartner\MR\LocalWorld.cs" Link="MR\LocalWorld.cs" />
+    <!-- The rules a model-built song / surroundings / skill must pass (no host, network or disk in that file): tested from the host's own source. -->
+    <Compile Include="..\LivingPartner.Host\WorldRules.cs" Link="Host\WorldRules.cs" />
+    <!-- The marketplace's shelf and books (what comes with the partner; installing, removing, publishing): plain data and rules, tested from the host's own source as well. -->
+    <Compile Include="..\LivingPartner.Host\MarketCatalog.cs" Link="Host\MarketCatalog.cs" />
+    <Compile Include="..\LivingPartner.Host\GomokuTable.cs" Link="Host\GomokuTable.cs" />
+    <!-- How a module travels (to the hub, from it, as a .bambi file) and what the hub and its clients say to each other: plain rules again. -->
+    <Compile Include="../SoloDemon/SoloDemonRun.cs" Link="Games/SoloDemonRun.cs" />
+    <Compile Include="..\LivingPartner.Host\MarketPack.cs" Link="Host\MarketPack.cs" />
+    <Compile Include="..\LivingPartner.Host\HubContract.cs" Link="Host\HubContract.cs" />
+    <!-- Modules are scripts: how a script is checked by running it (ScriptRules) and the writer that has a language model write one and repairs it until it passes (ScriptWriter; the tests give it a model that answers from a list). -->
+    <Compile Include="..\LivingPartner.Host\ScriptRules.cs" Link="Host\ScriptRules.cs" />
+    <Compile Include="..\LivingPartner.Host\ScriptWriter.cs" Link="Host\ScriptWriter.cs" />
+    <!-- (W1) the workshop: the agent loop, its simulated players and its rasteriser are pure (the model is an interface) -->
+    <Compile Include="..\LivingPartner.Host\Workshop.cs" Link="Host\Workshop.cs" />
+    <Compile Include="..\LivingPartner.Host\ClaudeGameClient.cs" Link="Host\ClaudeGameClient.cs" />
+    <Compile Include="..\LivingPartner.Host\ClaudeWorkshopModel.cs" Link="Host\ClaudeWorkshopModel.cs" />
+    <Compile Include="..\LivingPartner.Host\WorkshopPlay.cs" Link="Host\WorkshopPlay.cs" />
+    <Compile Include="..\LivingPartner.Host\WorkshopLook.cs" Link="Host\WorkshopLook.cs" />
+    <!-- The check that tells an icon with a round plate behind the object from a die-cut sticker: plain arithmetic on opacity, tested on shapes made here. -->
+    <Compile Include="..\LivingPartner.Host\IconCheck.cs" Link="Host\IconCheck.cs" />
+    <!-- Where the user means when they point and ask (hand, gaze, the last seconds) and what is cut out of the display; the host's rules for glass games; the stage machine of the shows: plain rules, no host in them. -->
+    <Compile Include="..\LivingPartner.Host\LookRules.cs" Link="Host\LookRules.cs" />
+    <Compile Include="..\LivingPartner.Host\GlassRules.cs" Link="Host\GlassRules.cs" />
+    <Compile Include="..\LivingPartner.Host\ShowRules.cs" Link="Host\ShowRules.cs" />
+    <!-- (H5) Plain rules of the conversation - the name as it is misheard, what is put away, make or play - and of the PC actions (the fixed list, the allow-list, safe names; carried out against a fake of Windows). -->
+    <Compile Include="..\LivingPartner.Host\TalkRules.cs" Link="Host\TalkRules.cs" />
+    <Compile Include="..\LivingPartner.Host\PcRules.cs" Link="Host\PcRules.cs" />
+    <!-- (Round 4) Understanding: what the recogniser made up, who decides (the model's prompt and answer shape, the exact orders, the guards), where the partner enters a screen; operating the computer by seeing and acting (the loop, run against fakes; the hard rules). -->
+    <Compile Include="..\LivingPartner.Host\TurnRules.cs" Link="Host\TurnRules.cs" />
+    <Compile Include="..\LivingPartner.Host\PcOperate.cs" Link="Host\PcOperate.cs" />
+    <!-- (H6) Documents: the plain wordings, the names, the stage machine of carrying one into the PC, the book of this sitting (DocsRules); the PDF writer; the pages drawn with GDI+ and the making itself, run with models that answer from a list. -->
+    <Compile Include="..\LivingPartner.Host\DocsRules.cs" Link="Host\DocsRules.cs" />
+    <Compile Include="..\LivingPartner.Host\DocsPdf.cs" Link="Host\DocsPdf.cs" />
+    <Compile Include="..\LivingPartner.Host\DocsPages.cs" Link="Host\DocsPages.cs" />
+    <Compile Include="..\LivingPartner.Host\DocsMaker.cs" Link="Host\DocsMaker.cs" />
+    <!-- (C1) "Show it and Bambi makes it in 3D": the plain wordings and lines (SightRules), the .glb writer and its check (GlbWriter), the picture of a sculpted thing (ModelRender): plain rules, no host in them. -->
+    <Compile Include="..\LivingPartner.Host\SightRules.cs" Link="Host\SightRules.cs" />
+    <Compile Include="..\LivingPartner.Host\GlbWriter.cs" Link="Host\GlbWriter.cs" />
+    <Compile Include="..\LivingPartner.Host\ModelRender.cs" Link="Host\ModelRender.cs" />
+    <PackageReference Include="System.Drawing.Common" Version="8.0.10" />
+    <!-- The marketplace hub without its web server: accounts, listings, buying and selling (HubTests.cs runs it on a store that lives in memory). -->
+    <Compile Include="..\LivingPartner.MarketHub\Hub.cs" Link="Hub\Hub.cs" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="MoonSharp" Version="2.0.0" />
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
+    <PackageReference Include="xunit" Version="2.9.2" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2" />
+  </ItemGroup>
+
+</Project>

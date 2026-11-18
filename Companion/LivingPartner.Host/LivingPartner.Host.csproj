@@ -1,0 +1,72 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="../SoloDemon/SoloDemon.props" />
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <LangVersion>latest</LangVersion>
+    <AssemblyName>LivingPartner.Host</AssemblyName>
+    <RootNamespace>LivingPartner.Host</RootNamespace>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <SatelliteResourceLanguages>en</SatelliteResourceLanguages>
+    <InvariantGlobalization>false</InvariantGlobalization>
+    <NoWarn>$(NoWarn);CA1416;CS8632</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- The protocol, coordinate math, motion plan and state machine are the SAME source files the Unity clients compile. -->
+    <Compile Include="..\..\MetaVRHack\Assets\LivingPartner\Shared\**\*.cs" LinkBase="Shared" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="MoonSharp" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- The marketplace's page, its font and its sticker art: served by the host from the folder next to the exe (/market). -->
+    <Content Include="web\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../../Play-Demon-Gate.cmd" Link="Play-Demon-Gate.cmd" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="..\LivingPartner.Mac\wwwroot\table\**\*" Link="web\table\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../LivingPartner.Mac/wwwroot/art/demon-*;../LivingPartner.Mac/wwwroot/art/swarm-meshes.json" Link="web/demon-art/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+
+  <!--
+    The marketplace hub (LivingPartner.MarketHub.exe) belongs next to the host: on a PC that names no other hub, the
+    host starts it from its own folder (HubLink.cs). So building the host builds the hub into the same output folder,
+    and publishing the host publishes the hub into the same publish folder, for the same runtime. The hub is a
+    program of its own, not a library of the host's: it is built by a call of its own rather than referenced.
+    (-p:SkipHub=true leaves it out.)
+  -->
+  <PropertyGroup>
+    <HubProject>$(MSBuildProjectDirectory)\..\LivingPartner.MarketHub\LivingPartner.MarketHub.csproj</HubProject>
+  </PropertyGroup>
+
+  <Target Name="HubBesideHost" AfterTargets="Build" Condition="'$(SkipHub)' != 'true'">
+    <PropertyGroup>
+      <_HubOut>$([System.IO.Path]::GetFullPath('$(OutDir)'))</_HubOut>
+      <_HubOut Condition="!HasTrailingSlash('$(_HubOut)')">$(_HubOut)\</_HubOut>
+    </PropertyGroup>
+    <!-- (restored under a property of its own, so that the build that follows reads what was just restored) -->
+    <MSBuild Projects="$(HubProject)" Targets="Restore" Properties="Configuration=$(Configuration);HubRestoreFor=build" />
+    <MSBuild Projects="$(HubProject)" Targets="Build" Properties="Configuration=$(Configuration);OutDir=$(_HubOut)" />
+  </Target>
+
+  <Target Name="HubBesidePublishedHost" AfterTargets="Publish" Condition="'$(SkipHub)' != 'true'">
+    <PropertyGroup>
+      <_HubPub>$([System.IO.Path]::GetFullPath('$(PublishDir)'))</_HubPub>
+      <_HubPub Condition="!HasTrailingSlash('$(_HubPub)')">$(_HubPub)\</_HubPub>
+      <_HubRuntime Condition="'$(RuntimeIdentifier)' != ''">;RuntimeIdentifier=$(RuntimeIdentifier);SelfContained=$(SelfContained)</_HubRuntime>
+    </PropertyGroup>
+    <MSBuild Projects="$(HubProject)" Targets="Restore" Properties="Configuration=$(Configuration)$(_HubRuntime);HubRestoreFor=publish" />
+    <MSBuild Projects="$(HubProject)" Targets="Publish" Properties="Configuration=$(Configuration)$(_HubRuntime);PublishDir=$(_HubPub)" />
+  </Target>
+
+  <Target Name="CopySoloLauncherToDistribution" AfterTargets="Publish"
+          Condition="'$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory),$(PublishDir)))' == '$([MSBuild]::NormalizeDirectory($(MSBuildProjectDirectory),../../dist/LivingAIPartner-Host))'">
+    <Copy SourceFiles="$(MSBuildProjectDirectory)/../../Play-Demon-Gate.cmd" DestinationFolder="$(MSBuildProjectDirectory)/../../dist" SkipUnchangedFiles="true" />
+  </Target>
+</Project>

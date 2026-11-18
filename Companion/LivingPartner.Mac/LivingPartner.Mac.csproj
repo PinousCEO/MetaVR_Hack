@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <Import Project="../SoloDemon/SoloDemon.props" />
+  <Import Project="MacDocumentPages.props" />
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>disable</Nullable>
+    <UseAppHost>true</UseAppHost>
+    <NoWarn>$(NoWarn);CS8632</NoWarn>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="../../MetaVRHack/Assets/LivingPartner/Shared/**/*.cs" LinkBase="Shared" />
+    <Compile Include="../../MetaVRHack/Assets/LivingPartner/MR/LocalWorld.cs" Link="Shared/LocalWorld.cs" />
+    <Compile Include="../LivingPartner.Host/TalkRules.cs" Link="Shared/TalkRules.cs" />
+    <Compile Include="../LivingPartner.Host/GlassRules.cs" Link="Shared/GlassRules.cs" />
+    <Compile Include="../LivingPartner.Host/GomokuTable.cs" Link="Shared/GomokuTable.cs" />
+    <Compile Include="../LivingPartner.Host/GomokuWeb.cs" Link="Shared/GomokuWeb.cs" />
+    <Compile Include="../LivingPartner.Host/OpenAiContent.cs" Link="Shared/OpenAiContent.cs" />
+    <Compile Include="../LivingPartner.Host/ClaudeGameClient.cs" Link="Shared/ClaudeGameClient.cs" />
+    <Compile Include="../LivingPartner.Host/DocsRules.cs" Link="Shared/DocsRules.cs" />
+    <Compile Include="../LivingPartner.Host/DocsPdf.cs" Link="Shared/DocsPdf.cs" />
+    <Compile Include="../LivingPartner.Host/PcRules.cs" Link="Shared/PcRules.cs" />
+    <Compile Include="../LivingPartner.Host/WorldRules.cs" Link="Shared/WorldRules.cs" />
+    <Compile Include="../LivingPartner.Host/GlbWriter.cs" Link="Shared/GlbWriter.cs" />
+    <Compile Include="../LivingPartner.Host/SculptureDesign.cs" Link="Shared/SculptureDesign.cs" />
+    <Compile Include="../LivingPartner.Host/SightRules.cs" Link="Shared/SightRules.cs" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="MoonSharp" Version="2.0.0" />
+    <PackageReference Include="Whisper.net" Version="1.9.1" />
+    <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
+    <Content Update="wwwroot/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="Audio/wake.wav" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../MetaVRHack/Assets/LivingPartner/Art/Ui/glass-*.png" Link="wwwroot/art/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

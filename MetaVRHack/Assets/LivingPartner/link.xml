@@ -1,0 +1,9 @@
+﻿<linker>
+  <!-- Protocol DTOs are (de)serialised by reflection and platform apps are registered by name: keep these assemblies whole under IL2CPP stripping. -->
+  <assembly fullname="LivingPartner.Shared" preserve="all"/>
+  <assembly fullname="LivingPartner.Character" preserve="all"/>
+  <assembly fullname="LivingPartner.MR" preserve="all"/>
+  <assembly fullname="LivingPartner.Quest" preserve="all"/>
+  <!-- The Lua interpreter that runs scripted modules (Shared/LuaSandbox.cs): it finds its own library functions by reflection. -->
+  <assembly fullname="MoonSharp.Interpreter" preserve="all"/>
+</linker>
