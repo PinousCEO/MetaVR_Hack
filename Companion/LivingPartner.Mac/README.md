@@ -9,10 +9,6 @@ Connect your MacBook to the TV over HDMI or a display adapter. In macOS Displays
 3. Look at the TV and follow the screen-location prompts. **Calibrate TV** repeats this step. Allow microphone access on Quest.
 4. Say **“Hey, Nilo.”** When Nilo answers, speak your request, or use a single phrase such as **“Hey, Nilo, enter the TV.”** Say **“Hey, Nilo, come back”** to return to the room. A text field in TV settings also accepts commands. Spoken replies can be enabled in the TV controls.
 
-## Star Garden
-
-Say **“Hey, Nilo, open the star garden”** or choose **Star Garden** under **Places** in your bag. Pinch a patch of soil to plant and pinch again to water. After 45 seconds, a gold star grows above the leaves. Pinch it to collect three stars. Pinch a sign to install an upgrade. Rain Bell costs three stars and waters subsequent seeds. Sun Dial costs six and reduces growing time to 25 seconds. Twin Bloom costs nine and doubles the harvest. Your beds, stars and upgrades stay on the headset when you leave the garden.
-
 ## Play on the TV
 
 - **Goalkeeper.** Block Nilo’s penalty shots with your hands as the ball crosses from the TV into the room.

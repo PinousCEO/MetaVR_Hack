@@ -231,7 +231,7 @@ namespace LivingPartner.MR
         enum MbKind { None, Item, Game, Skill, Place, Act, Folder }
         struct MbEntry { public MbKind kind; public ItemDef item; public GamePackDef game; public SkillDef skill; public AmbienceDef place; public int act; }
         // what a sticker of Nilo / Tools does
-        const int ActGoIn = 0, ActComeOut = 1, ActHere = 2, ActWave = 3, ActLook = 4, ActCheer = 5, ActMarket = 10, ActScreen = 11, ActFind = 12, ActQuiet = 13, ActStop = 14, ActRain = 15, ActGarden = 16;
+        const int ActGoIn = 0, ActComeOut = 1, ActHere = 2, ActWave = 3, ActLook = 4, ActCheer = 5, ActMarket = 10, ActScreen = 11, ActFind = 12, ActQuiet = 13, ActStop = 14, ActRain = 15;
         /// <summary>How the menu was opened: by the open palm (it is on the hand), by voice or by a check from the PC (it stands in the room).</summary>
         enum MbFrom { Palm, Voice, Pc }
 
@@ -394,7 +394,7 @@ namespace LivingPartner.MR
 
         static string MbName(in MbEntry e) => e.kind == MbKind.Folder ? MbRingNames[e.act] : e.kind == MbKind.Item ? e.item.name : e.kind == MbKind.Game ? e.game.title ?? "" : e.kind == MbKind.Skill ? e.skill.name : e.kind == MbKind.Place ? e.place.name
             : e.act == ActGoIn ? "Go in" : e.act == ActComeOut ? "Come out" : e.act == ActHere ? "Come here" : e.act == ActWave ? "Wave" : e.act == ActLook ? "Look" : e.act == ActCheer ? "Cheer"
-            : e.act == ActMarket ? "Market" : e.act == ActScreen ? "Bring screen" : e.act == ActFind ? "Find screens" : e.act == ActQuiet ? "Quiet" : e.act == ActStop ? "Stop" : e.act == ActGarden ? "Star Garden" : "Rain";
+            : e.act == ActMarket ? "Market" : e.act == ActScreen ? "Bring screen" : e.act == ActFind ? "Find screens" : e.act == ActQuiet ? "Quiet" : e.act == ActStop ? "Stop" : "Rain";
 
         /// <summary>Everything that is in the bag now has been seen: none of it is "new" the next time the menu is opened.</summary>
         void MenuRemember()
@@ -428,7 +428,6 @@ namespace LivingPartner.MR
                 foreach (var sk in w.skills) if (sk.builtin && !PassingSkill(sk)) _mbList.Add(new MbEntry { kind = MbKind.Skill, skill = sk });
                 for (int i = w.skills.Count - 1; i >= 0; i--) if (!w.skills[i].builtin && !PassingSkill(w.skills[i])) _mbList.Add(new MbEntry { kind = MbKind.Skill, skill = w.skills[i] });
             }
-            if (ring == RgPlaces) _mbList.Add(new MbEntry { kind = MbKind.Act, act = ActGarden });
             if (ring == RgPlaces || ring < 0)
                 foreach (var a in MenuPlaces()) _mbList.Add(new MbEntry { kind = MbKind.Place, place = a });
             if (ring == RgBambi)
@@ -524,7 +523,6 @@ namespace LivingPartner.MR
                     case MbKind.Act:
                         switch (e.act)
                         {
-                            case ActGarden: tex = v.texPlaces; title = MbName(e); on = GardenOpen; break;
                             case ActGoIn: tex = v.texGoIn; title = "Go in"; break;
                             case ActComeOut: tex = v.texComeOut; title = "Come out"; break;
                             case ActHere: tex = v.texHere; title = "Come here"; break;
@@ -696,7 +694,6 @@ namespace LivingPartner.MR
                     MenuSay(_scrMon.Length > 0 ? "The screen goes back" : "Bringing the screen you are looking at over");
                     SendMarket("screen", "", _scrMon.Length > 0 ? "close" : "this");
                     break;
-                case ActGarden: ToggleGarden(); break;
                 case ActFind: MenuSay("Looking for your screens ..."); BeginCalibration(); break;
                 case ActQuiet:
                     _settings.quietMode = !_settings.quietMode; _link.Send(Msg.Settings, _settings);

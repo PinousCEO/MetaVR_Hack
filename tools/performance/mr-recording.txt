@@ -4,23 +4,12 @@
 4 frameSample 180 60 0 recording
 12 menu 1
 13 menuTab 4
-19.3 menuPress 99 0 0 Star Garden
+19.3 menu 0
 20 simEye 0.28 0 1.18
-22 simTouch 0.6 -0.112 .95
-23 simTouch 0.618 0 .95
-24 simTouch 0.6 0.112 .95
-25 simTouch 0.6 -0.112 .95
-26 simTouch 0.618 0 .95
-27 simTouch 0.6 0.112 .95
 39 swarmStart
 40 swarmBot 2
 56 swarmInfo
 57 swarmStop
-76 simTouch .6 -.112 .95
-77 simTouch .618 0 .95
-78 simTouch .6 .112 .95
-80 simTouch .743 -.127 .943
-83 simTouch .743 0 .943
 98 swarmStart
 99 swarmBot 2
 156 swarmInfo

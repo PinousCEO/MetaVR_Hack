@@ -463,22 +463,34 @@ end
 
         /// <summary>The built-in kind "cup".</summary>
         public const string Cup =
-@"-- Cup. Nilo takes a sip and puts it back.
+@"-- Lift the cup, pause for a sip, and set it down where it was.
+wearable(""handR"")
+offer(""sip"", ""Take a sip"")
+motion(""sip"", 2.8, function(u, p)
+  local lift = keys(u, {0,0, 0.12,0, 0.40,1, 0.68,1, 0.96,0, 1,0})
+  p.armR = {x = -35 - 62 * lift, z = -24 - 18 * lift}
+  p.foreR = {x = -12 - 58 * lift}
+  p.chest = {x = 6 * lift, y = 10 * lift}
+  p.head = {x = 10 * lift, y = 14 * lift, z = -5 * lift}
+  p.armL = {x = -12 * lift}
+end)
+
 function on_use()
   if pet_busy() then return end
   local x, y, z = me()
   pet_goto(clamp(x - 0.06, -0.4, 0.4), z, function()
     pet_face_user()
     pet_hold(""handR"")
-    pet_pose(""talk"", 1.6)
-    sound(""drop"")
-    after(1.8, function()
+    pet_play(""sip"", function()
       pet_drop()
-      me_move(x, z)
-      pet_say(""Ahh!"")
-      pet_pose(""cheer"", 1.0)
+      me_move(x, z, y)
+      pet_say(""Mmm. Thanks!"")
     end)
   end)
+end
+
+function on_act(name)
+  if name == ""sip"" then on_use() end
 end
 ";
 

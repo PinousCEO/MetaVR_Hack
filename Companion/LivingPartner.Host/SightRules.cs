@@ -33,6 +33,7 @@ public static class SightRules
     /// <summary>The plainest wordings, understood with no language model: "이거 만들어 줘", "이거 3D로 만들어 줘", "make this". null = not one of them.</summary>
     public static string Plain(string said)
     {
+        if (Regex.IsMatch(said ?? "", @"^(?:please )?(?:copy|scan|make a copy of) (?:this|my|the) (?:coffee(?: cup)?|cup|mug)(?:[,.]? (?:and |then )?(?:add a sip|add a drinking animation|make it drinkable))?[.!?]*$", RegexOptions.IgnoreCase)) return Make;
         string flat = Flat(said);
         if (flat.Length < 4 || flat.Length > 96) return null;
         if (KoMake.IsMatch(flat) || EnMake.IsMatch(flat)) return Make;
@@ -46,6 +47,7 @@ public static class SightRules
         Regex.IsMatch((words ?? "").Trim(), @"^(?:what(?:'s| is) (?:this|that)(?: object| thing)?|(?:can you see|do you see|is there) (?:a |the |this |that )?(?:cup|mug|bottle|bowl)(?: (?:here|on (?:my|the) (?:desk|table)))?|이거\s*뭐야|(?:여기\s*)?(?:컵|머그컵)\s*(?:보여|있어))[\s?!.]*$", RegexOptions.IgnoreCase);
 
     public static bool WantsModelFile(string said) =>
+        Regex.IsMatch(said ?? "", @"^(?:please )?(?:send|put|save|bring) (?:this|that|the|my) (?:coffee cup|cup|mug) (?:to|on|onto|into) (?:my|the) (?:PC|computer|Mac)[.!?]*$", RegexOptions.IgnoreCase) ||
         Regex.IsMatch(said ?? "", @"\bglb\b|\b3d (file|model file)\b|3[d디]\s*파일", RegexOptions.IgnoreCase) &&
         Regex.IsMatch(said ?? "", @"\b(export|save|download|send|copy|give|bring|get)\b|저장|내보내|보내|받고|가져", RegexOptions.IgnoreCase);
 
@@ -58,6 +60,20 @@ public static class SightRules
         string name = store.Success ? store.Groups[1].Value : place.Groups[1].Success ? place.Groups[1].Value : place.Groups[2].Value;
         var item = ExportTarget(inventory, name);
         return item == null ? null : new WorldCommand { cmd = store.Success ? "store" : "place", id = item.id };
+    }
+
+    public static bool WantsSip(string words) => Regex.IsMatch((words ?? "").Trim(),
+        @"^(?:please )?(?:take a sip|have a sip|drink (?:it|(?:your|the|this|my) coffee)|sip (?:it|(?:your|the|this|my) coffee))[.!?]*$", RegexOptions.IgnoreCase);
+
+    public static ItemDef DrinkingCup(IEnumerable<ItemDef> items) => items
+        .Where(i => i != null && i.kind == "cup" && i.status == "ready")
+        .OrderByDescending(i => !string.IsNullOrEmpty(i.model)).ThenByDescending(i => i.madeUnixMs).FirstOrDefault();
+
+    public static bool RestoreCupScript(ItemDef cup)
+    {
+        if (!string.IsNullOrEmpty(cup.script) && !cup.script.StartsWith("-- Cup. Nilo takes a sip and puts it back.", StringComparison.Ordinal)) return false;
+        cup.script = RoomScriptExamples.Cup;
+        return true;
     }
 
     public static ItemDef ExportTarget(IEnumerable<ItemDef> inventory, string words)

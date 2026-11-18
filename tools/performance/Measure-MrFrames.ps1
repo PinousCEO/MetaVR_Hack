@@ -19,7 +19,7 @@ if (!$process.WaitForExit(140000)) {
     throw "Simulator timed out. See $log"
 }
 $rows = @(Select-String -LiteralPath $log -Pattern '^\[MR\] frames (\S+) n=')
-$expected = @('desk', 'open-menu', 'first-open', 'growing', 'demon-wave', 'ripe-garden')
+$expected = @('desk', 'open-menu', 'menu-dismiss', 'desk-close', 'demon-wave', 'after-game')
 $actual = @($rows | ForEach-Object { $_.Matches[0].Groups[1].Value })
 if ($process.ExitCode -ne 0 -or ($actual -join ',') -ne ($expected -join ',')) {
     throw "Incomplete run. See $log"

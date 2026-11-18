@@ -469,7 +469,7 @@ namespace LivingPartner.MR
                     float size = d.sizeM;
                     if (worn.Length > 0)
                     {
-                        if (petHere) RoomAttach(p, d, worn);
+                        if (petHere) RoomAttach(p, d, worn, rs);
                         else p.Visible = false;                      // (worn by a partner that is inside the screen)
                         p.shadow.enabled = false;
                     }
@@ -558,7 +558,7 @@ namespace LivingPartner.MR
         /// A thing the partner wears: in a hand (it is held by one end and lies along the arm - turned up when the arm
         /// hangs, so that a bat does not go through the desk), on the head, or on the back.
         /// </summary>
-        void RoomAttach(PropView p, ItemDef d, string slot)
+        void RoomAttach(PropView p, ItemDef d, string slot, RoomScript script)
         {
             // the thing's long side, and the end it is held by
             Bounds mb = p.Mesh != null ? p.Mesh.bounds : new Bounds(new Vector3(0f, 0.5f, 0f), Vector3.one);
@@ -572,6 +572,18 @@ namespace LivingPartner.MR
                 scale = d.sizeM * Mathf.Min(1f, 0.06f / Mathf.Max(0.01f, d.sizeM));
                 rot = headBone.rotation;
                 at = _rig.HeadTopWorld - rot * Vector3.up * (0.045f * _H) - rot * new Vector3(mb.center.x, mb.min.y, mb.center.z) * scale;
+            }
+            else if (slot == "handR" && d.kind == "cup" && script?.Pet.motion == "sip")
+            {
+                float u = script.Pet.MotionU;
+                float lift = Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.12f, .4f, u)) *
+                             (1f - Mathf.SmoothStep(0, 1, Mathf.InverseLerp(.68f, .96f, u)));
+                scale = Mathf.Min(scale, .35f * _H);
+                rot = _rot * Quaternion.Euler(-27f * lift, 0, 0);
+                Vector3 grip = new Vector3(mb.max.x, mb.center.y, mb.center.z);
+                Vector3 rim = new Vector3(mb.center.x, mb.max.y, mb.min.z);
+                Vector3 mouth = _rig.Bones[(int)Bone.Head].TransformPoint(new Vector3(.035f, .13f, .245f));
+                at = Vector3.Lerp(_rig.HandRWorld - rot * grip * scale, mouth - rot * rim * scale, lift);
             }
             else if (slot == "back")
             {
@@ -665,8 +677,42 @@ namespace LivingPartner.MR
             int bar = text.IndexOf('|');
             string which = (bar >= 0 ? text.Substring(0, bar) : text).Trim(), what = bar >= 0 ? text.Substring(bar + 1).Trim() : "use";
             var e = RoomFind(which);
+            if (what == "sip" && bar > 0)
+            {
+                var item = Item(e?.itemId ?? which);
+                if (item?.kind == "cup" || (item == null && e == null && which.StartsWith("item-", StringComparison.Ordinal)))
+                {
+                    if (_sipPending != null) StopCoroutine(_sipPending);
+                    _sipPending = StartCoroutine(SipWhenPlaced(item?.id ?? which, how));
+                    return;
+                }
+            }
             if (e == null) { Debug.Log($"[MR] room script: nothing with a script is called '{which}' ({how} asked for '{what}')"); return; }
             RoomDo(e, what.Length > 0 ? what : "use", how);
+        }
+
+        Coroutine _sipPending;
+        System.Collections.IEnumerator SipWhenPlaced(string id, string how)
+        {
+            // A spoken act can arrive before the world snapshot placing the cup, or before its GLB download.
+            float until = Time.unscaledTime + 20f;
+            yield return null;
+            while (Time.unscaledTime < until && _ch.owner == Env.Mr && _game.Length == 0 && !_tn.active)
+            {
+                var entry = RoomEntry(id);
+                var item = Item(id);
+                var prop = PropOf(id);
+                if (entry != null && item != null && item.inRoom && prop != null && prop.Visible &&
+                    (string.IsNullOrEmpty(item.model) || (_shapes.TryGetValue("glb:" + item.model, out var shape) && shape.mesh != null && prop.Mesh == shape.mesh)))
+                {
+                    RoomDo(entry, "sip", how);
+                    _sipPending = null;
+                    yield break;
+                }
+                yield return null;
+            }
+            if (_ch.owner == Env.Mr && _game.Length == 0 && !_tn.active) Caption("I couldn't bring the cup out. Try again.", 3f);
+            _sipPending = null;
         }
 
         /// <summary>The scripted thing (or skill) with this id or name; with no text, the first one.</summary>

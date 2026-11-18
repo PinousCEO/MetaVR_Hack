@@ -28,13 +28,6 @@ sealed partial class Stage
         bool Has(params string[] parts) => parts.Any(ask.Contains);
         snap.character.heard = words; snap.character.heardAt = Now;
         if (bare && named) { Say(Wake); followUpUntil = Now + 12; return; }
-        string garden = RadishGarden.Request(ask);
-        if (garden.Length > 0)
-        {
-            Send(headset, Msg.IntentResult, new { kind = garden, text = "" });
-            followUpUntil = 0;
-            return;
-        }
         if (ScreenReading.Requested(ask))
         {
             if (readingScreen) { Say("I’m reading the screen."); return; }

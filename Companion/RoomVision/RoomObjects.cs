@@ -25,7 +25,7 @@ internal static class RoomObjects
 
     internal static string RequestedClass(string words)
     {
-        if (Regex.IsMatch(words, @"\b(?:mug|coffee mug|teacup)s?\b|컵|머그", RegexOptions.IgnoreCase)) return "cup";
+        if (Regex.IsMatch(words, @"\b(?:mug|coffee(?: mug| cup)?|teacup)s?\b|컵|머그", RegexOptions.IgnoreCase)) return "cup";
         // The object can be sitting on a table or by a laptop. Read the object before its location.
         string subject = Regex.Split(words.ToLowerInvariant(), @"\s+(?:on|near|beside|next to|in front of|behind)\s+")[0];
         return Labels.FirstOrDefault(label => Regex.IsMatch(subject, @"\b" + label + @"s?\b"));

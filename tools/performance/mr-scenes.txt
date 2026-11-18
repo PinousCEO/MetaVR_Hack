@@ -5,20 +5,14 @@
 12 menu 1
 13 menuTab 4
 14 frameSample 4 60 0 open-menu
-19 frameSample 2 60 0 first-open
-19.3 menuPress 99 0 0 Star Garden
+19 frameSample 2 60 0 menu-dismiss
+19.3 menu 0
 20 simEye 0.28 0 1.18
-22 simTouch 0.6 -0.112 .95
-23 simTouch 0.618 0 .95
-24 simTouch 0.6 0.112 .95
-25 simTouch 0.6 -0.112 .95
-26 simTouch 0.618 0 .95
-27 simTouch 0.6 0.112 .95
-29 frameSample 9 60 0 growing
+29 frameSample 9 60 0 desk-close
 39 swarmStart
 40 swarmBot 2
 43 frameSample 12 60 0 demon-wave
 56 swarmInfo
 57 swarmStop
-74 frameSample 8 60 0 ripe-garden
+74 frameSample 8 60 0 after-game
 84 simQuit

@@ -44,6 +44,7 @@ internal static class PhotoObject
         ct.ThrowIfCancellationRequested();
         var item = new ItemDef { id = id, name = idea.name, asked = words, kind = idea.kind, uses = idea.uses,
             sizeM = idea.sizeM, color = idea.color, note = idea.note, model = id + ".glb", status = "ready",
+            script = idea.kind == "cup" ? RoomScriptExamples.Cup : "",
             progress = 1, inRoom = false, madeUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
         return (item, glb);
     }

@@ -66,6 +66,40 @@ public class SightTests
     }
 
     [Fact]
+    public void Filming_commands_use_the_copied_cup_and_return_it_after_a_sip()
+    {
+        string request = NameRules.Strip("Hey, Nilo, copy this cup and add a sip.");
+        Assert.Equal(SightRules.Make, SightRules.Plain(request));
+        Assert.Equal("cup", RoomObjects.RequestedClass(request));
+        Assert.True(SightRules.WantsSip(NameRules.Strip("Hey, Nilo, take a sip.")));
+        Assert.True(SightRules.WantsModelFile("Send the cup to my PC."));
+        Assert.False(SightRules.WantsModelFile("Send the PDF to my PC."));
+        var cup = new ItemDef { id = "my-cup", kind = "cup", name = "Cup", model = "my-cup.glb",
+            status = "ready", sizeM = .08f, x = .12f, z = -.08f };
+        var items = new[] { cup, new ItemDef { id = "shop-cup", name = "Cup", kind = "cup", status = "ready" } };
+        Assert.Same(cup, SightRules.DrinkingCup(items));
+        Assert.Same(cup, SightRules.ExportTarget(items, "Send the cup to my PC."));
+        Assert.True(SightRules.RestoreCupScript(cup));
+        Assert.False(SightRules.RestoreCupScript(cup));
+        var room = new FakeRoom();
+        var script = new RoomScript(cup.script, cup, room);
+        Assert.True(script.Act("sip"));
+        bool lifted = false;
+        for (int frame = 0; frame < 600; frame++)
+        {
+            room.Step(1f / 60, script);
+            script.Tick(1f / 60);
+            if (script.Pet.motion == "sip" && script.Pet.MotionU is > .4f and < .7f)
+                lifted |= room.worn == "handR";
+        }
+        Assert.True(lifted);
+        Assert.Equal(new[] { "handR", "" }, room.wears);
+        Assert.Equal(cup.x, script.Me.body.x, 3);
+        Assert.Equal(cup.z, script.Me.body.z, 3);
+        script.Dispose();
+    }
+
+    [Fact]
     public async Task The_selected_cup_region_drives_one_Tripo_task_and_preserves_its_GLB()
     {
         byte[] frame = CoffeeOnTable();

@@ -16,6 +16,19 @@ sealed partial class Stage
     bool TryWorkSpoken(string words,out string reply)
     {
         string ask = NameRules.Strip(words).Trim();
+        if (SightRules.WantsSip(ask))
+        {
+            var cup = SightRules.DrinkingCup(bag.World.items);
+            if (cup == null) reply = "Show me your cup first.";
+            else if (snap.character.owner != Env.Mr) reply = "Call me back into the room for a sip.";
+            else
+            {
+                SightRules.RestoreCupScript(cup);
+                bag.Handle(Msg.World, new WorldCommand { cmd = "act", id = cup.id, text = "sip" });
+                reply = "Coffee? Thanks!";
+            }
+            return true;
+        }
         if (SightRules.BagCommand(bag.World.items, ask) is { } placement)
         {
             bag.Handle(Msg.World, placement);

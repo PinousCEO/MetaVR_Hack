@@ -102,7 +102,6 @@ namespace LivingPartner.MR
             _link.OnTokenIssued += t => SaveToken(t);
             _link.OnConnectionChanged += c => { Debug.Log("[MR] host connection: " + c); _tn = new TennisState(); _tnLocal = null; if (!c) OnHostLost(); };
             if (!LocalAtStart) _link.Start();      // (LocalAtStart: no PC is looked for at all - MrLocalHost)
-            _gardenArtRequest = Resources.LoadAsync<StarGardenMeshes>("StarGarden");
             InitUi();
             InitVoice();
             InitSound();
@@ -194,8 +193,6 @@ namespace LivingPartner.MR
         {
             switch (r.kind)
             {
-                case "gardenOpen": if (!GardenOpen) ToggleGarden(); break;
-                case "gardenClose": if (GardenOpen) ToggleGarden(); break;
                 case "enterPortal":
                     // Where it goes in: the spot the host worked out (pointed at on purpose, or looked at, round the
                     // sentence - EnterRules); with none, the screen being looked at NOW, before a hand ray that may
@@ -447,7 +444,6 @@ namespace LivingPartner.MR
             UpdateVoice(dt, hostOk, show);
             UpdateTennis(dt, hostOk);
             UpdateWorld(dt, hostOk);
-            UpdateGarden();
             UpdateRps(dt);
             UpdateSwarm(dt, hostOk);     // Screen Scamps: the monsters that come out of the screen (MrSwarm)
             UpdatePoke(dt, hostOk);     // a fingertip presses a thing on the desk (MrPoke)

@@ -130,8 +130,6 @@ try {
   console.log("PASS four-game catalog, English game commands and authenticated demon geometry/HUD, WebGL acknowledgement and stop");
   written("utterance",{text:"Hey, Nilo"}); await take("character.say",a=>a.text==="I’m here!");
   assert.equal((await state()).speak,false);
-  written("utterance",{text:"Hey, Nilo, open the star garden."}); await take("intent.result",a=>a.kind==="gardenOpen");
-  written("utterance",{text:"Hey, Nilo, close the garden."}); await take("intent.result",a=>a.kind==="gardenClose");
   const cupPhoto = await readFile(new URL("../../LivingPartner.Tests/Fixtures/coffee.jpg",import.meta.url));
   written("utterance",{text:"Hey, Nilo, do you see a cup on my desk?"});
   const eye = await take("eye.request");

@@ -300,6 +300,21 @@ public sealed class Conversation
             return;
         }
         string gameWish = NameRules.Strip(u.text);
+        if (SightRules.WantsSip(gameWish) && (!open || named || HostClock.Now <= _attentionUntil))
+        {
+            if (open && !named) _attentionUntil = -1;
+            LastLanguage = "English";
+            var cup = SightRules.DrinkingCup(_core.State.world.items);
+            if (cup == null) Say("Show me your cup first.", "curious", 3, "coffee");
+            else if (_core.State.character.owner != Env.Mr) Say("Call me back into the room for a sip.", "curious", 3, "coffee");
+            else
+            {
+                if (SightRules.RestoreCupScript(cup)) _core.World.Changed();
+                _core.World.Run(c, new WorldCommand { cmd = "act", id = cup.id, text = "sip" }, true);
+            }
+            HeardAs(u, "actThing");
+            return;
+        }
         string sight = SightRules.Plain(gameWish) ?? (SightRules.WantsModelFile(gameWish) ? SightRules.Export : SightRules.WantsIdentification(gameWish) ? SightRules.Identify : null);
         if (sight != null && (!open || named || HostClock.Now <= _attentionUntil))
         {
@@ -315,15 +330,6 @@ public sealed class Conversation
             LastLanguage = "English";
             _core.World.Run(c, placement, true);
             HeardAs(u, placement.cmd == "place" ? "placeItem" : "storeItem");
-            return;
-        }
-        string garden = RadishGarden.Request(gameWish);
-        if (garden.Length > 0 && (!open || named || HostClock.Now <= _attentionUntil))
-        {
-            if (open && !named) _attentionUntil = -1;
-            if (_core.HasMr) _core.Broadcast(Msg.IntentResult, new IntentResultMsg { kind = garden }, _core.IsMr);
-            else Say("Connect your headset to open the garden.", "neutral", 3, "garden");
-            HeardAs(u, garden);
             return;
         }
         string tableAsk=gameWish.ToLowerInvariant();
