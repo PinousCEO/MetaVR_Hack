@@ -54,6 +54,36 @@ public class SwarmTests
     }
 
     static SwarmInput Idle() => new SwarmInput { target = Chest };
+
+    [Theory]
+    [InlineData(SwarmKind.Hopper)]
+    [InlineData(SwarmKind.Flyer)]
+    [InlineData(SwarmKind.Boss)]
+    public void Demons_continue_from_the_exit_straight_to_the_player(int kind)
+    {
+        var s = New();
+        Vector3 eye = new(.11f, 1.40f, -.3f);
+        Vector3 exit = s.arena.center + s.arena.up * .10f;
+        ref var demon = ref s.monsters[0];
+        demon.kind = kind; demon.state = SwarmState.Emerging; demon.t = 0; demon.from = demon.pos = exit;
+        var direction = Vector3.Normalize(eye - exit);
+        var input = new SwarmInput { target = eye };
+        float previous = 0;
+        bool chased = false;
+        for (int i = 0; i < 130 && demon.alive; i++)
+        {
+            s.Step(Dt, input);
+            if (!demon.alive) break;
+            Vector3 travel = demon.pos - exit;
+            float along = Vector3.Dot(travel, direction);
+            Assert.True(along >= previous - 1e-5f);
+            Assert.InRange((travel - direction * along).Length(), 0, .0001f);
+            previous = along;
+            chased |= demon.state == SwarmState.Chase;
+        }
+        Assert.True(chased);
+        Assert.True(previous > SwarmKind.Speed[kind] * .4f);
+    }
     static SwarmInput Aim(Vector3 at) => new SwarmInput { target = Chest, aimValid = true, aimOrigin = Finger, aimDir = Vector3.Normalize(at - Finger), handValid = true, hand = Finger - new Vector3(0, 0.03f, 0.08f) };
 
     /// <summary>A player: points at the monster nearest to the chest, turning the finger at `turn` per second; takes the cards in the order of `likes`.</summary>

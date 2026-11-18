@@ -137,6 +137,7 @@ public sealed class Conversation
     bool _openBusy;        // an overheard clip is being worked on: the next one waits
     (Client c, VoiceClip clip) _openNext;
     double _attentionUntil = -1;
+    double _googleUntil = -1;
     int _nameCalls;
     // The partner's name as the transcription writes it - 밤비야, 밤미야, 반비야, Bamby ... - is NameRules (TalkRules.cs).
     static System.Text.RegularExpressions.Regex NameRx => NameRules.NameRx;
@@ -287,7 +288,10 @@ public sealed class Conversation
         // speech after the Talk button are addressed by definition.
         bool nameOnly;
         bool named = open ? NameRules.Wake(u.text, out nameOnly) : Named(u.text, out nameOnly);
-        if (open && !named && HostClock.Now > _attentionUntil && !_core.Shop.Listening) { HeardAs(u, "not for me"); return; }
+        string gameWish = NameRules.Strip(u.text);
+        var google = PcRules.Google(gameWish);
+        bool searchFollowUp = google?.@do == "webSearch" && HostClock.Now <= _googleUntil;
+        if (open && !named && HostClock.Now > _attentionUntil && !_core.Shop.Listening && !searchFollowUp) { HeardAs(u, "not for me"); return; }
         if (named && nameOnly)
         {
             bool koName = u.text.Any(ch => ch >= 0xAC00 && ch <= 0xD7A3);
@@ -299,7 +303,15 @@ public sealed class Conversation
             Say(hello, "happy", 3, "conversation: name");
             return;
         }
-        string gameWish = NameRules.Strip(u.text);
+        if (google is { } browser && (!open || named || searchFollowUp || HostClock.Now <= _attentionUntil))
+        {
+            _attentionUntil = -1;
+            var outcome = _core.PcDo.Do(c, browser.@do, browser.arg, u);
+            _googleUntil = outcome.ok && browser.@do == "openUrl" ? HostClock.Now + 15 : -1;
+            Say(outcome.line, outcome.ok ? "happy" : "worried", 4, "Google");
+            HeardAs(u, "pcDo");
+            return;
+        }
         if (SightRules.WantsSip(gameWish) && (!open || named || HostClock.Now <= _attentionUntil))
         {
             if (open && !named) _attentionUntil = -1;

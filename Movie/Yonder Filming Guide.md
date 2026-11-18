@@ -2,7 +2,7 @@
 
 **Final cut · 2:55 · Quest 3 and Windows Companion.** Start with a real sip. Give the viewer a moment to notice the handle or band of colour on your cup. That detail identifies the same object when Nilo drinks and when you show its 3D file on your computer.
 
-[Printable cue card](Yonder%20Cue%20Card.pdf) · [Slow English rehearsal audio](Yonder%20English%20Rehearsal.mp3) · [Cup animation from the simulator](Nilo%20Cup%20Rehearsal.mp4)
+[Printable cue card](Yonder%20Cue%20Card.pdf) · [Slow English rehearsal audio](Yonder%20English%20Rehearsal.mp3) · [Cup animation from the simulator](Nilo%20Cup%20Rehearsal.mp4) · [Demon Gate desktop gameplay](Demon%20Gate%20Flight.mp4)
 
 ## Shooting script
 
@@ -29,4 +29,5 @@ Say **Hey, Nilo** (헤이 니-로) before each command when the microphone is li
 - For tennis, point as you say “go inside.” Changing courts ends the room match. Say “play tennis” after the crossing to start play on the PC side. If a game is still active before a different game, say “Hey, Nilo, stop the game.” Launch the solo Demon Gate from the desktop shortcut. A brief cutaway keeps the emphasis on the shared tennis rally.
 - If the longer cup line is hard to say, use **“Hey, Nilo, copy this cup.”** Tripo creates the cup model from the object you look at in Quest. Yonder attaches its drinking animation to that model. The rehearsal clip uses the simulator's stock cup. For the submission, film the cup you actually copied.
 - The PDF line can be spoken in two breaths, with a short pause after “PDF.” To deliver it, say “the PDF” distinctly. On Windows the delivered file opens when you select the file Nilo holds up.
+- For a search take, say **“Hey, Nilo, open Google.”** When the browser opens, say **“Search for coffee mugs.”** Nilo listens for a search for 15 seconds. After that, say **“Hey, Nilo, search for coffee mugs.”**
 - For the submission scene, check the generated report against the published rules before filming. Upload the Unity APK to the **Competition** release channel, include its link in Devpost, and use a publicly visible YouTube or Vimeo link for the video. Show the Quest view and keep the final export under three minutes. The deadline is **November 18, 2026, 12:00 noon PST**, or **November 19, 5:00 a.m. in Seoul**. [Official competition rules](https://start-developer-competition-26.devpost.com/rules)

@@ -1241,6 +1241,38 @@ public static class WorldRules
         return t is "clear" or "off" or "none" or "stop" or "reset" or "꺼" or "꺼줘" or "꺼줄래" or "그만" or "없애줘" || t.Contains("원래대로");
     }
 
+    public static string EnglishItemName(string name, string kind)
+    {
+        if (string.IsNullOrWhiteSpace(name) || !Regex.IsMatch(name, "[가-힣]")) return name;
+        return Regex.Replace(name, @"\s+", " ").Trim() switch
+        {
+            "책상" => "Desk", "의자" => "Chair", "작은 레코드 플레이어" => "Small Record Player",
+            "침대" => "Bed", "책" => "Book", "공" => "Ball", "빨간 우산" => "Red Umbrella",
+            "작은 통기타" => "Small Acoustic Guitar", "강아지 인형" => "Puppy Plush",
+            "작은 선인장 화분" => "Potted Cactus", "망치" => "Hammer", "야구배트" or "야구 배트" => "Baseball Bat",
+            "나무" => "Tree", "랜턴" => "Lantern", "장작" => "Firewood", "머그컵" or "커피잔" => "Coffee Mug",
+            "컨트롤러" or "게임패드" or "게임 패드" => "Game Controller",
+            _ => string.IsNullOrWhiteSpace(kind) ? "Object" : char.ToUpperInvariant(kind[0]) + kind.Substring(1)
+        };
+    }
+
+    public static void EnglishLabel(ItemDef item)
+    {
+        item.name = EnglishItemName(item.name, item.kind);
+        if (string.IsNullOrEmpty(item.note) || !Regex.IsMatch(item.note, "[가-힣]")) return;
+        item.note = item.name switch
+        {
+            "Desk" => "I can put things on it.", "Chair" => "Now I can sit at my desk.",
+            "Small Record Player" => "I can listen to music at my desk.", "Bed" => "Time for a nap.",
+            "Book" => "I can read it at my desk.", "Ball" => "Let's play catch.",
+            "Red Umbrella" => "I can take this out in the rain.", "Small Acoustic Guitar" => "I can play along with my records.",
+            "Puppy Plush" => "My puppy and I can play ball.", "Potted Cactus" => "This will brighten up my desk.",
+            "Hammer" => "I'll keep this on my desk.", "Baseball Bat" => "Now we can play baseball.",
+            "Tree" => "A little greenery for my desk.", "Lantern" => "This can light up our campfire spot.",
+            "Firewood" => "A stack of logs for our campfire.", _ => $"{item.name} is in my bag."
+        };
+    }
+
     /// <summary>
     /// A label for a thing before (or without) a language model: the word that named its kind ("책상", "Desk"),
     /// otherwise what was said with the asking taken off ("빨간 우산 하나 만들어 줘" -> "빨간 우산").

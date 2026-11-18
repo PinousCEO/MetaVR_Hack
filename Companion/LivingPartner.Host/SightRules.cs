@@ -33,6 +33,8 @@ public static class SightRules
     /// <summary>The plainest wordings, understood with no language model: "이거 만들어 줘", "이거 3D로 만들어 줘", "make this". null = not one of them.</summary>
     public static string Plain(string said)
     {
+        if (Regex.IsMatch(said ?? "", @"^(?:please )?(?:copy|scan|recreate|make(?: me)?(?: a 3d (?:copy|model) of)?) (?:a|this|that|my|the) (?:(?:quest|vr|game|touch) )*(?:controller|game\s?pad)(?: (?:in my hand|I(?:'m| am) holding|on (?:my|the) (?:desk|table)))?[.!?]*$", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(said ?? "", @"^(?:내가\s*들고\s*있는\s*)?(?:(?:이|그|저|내|퀘스트|VR|게임)\s*)*(?:컨트롤러|콘트롤러|게임\s*패드)(?:를|을)?\s*(?:그대로\s*)?(?:만들어|복제해|복사해|스캔해)\s*(?:줘|주세요|줄래)?[.!?]*$", RegexOptions.IgnoreCase)) return Make;
         if (Regex.IsMatch(said ?? "", @"^(?:please )?(?:copy|scan|make a copy of) (?:this|my|the) (?:coffee(?: cup)?|cup|mug)(?:[,.]? (?:and |then )?(?:add a sip|add a drinking animation|make it drinkable))?[.!?]*$", RegexOptions.IgnoreCase)) return Make;
         string flat = Flat(said);
         if (flat.Length < 4 || flat.Length > 96) return null;

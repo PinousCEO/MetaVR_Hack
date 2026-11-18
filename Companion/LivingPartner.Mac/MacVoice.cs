@@ -17,17 +17,34 @@ sealed partial class Stage
     bool hearing;
     string speech = "";
     double speechUntil, followUpUntil;
+    double googleUntil = -1;
     int speechNumber;
     public void Dispatch(string words, bool openMic = false)
     {
         if (string.IsNullOrWhiteSpace(words) || words.Length > 240 || headset == null) return;
         bool bare;
         bool named = openMic ? NameRules.Wake(words, out bare) : NameRules.Named(words, out bare);
-        if (openMic && !named && Now >= followUpUntil) return;
+        var google = PcRules.Google(NameRules.Strip(words));
+        bool searchFollowUp = google?.@do == "webSearch" && Now <= googleUntil;
+        if (openMic && !named && Now >= followUpUntil && !searchFollowUp) return;
         string ask = NameRules.Strip(words).Trim().ToLowerInvariant();
         bool Has(params string[] parts) => parts.Any(ask.Contains);
         snap.character.heard = words; snap.character.heardAt = Now;
         if (bare && named) { Say(Wake); followUpUntil = Now + 12; return; }
+        if (google is { } browser)
+        {
+            string url = browser.@do == "webSearch" ? PcRules.SearchUrl(browser.arg) : browser.arg;
+            googleUntil = -1;
+            try
+            {
+                using var launch = Process.Start(new ProcessStartInfo("/usr/bin/open") { UseShellExecute = false, ArgumentList = { url } });
+                if (launch == null) throw new InvalidOperationException();
+                if (browser.@do == "openUrl") googleUntil = Now + 15;
+                Say(browser.@do == "openUrl" ? "I opened Google." : $"I searched Google for {browser.arg}.");
+            }
+            catch (Exception) { Say("I couldn't open your browser."); }
+            return;
+        }
         if (ScreenReading.Requested(ask))
         {
             if (readingScreen) { Say("I’m reading the screen."); return; }

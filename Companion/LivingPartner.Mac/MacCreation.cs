@@ -160,7 +160,7 @@ sealed partial class Stage
         else
         {
             WorkStep(job, "Shaping the materials", .15f);
-            answer = await model.AskJsonAsync(SculptureDesign.Brief + "\nAlso include a short object title in the user's language.",
+            answer = await model.AskJsonAsync(SculptureDesign.Brief + "\nAlso include a short English object title.",
                 words, Array.Empty<(string, byte[], string)>(), ShapeSchema(), 12000, ct);
             name = WorldRules.Text(answer["title"], 36, name);
         }
@@ -170,7 +170,7 @@ sealed partial class Stage
         WorldRules.Join(sculpture);
         if (sculpture.loose.Count != 0) throw new InvalidDataException("Some parts are disconnected.");
         string id = CreationId("item");
-        var item = new ItemDef { id = id, name = name, asked = words, kind = kind.id, uses = kind.uses, sizeM = Math.Max(WorldRules.MadeSizeMin, kind.sizeM),
+        var item = new ItemDef { id = id, name = WorldRules.EnglishItemName(name, kind.id), asked = words, kind = kind.id, uses = kind.uses, sizeM = Math.Max(WorldRules.MadeSizeMin, kind.sizeM),
             color = kind.color, note = "", status = "ready", progress = 1, model = id + ".glb", parts = sculpture.parts, seat = sculpture.seat, top = sculpture.top,
             madeUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), script = RoomScriptExamples.ForKind(kind.id) ?? "" };
         WorkStep(job, "Checking mesh and materials", .81f);
@@ -206,7 +206,7 @@ sealed partial class Stage
     void AddCreation(Creation asset)
     {
         if (asset.game != null) bag.World.games.Add(asset.game);
-        else { asset.item.inRoom = false; asset.item.wornOn = asset.item.onId = ""; bag.World.items.Add(asset.item); }
+        else { WorldRules.EnglishLabel(asset.item); asset.item.inRoom = false; asset.item.wornOn = asset.item.onId = ""; bag.World.items.Add(asset.item); }
         bag.NotifyInventoryChanged();
     }
 

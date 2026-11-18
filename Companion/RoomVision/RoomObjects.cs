@@ -25,6 +25,7 @@ internal static class RoomObjects
 
     internal static string RequestedClass(string words)
     {
+        if (Regex.IsMatch(words, @"\b(?:controllers?|game\s?pads?|joy-?cons?|dualsense|dualshock)\b|컨트롤러|콘트롤러|게임\s*패드", RegexOptions.IgnoreCase)) return "controller";
         if (Regex.IsMatch(words, @"\b(?:mug|coffee(?: mug| cup)?|teacup)s?\b|컵|머그", RegexOptions.IgnoreCase)) return "cup";
         // The object can be sitting on a table or by a laptop. Read the object before its location.
         string subject = Regex.Split(words.ToLowerInvariant(), @"\s+(?:on|near|beside|next to|in front of|behind)\s+")[0];
@@ -68,9 +69,52 @@ internal static class RoomObjects
         return Cut(photo, new Detection(label, box, 0));
     }
 
+    // The detector has no game-controller class. The vision model traces the visible shell,
+    // including holes and the gaps between grips. Only the masked PNG leaves for Tripo.
+    internal static Target ControllerCutout(byte[] bytes, SKRect box, List<SKPoint[]> rings)
+    {
+        const string retry = "Hold one controller clear of your hand and the screen, then try again.";
+        if (rings.Count == 0 || rings[0].Length < 6) throw new Unclear(retry);
+        CheckBounds(box);
+        using var photo = SKBitmap.Decode(bytes);
+        if (photo == null) throw new Unclear(retry);
+        int left = (int)(box.Left * photo.Width), top = (int)(box.Top * photo.Height);
+        int w = (int)Math.Ceiling(box.Right * photo.Width) - left, h = (int)Math.Ceiling(box.Bottom * photo.Height) - top;
+        if (Math.Min(w,h) < 18) throw new Unclear(retry);
+        using var path = new SKPath { FillType = SKPathFillType.EvenOdd };
+        foreach (var ring in rings)
+        {
+            if (ring.Length is < 3 or > 128) throw new Unclear(retry);
+            foreach (var p in ring)
+                if (!float.IsFinite(p.X) || !float.IsFinite(p.Y) || p.X < box.Left-.005f || p.X > box.Right+.005f || p.Y < box.Top-.005f || p.Y > box.Bottom+.005f) throw new Unclear(retry);
+            path.AddPoly(ring.Select(p => new SKPoint(p.X * photo.Width - left, p.Y * photo.Height - top)).ToArray(), true);
+        }
+        // Reject a rectangle drawn around the controller and large areas of unrecognised background.
+        using var isolated = new SKBitmap(w, h, SKColorType.Rgba8888, SKAlphaType.Premul);
+        using (var canvas = new SKCanvas(isolated))
+        {
+            canvas.Clear(SKColors.Transparent);
+            canvas.ClipPath(path, SKClipOperation.Intersect, true);
+            canvas.DrawBitmap(photo, -left, -top);
+        }
+        int opaque = isolated.Pixels.Count(p => p.Alpha > 128);
+        if (opaque < w*h*.12 || opaque > w*h*.95) throw new Unclear(retry);
+        using var image = SKImage.FromBitmap(isolated);
+        using var png = image.Encode(SKEncodedImageFormat.Png, 100);
+        return new Target("controller", png.ToArray(), box, 0);
+    }
+
+    static void CheckBounds(SKRect box)
+    {
+        if (!float.IsFinite(box.Width) || !float.IsFinite(box.Height) || box.Left < 0 || box.Top < 0 ||
+            box.Right > 1 || box.Bottom > 1 || box.Width < .02f || box.Height < .02f || box.Width * box.Height > .68f)
+            throw new Unclear("I need a clear outline. Leave some space around the object and try again.");
+    }
+
     static Target Cut(SKBitmap photo, Detection selected)
     {
         SKRect box = selected.Box;
+        CheckBounds(box);
         // Leave a narrow margin around handles and rims, clamped to the real frame.
         var crop = new SKRectI(Math.Max(0, (int)((box.Left - box.Width * .04f) * photo.Width)),
             Math.Max(0, (int)((box.Top - box.Height * .04f) * photo.Height)),
@@ -122,7 +166,7 @@ internal static class RoomObjects
     internal static Detection Select(IEnumerable<Detection> boxes, string requested, float x, float y)
     {
         if (!float.IsFinite(x) || !float.IsFinite(y)) { x = .5f; y = .5f; }
-        var filtered = boxes.Where(d => requested == null ? d.Label != "person" : d.Label == requested).ToList();
+        var filtered = boxes.Where(d => requested == null ? d.Label is not ("person" or "dining table" or "tv" or "bed" or "couch") : d.Label == requested).ToList();
         if (requested != null && filtered.Count == 1) return filtered[0];
         var underRay = filtered.Where(d => d.Box.Contains(x,y)).OrderBy(d => d.Box.Width * d.Box.Height).ToList();
         if (underRay.Count > 0) return underRay[0];

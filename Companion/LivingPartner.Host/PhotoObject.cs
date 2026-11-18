@@ -9,13 +9,25 @@ internal static class PhotoObject
     public static async Task<RoomObjects.Target> LocateAsync(OpenAiClient vision, byte[] pixels, string words, EyeFrame frame, CancellationToken ct)
     {
         float x = frame?.aimX ?? .5f, y = frame?.aimY ?? .5f;
-        try { return RoomObjects.Locate(pixels, words, x, y, ct); }
-        catch (RoomObjects.Unclear) when (vision != null && RoomObjects.RequestedClass(words) == null) { }
+        string requested = RoomObjects.RequestedClass(words);
+        bool controller = requested == "controller";
+        if (controller && vision == null) throw new RoomObjects.Unclear("I need a vision connection to pick out the controller.");
+        if (!controller)
+        {
+            try { return RoomObjects.Locate(pixels, words, x, y, ct); }
+            catch (RoomObjects.Unclear) when (vision != null && requested == null) { }
+        }
 
         // Open-vocabulary fallback for objects outside the local detector's classes.
         var fields = new JObject();
         foreach (var name in new[] { "found", "name", "left", "top", "right", "bottom" })
             fields[name] = new JObject { ["type"] = name == "found" ? "boolean" : name == "name" ? "string" : "integer" };
+        if (controller)
+        {
+            var point = new JObject { ["type"] = "object", ["additionalProperties"] = false,
+                ["properties"] = new JObject { ["x"] = new JObject { ["type"] = "integer" }, ["y"] = new JObject { ["type"] = "integer" } }, ["required"] = new JArray("x","y") };
+            fields["contours"] = new JObject { ["type"] = "array", ["items"] = new JObject { ["type"] = "array", ["items"] = point } };
+        }
         var schema = new JObject { ["type"] = "object", ["additionalProperties"] = false,
             ["properties"] = fields, ["required"] = new JArray(fields.Properties().Select(p => p.Name)) };
         string prompt = "Identify the specific physical object the user means in this headset view. It can be on furniture or in a hand. " +
@@ -23,14 +35,23 @@ internal static class PhotoObject
             "If the object is absent, ambiguous or hidden, set found=false. Otherwise give its short English name and tight box " +
             "(left,top,right,bottom) in integers from 0 to 1000, origin top left.";
         var mime = pixels[0] == 0x89 ? "image/png" : "image/jpeg";
+        if (controller) prompt += " Find exactly one real physical handheld game or VR controller. A monitor showing a controller, a remote, or an empty hand is not the object. " +
+            "If the controller is obscured or you cannot trace it reliably, set found=false and contours=[]. Otherwise trace the visible controller tightly with 16 to 48 ordered silhouette vertices. " +
+            "The first closed contour follows its outer edge. Further contours cut out any holes, fingers or background inside that edge. Return all vertices in the SAME full-image 0..1000 coordinates as the box.";
         var result = await vision.AskJsonAsync(prompt, FormattableString.Invariant($"User: {words}. Projected target: ({x*1000:0}, {y*1000:0})."),
-            new[] { (mime, pixels, "room" + (mime == "image/png" ? ".png" : ".jpg")) }, schema, 400, ct);
+            new[] { (mime, pixels, "room" + (mime == "image/png" ? ".png" : ".jpg")) }, schema, controller ? 2400 : 400, ct);
         var box = new SkiaSharp.SKRect((float?)result["left"] / 1000 ?? 0, (float?)result["top"] / 1000 ?? 0,
             (float?)result["right"] / 1000 ?? 0, (float?)result["bottom"] / 1000 ?? 0);
         string label = WorldRules.Text(result["name"], 35);
         if ((bool?)result["found"] != true || label.Length == 0 || box.Left < 0 || box.Top < 0 || box.Right > 1 ||
             box.Bottom > 1 || box.Width < .02f || box.Height < .02f)
             throw new RoomObjects.Unclear("Point at the object you mean and ask me again.");
+        if (controller)
+        {
+            var contours = (result["contours"] as JArray)?.OfType<JArray>().Select(r => r.Select(p =>
+                new SkiaSharp.SKPoint(((float?)p["x"] ?? -1000)/1000, ((float?)p["y"] ?? -1000)/1000)).ToArray()).ToList();
+            return RoomObjects.ControllerCutout(pixels, box, contours ?? new());
+        }
         return RoomObjects.CropRegion(pixels, label, box);
     }
 

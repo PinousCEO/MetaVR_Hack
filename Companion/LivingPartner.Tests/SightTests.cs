@@ -65,6 +65,60 @@ public class SightTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token) => respond(request);
     }
 
+    [Theory]
+    [InlineData("Copy my Quest controller.")]
+    [InlineData("Make this game controller.")]
+    [InlineData("이 컨트롤러 만들어 줘")]
+    public void A_named_controller_never_matches_a_screen(string words)
+    {
+        Assert.Equal(SightRules.Make, SightRules.Plain(words));
+        Assert.Equal("controller", RoomObjects.RequestedClass(words));
+        var monitor = new RoomObjects.Detection("tv", new(0, 0, 1, 1), .99f);
+        Assert.Throws<RoomObjects.Unclear>(() => RoomObjects.Select(new[] { monitor }, "controller", .5f, .5f));
+        Assert.Throws<RoomObjects.Unclear>(() => RoomObjects.CropRegion(CoffeeOnTable(), "controller", monitor.Box));
+    }
+
+    [Fact]
+    public void Only_pixels_in_the_controller_silhouette_reach_the_output_including_its_ring_hole()
+    {
+        using var frame = new SkiaSharp.SKBitmap(200,200);
+        frame.Erase(SkiaSharp.SKColors.Orange);
+        using var image = SkiaSharp.SKImage.FromBitmap(frame);
+        using var png = image.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+        SkiaSharp.SKPoint[] outer = { new(.25f,.30f), new(.36f,.20f), new(.64f,.20f), new(.75f,.30f), new(.75f,.70f), new(.60f,.80f), new(.40f,.80f), new(.25f,.70f) };
+        SkiaSharp.SKPoint[] hole = { new(.42f,.40f), new(.58f,.40f), new(.58f,.58f), new(.42f,.58f) };
+        var target = RoomObjects.ControllerCutout(png.ToArray(), new(.25f,.20f,.75f,.80f), new() { outer, hole });
+        using var result = SkiaSharp.SKBitmap.Decode(target.Crop);
+        Assert.Equal(100, result.Width);
+        Assert.Equal(0, result.GetPixel(0,0).Alpha);
+        Assert.Equal(0, result.GetPixel(50,59).Alpha);
+        Assert.Equal(SkiaSharp.SKColors.Orange, result.GetPixel(15,59));
+    }
+
+    [Fact]
+    public void Opening_Google_then_searching_uses_the_spoken_query()
+    {
+        Assert.Equal(("openUrl","https://www.google.com/"), PcRules.Google("Open Google."));
+        foreach (string words in new[] { "Search Google for C++ mugs", "Search for C++ mugs on Google", "Look up C++ mugs", "구글에서 C++ mugs 검색해 줘" })
+        {
+            var action = PcRules.Google(words);
+            Assert.Equal(("webSearch","C++ mugs"), action);
+            Assert.Equal("https://www.google.com/search?q=C%2B%2B%20mugs", PcRules.SearchUrl(action.Value.arg));
+        }
+        Assert.Null(PcRules.Google("Search for coffee on YouTube."));
+    }
+
+    [Fact]
+    public void Bag_translation_keeps_original_request_and_model_identity()
+    {
+        var item = new ItemDef { id = "item-34", name = "작은 통기타", asked = "작은 통기타 만들어 줘", note = "통기타다!", kind = "toy", model = "item-34.glb" };
+        WorldRules.EnglishLabel(item);
+        Assert.Equal("Small Acoustic Guitar",item.name);
+        Assert.Contains("records",item.note);
+        Assert.Equal("작은 통기타 만들어 줘",item.asked);
+        Assert.Equal("item-34.glb",item.model);
+    }
+
     [Fact]
     public void Filming_commands_use_the_copied_cup_and_return_it_after_a_sip()
     {

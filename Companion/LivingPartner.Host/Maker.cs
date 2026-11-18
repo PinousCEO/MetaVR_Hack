@@ -164,6 +164,9 @@ public sealed class Maker
         foreach (var i in w.items)
         {
             i.name ??= ""; i.asked ??= ""; i.kind ??= "box"; i.uses ??= new string[0]; i.color ??= ""; i.note ??= ""; i.model ??= ""; i.icon ??= "";
+            string previousName = i.name, previousNote = i.note;
+            WorldRules.EnglishLabel(i);
+            if (i.name != previousName || i.note != previousNote) _core.MarkDirty();
             // what it does (its script), and whether the partner wears it: only a thing that is out can be worn, and only where things are worn
             i.script ??= ""; i.wornOn ??= ""; i.onId ??= "";
             if (i.wornOn.Length > 0 && (!i.inRoom || Array.IndexOf(ScriptRules.Slots, i.wornOn) < 0 || i.script.Length == 0)) i.wornOn = "";
@@ -500,7 +503,7 @@ public sealed class Maker
         var guess = ItemKinds.Guess(asked);
         var item = new ItemDef
         {
-            id = "item-" + NewId(), name = WorldRules.RoughName(asked, guess), asked = asked, kind = guess.id, uses = (string[])guess.uses.Clone(), sizeM = guess.sizeM,
+            id = "item-" + NewId(), name = WorldRules.EnglishItemName(WorldRules.RoughName(asked, guess), guess.id), asked = asked, kind = guess.id, uses = (string[])guess.uses.Clone(), sizeM = guess.sizeM,
             // A made thing goes into the BAG ("objects should only come out when I press them", "why is it made in
             // front of me?"): nothing appears on the desk. The offer card still comes; the user takes the thing out.
             status = "making", inRoom = false, madeUnixMs = HostClock.UnixMs,
@@ -537,12 +540,12 @@ Nilo's things so far:
 What Nilo can do with them right now: {(canDo.Length > 0 ? canDo : "nothing special yet")}.
 How that is worked out from what the things ON THE DESK are for: study needs a thing for ""table"" AND a thing for ""sit""; sit needs ""sit""; nap needs ""sleep""; read needs ""read""; play needs ""play""; putting a tune on with it needs ""music"".
 Fill in:
-- name: a short name for the new thing in {lang} (one or two words, no article).
+- name: a short English name for the new thing (one or two words, no article).
 - kind: the closest built-in shape, one of: {string.Join(", ", ItemKinds.All.Select(k => k.id))}.
 - uses: what it is for - every one of these that truly applies, at least one: {string.Join(", ", ItemUses.All)} (""decor"" when nothing else fits).
 - realSizeCm: the longest side of the real thing in centimetres (a desk 120, a chair 85, a record player 40, a hammer 30, a mug 10). The host turns it into the thing's size at Nilo's scale: furniture stands at one tenth (a desk 0.12 m), and nothing is made smaller than 0.06 m, so that it can be seen and picked up beside a 0.10 m Nilo (a hand tool comes out at 0.06 to 0.08 m, a cup at about 0.06 m). So give the honest size of the real thing; do not shrink it yourself.
 - colour: its main colour as ""#RRGGBB"", from a soft pastel storybook palette: cream #FFF3D6, honey yellow #F2C14E, sage #9BD3A0, sky blue #BFD9F2, rose #F4A9A0, lavender #C9B8F0, warm wood #E9C99A, or close to one of them.
-- note: ONE short sentence Nilo says in {lang} when the thing is finished. It goes into Nilo's BAG first (the user takes it out when they want it): say what it is and what Nilo will be able to do with it once it is out, TOGETHER with the things it already has on the desk (a chair when there is a desk: ""의자다! 꺼내 주면 책상에 앉아서 공부할 수 있겠다.""). Promise nothing that the uses do not allow. In Korean use casual speech between friends (반말: '~다', '~야'), never the polite '~요' form. No emoji.
+- note: ONE short sentence in English about what Nilo can do with the object once taken out of the bag. Mention only uses it supports.
 - modelPrompt: IN ENGLISH, for a text-to-3D model: the object alone - its shape, its parts, its materials and colours - in one or two sentences, in the state everybody knows it by (an umbrella open, a bookshelf with a few books on it, a cake with its candle). No scene, no people, no text on it. (The art style is added by the host.)
 - iconPrompt: IN ENGLISH, one sentence: the same object as it should be drawn on a small icon (what is seen, from which side, its main colours).";
 
@@ -645,7 +648,7 @@ Fill in:
         var item = job.item;
         if (_job != job || !W.items.Contains(item)) return;
         bool untouched = item.inRoom && item.x == job.x && item.z == job.z;
-        if (idea.name.Length > 0) item.name = idea.name;
+        if (idea.name.Length > 0) item.name = WorldRules.EnglishItemName(idea.name, idea.kind);
         item.kind = idea.kind; item.uses = idea.uses; item.sizeM = idea.sizeM; item.color = idea.color; item.note = idea.note;
         // now that it is known what it is for, it goes where such a thing belongs - unless the user has already moved it
         if (untouched) { Activities.Arrange(W.items, item); job.x = item.x; job.z = item.z; }
@@ -765,6 +768,7 @@ Fill in:
         // what this thing has just made possible, the richest first
         var opened = Activities.Possible(W.items).Where(a => a.itemIds.Contains(item.id) && !job.before.Contains(a.name)).ToList();
         if (item.note.Length == 0) item.note = OwnNote(item, opened);
+        WorldRules.EnglishLabel(item);
         string line = item.note, sorry = "";
         if (modelError.Length > 0)
         {

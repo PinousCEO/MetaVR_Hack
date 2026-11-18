@@ -147,6 +147,20 @@ public static class PcRules
     }
 
     public static string SearchUrl(string query) => "https://www.google.com/search?q=" + Uri.EscapeDataString(Query(query));
+
+    public static (string @do, string arg)? Google(string words)
+    {
+        string text = (words ?? "").Trim().TrimEnd('.', '!', '?').Trim();
+        const RegexOptions ignore = RegexOptions.IgnoreCase;
+        if (Regex.IsMatch(text, @"^(?:please )?(?:open|launch|go to) google(?:\.com)?$|^구글(?:을|를)?\s*(?:열어|켜|켜줘|실행해)\s*(?:줘|주세요)?$", ignore))
+            return ("openUrl", "https://www.google.com/");
+        if (Regex.IsMatch(text, @"\bon (?:youtube|amazon|wikipedia)\b|^(?:유튜브|네이버)에서|\band (?:make|write|create|summarize)\b|(?:정리|만들어)\s*줘", ignore)) return null;
+        var query = Regex.Match(text, @"^(?:(?:now|then|please)[, ]+)*(?:search (?:on )?google for|search(?: the web)? for|google(?: search for)?|look up)\s+(.+?)(?:\s+on google)?$", ignore);
+        if (!query.Success) query = Regex.Match(text, @"^search\s+(.+?)\s+on google$", ignore);
+        if (!query.Success) query = Regex.Match(text, @"^(?:구글에서\s*)?(.+?)(?:을|를)?\s*(?:구글에서\s*)?검색(?:해|해줘|해봐)\s*(?:줘|주세요|줄래)?$", ignore);
+        if (!query.Success) query = Regex.Match(text, @"^구글에서\s*(.+?)(?:을|를)?\s*찾아\s*(?:줘|주세요|줄래)?$", ignore);
+        return query.Success && !string.IsNullOrWhiteSpace(query.Groups[1].Value) ? ("webSearch", query.Groups[1].Value.Trim()) : null;
+    }
     /// <summary>The results page for a search; with nothing to look for, the front page.</summary>
     public static string YoutubeUrl(string query) => Query(query).Length == 0 ? "https://www.youtube.com/" : "https://www.youtube.com/results?search_query=" + Uri.EscapeDataString(Query(query));
 

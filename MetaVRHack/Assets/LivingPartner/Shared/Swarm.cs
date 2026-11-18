@@ -124,7 +124,7 @@ namespace LivingPartner.Shared
             phase = SwarmPhase.Intro; time = 0f; slow = 1f; iframes = 0f; _introT = 0f;
             hearts = maxHearts = StartHearts; level = 1; xp = 0; kills = 0; score = 0; pendingChoices = 0; surges = 0;
             won = bossSpawned = bossOut = bossDead = false; bossIndex = -1; alive = 0;
-            _spawnT = 10.0f; _fireT = 0.2f; _cometT = 1f; _orbitA = 0f; _nextSurge = 24f; _gemExtra = 0f;
+            _spawnT = 13.0f; _fireT = 0.2f; _cometT = 1f; _orbitA = 0f; _nextSurge = 24f; _gemExtra = 0f;
             // the first crowd gathers behind the glass and comes out together
             for (int i = 0; i < 8; i++) SpawnInside(i == 2 || i == 6 ? SwarmKind.Flyer : i == 5 ? SwarmKind.Splitter : SwarmKind.Hopper, IntroSeconds + 0.07f * i, 1);
             Push(SwarmEv.Started, a.center);
@@ -250,7 +250,10 @@ namespace LivingPartner.Shared
                 {
                     float dur = m.kind == SwarmKind.Boss ? 1.45f : 0.27f, k = M.Clamp01(m.t / dur);
                     m.grow = k;
-                    m.pos = m.from + arena.outward * ((m.kind == SwarmKind.Boss ? 0.24f : 0.09f) * M.EaseOut(k));
+                    Vector3 path = inp.target - m.from;
+                    float length = path.Length();
+                    float travel = Math.Min(length, SwarmKind.Speed[m.kind] * SpeedScale * m.t);
+                    m.pos = length > 1e-5f ? m.from + path * (travel / length) : m.from;
                     if (k >= 1f) { m.state = SwarmState.Chase; m.t = 0f; m.grow = 1f; }
                     continue;
                 }
@@ -260,33 +263,9 @@ namespace LivingPartner.Shared
                 float sp = SwarmKind.Speed[m.kind] * SpeedScale;
                 m.slowed = slowR > 0f && dist < slowR;
                 if (m.slowed) sp *= slowK;
-                switch (m.kind)
-                {
-                    case SwarmKind.Hopper:
-                    {
-                        Vector3 flat = new Vector3(to.X, 0f, to.Z); float fd = flat.Length();
-                        if (fd > 0.30f)
-                        {
-                            // along the desk in hops
-                            Vector3 fdir = flat / fd;
-                            m.pos += fdir * (sp * dt);
-                            float hop = Math.Abs(M.Sin(m.phase * 6.5f)) * 0.055f;
-                            float want = arena.deskY + m.radius + hop;
-                            m.pos.Y += (want - m.pos.Y) * Math.Min(1f, dt * 7f);
-                        }
-                        else m.pos += dir * (sp * 1.5f * dt);      // the last leap, up at the user
-                        break;
-                    }
-                    case SwarmKind.Flyer:
-                    {
-                        Vector3 side = Vector3.Cross(Vector3.UnitY, dir);
-                        m.pos += dir * (sp * dt) + side * (M.Cos(m.phase * 4.2f) * 0.42f * dt) + Vector3.UnitY * (M.Sin(m.phase * 2.6f) * 0.10f * dt);
-                        break;
-                    }
-                    default:
-                        m.pos += dir * (sp * dt);
-                        break;
-                }
+                // Continue through the portal toward the player at the height of the opening.
+                // The meshes carry each species' gait while its body follows the same flight path.
+                m.pos += dir * Math.Min(dist, sp * dt);
                 // (the boss spits out little ones as it comes)
                 if (m.kind == SwarmKind.Boss && m.t > 2.8f)
                 {
