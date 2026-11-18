@@ -29,6 +29,10 @@ dist/
 artifacts/tmp/
 *.token
 *.secret
+*.p12
+*.jks
+*.keystore
+*.dpapi
 .env
 .env.*
 

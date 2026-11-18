@@ -1,56 +1,70 @@
-# Yonder
+﻿# Yonder
 
-Nilo is a personal AI partner that lives on your desk in mixed reality (Meta Quest 3 / 3S), passes its body through your **real monitor** at the spot you point to, works inside your real Windows desktop as an independent transparent character, and comes back out the same way.
+**An AI teammate that moves between your desk and your screen and builds the tools you ask for.**
 
-Look at a real cup on your desk and say **“Hey, Nilo, do you see a cup on my desk?”** Quest uses its passthrough camera and the companion identifies the cup locally. To make a textured 3D copy, connect your Tripo key and say **“Hey, Nilo, copy this cup.”** The copy goes into your bag. Say **“Put it on my desk”** to place it in your room or **“Export it as a GLB”** to save the same model on your computer. [Set the Windows Tripo key](tools/Set-TripoKey.ps1) · [Mac setup](Companion/LivingPartner.Mac/README.md)
+<p align="center"><img src="reports/media/yonder-cover.jpg" width="650" alt="Nilo stepping through a glowing doorway in a real monitor toward an outstretched hand"></p>
 
-Say **“Hey, Nilo”** to get Nilo’s attention.
+I built Yonder for the days I spend working alone. I can hold up my coffee mug so Nilo sees what I mean, ask him to make a 3D copy, and open that same model on my computer. When I need a new tool, I can describe it out loud and put it to work during the same session.
 
-Entry for the Meta VR Start Developer Competition 2026 (Productivity). On Windows and Mac, **Demon Gate** is a solo desktop game with mouse controls, 3D demons and a choice of charms. **Gomoku** is a separate game for two people at one TV. The Quest wearer places black stones with a pinch, then looks toward the other player's outstretched finger as they select a white stone on the same board. Tennis and Goalkeeper send the ball between the room and the screen. On MacBook, the companion hosts these games and connects directly to Quest. [MacBook setup and play guide](Companion/LivingPartner.Mac/README.md)
+## Download and play
 
-To play Demon Gate on Windows, double-click `dist/Play-Demon-Gate.cmd`. On Mac, open `Start-Yonder.command` and select **Demon Gate · Play solo**.
+The demo uses **two apps**. The Quest app puts Nilo in your room. The Windows companion lets him cross onto your desktop and work with your files and windows.
 
-[Film the coffee demo with Quest and a computer](Movie/Yonder%20Filming%20Guide.md).
+| Device | Download | Getting started |
+| --- | --- | --- |
+| **Meta Quest 3 or 3S** | [Download Yonder for Quest (.apk)](https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Quest.apk) | Install through the competition release channel if you have an invitation, or sideload this APK on a developer-enabled headset. |
+| **Windows x64 PC** | [Download Yonder Companion Setup (.exe)](https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Windows-Setup.exe) | Run the installer, then open **Yonder Companion** from the Windows Start menu. The package includes the host, desktop character and .NET runtime. |
 
-[Watch the Windows gameplay recording](reports/DEMON_GATE_GAMEPLAY.mp4) · [Boss fight](reports/DEMON_GATE_SOLO.jpg) · [Choose a charm](reports/DEMON_GATE_CHARMS.jpg) · [TV Gomoku after eight moves](reports/GOMOKU_PLAY.png).
+[Release notes and SHA-256 checksums](https://github.com/PinousCEO/MetaVR_Hack/releases/tag/yonder-0.1.0) · [MacBook setup](Companion/LivingPartner.Mac/README.md)
 
-![Demon Gate running on Windows](reports/DEMON_GATE_GAMEPLAY.gif)
+### Connect your desk
 
-Custom game design, scripting and AI playtest review use Claude Fable 5.2. Set `ANTHROPIC_API_KEY` in the Windows or Mac companion's environment and restart it. The Mac companion also reads the `LivingPartner.Anthropic` generic password from Keychain. Playing an installed game runs locally. [Anthropic model and access details](https://platform.claude.com/docs/en/models/fable-5-2/overview)
+1. Put the PC and Quest on the same local network. Start **Yonder Companion** on the PC and allow it through Windows Firewall on your private network.
+2. Open **Yonder** in the headset. For the first wireless connection, enter the six-digit code displayed by the PC companion. Give Yonder access to the headset camera for monitor and object recognition, and the microphone for voice.
+3. Glance at each monitor when it lights up so Yonder can locate the display in your room. After moving a screen, use **Calibrate** in the hand menu or say **“Hey, Nilo, find my screens.”**
+4. Point at a spot on the monitor and send Nilo inside. Watch his feet as he crosses the glass. Try a game of tennis and return his serve with your hand.
 
-| Read | For |
-|---|---|
-| `RUNBOOK.md` | start, pair, calibrate, use, debug, build |
-| `reports/DEVICE_AUDIT_KO.md` | Current game, camera and device checks, followed by earlier workshop checks |
-| `ARCHITECTURE.md` | how the two renderers show one body |
-| `REQUIREMENTS.md` | the requirement list and where each item lives |
-| `TEST_RESULTS.md` | what was actually verified, at which level, with numbers |
-| `BLOCKERS.md` / `NEXT_STEPS.md` | what is blocked and what to do first with a headset |
-| `IMPLEMENTATION_STATUS.md` | resume point |
-| `reports/FINAL_REPORT.md` (+ `.pdf`) | session summary (Korean) |
-| `reports/PROJECT_DESCRIPTION_EN.md`, `reports/DEMO_SCENARIO.md`, `reports/SUBMISSION_CHECKLIST.md` | submission material (drafts) |
+**Sideloading by USB:** With Android platform tools installed and USB debugging authorized in the headset, run the following from the folder containing the APK. Once the app is installed, the two devices can pair over Wi-Fi.
 
-```
-MetaVRHack/                 Unity 6 project shared by the Quest and Windows clients
-  Assets/LivingPartner/
-    Scenes/                 Main (Windows entry) · PcCharacter · MrSimulator · QuestMR · CharacterGallery (viewing only)
-    Prefabs/                MrCore · Partner · PortalFx · SparkFx · TimerPanel · ProposalCard
-    Art/                    meshes and materials; Characters/ = the partner (Tripo/ = the owner's model, as delivered); Fonts/ = the project's own typeface
-    Shared · Character · MR · Quest · Windows · Editor    scripts (one assembly each)
-Companion/
-  LivingPartner.Host/       .NET 8 companion: authority, launcher, tray
-  LivingPartner.Ctl/        lpctl: diagnostics and portal debug
-  LivingPartner.Mac/        standalone Mac companion and TV stage (Apple Silicon and Intel)
-  LivingPartner.Tests/      tests for the shared core and companion behavior
-samples/sample-site/        reviewer sample project
-tools/                      launch, verification and evidence scripts
-artifacts/                  screenshots, recordings and logs collected in the session
-dist/                       built outputs (not committed)
-```
+~~~powershell
+adb install -r Yonder-Quest.apk
+~~~
 
-The Unity client uses scenes and prefabs for Nilo and the interface. Open `PcCharacter.unity`, `MrSimulator.unity` or `QuestMR.unity` to inspect or edit it.
+The competition APK is release-signed. If you previously installed the developer-signed demo, Android will reject an in-place update because the signatures differ. Back up any headset data you want to keep before removing the old build. [Connection and troubleshooting guide](RUNBOOK.md)
 
-The partner is the owner's own character: a model generated with Tripo from a reference image (`Art/Characters/Tripo`), which the project rigs itself - `Editor/PartnerModelBuilder.cs` skins it to the shared skeleton, separates the eyes so they can blink, and prepares it for being cut by the screen (`artifacts/partner-pose-sheet.png`, `artifacts/partner-cut-sheet.png`). The UI is set in "LPStory", a rounded typeface drawn stroke by stroke by `Editor/StoryFontBuilder.cs` (`artifacts/font-specimen.png`). The licence terms of the generated model are the owner's to check before submission (`reports/SUBMISSION_CHECKLIST.md`).
+### Enable AI features
 
-Two things it does besides the portal and the coding work (RUNBOOK §4.1, §4.2): asked what it thinks of the window you point at, it looks, tells you, and saves a marked-up capture, a redrawn revised version (PNG) and a PDF of the review on the PC - and it reads PDF, picture and text files and can answer questions about them afterwards; and it plays tennis with you through the monitor - it plays in a court inside the screen, its ball comes out into the room, and your open hand is the racket.
-Quick start on the PC: double-click `Start-Yonder.cmd`. Without a headset: `tools\Start-Dev.ps1 -Sim -LoopbackOnly` runs the desktop MR simulator (a verification tool, not a Quest).
+Bring your own service credentials for the features you want to try. The Windows installer includes the two key setup scripts under %LOCALAPPDATA%\Programs\Yonder\tools. The scripts prompt privately and store keys for the current Windows user. Restart Yonder Companion after setup.
+
+| Feature | Setup on Windows |
+| --- | --- |
+| Voice conversations and screen assistance | Run [Set-OpenAiKey.ps1](tools/Set-OpenAiKey.ps1) or set OPENAI_API_KEY. |
+| Turn a physical object into a textured 3D model | Run [Set-TripoKey.ps1](tools/Set-TripoKey.ps1) or set TRIPO_API_KEY. |
+| Custom game design, scripting and AI playtest review | Set ANTHROPIC_API_KEY in the companion process environment. Installed games play locally. |
+
+## What to try
+
+| In your room | On the other side of the screen |
+| --- | --- |
+| Hold up your mug and say **“Hey, Nilo, copy this cup.”** Pick up the model or place it on your desk. | Ask Nilo to export it as a **GLB** and open the same object in a desktop 3D tool. |
+| Point at the logo on a page and ask for new ideas. Compare the options together in MR. | Choose a design to receive the PNG. |
+| Ask Nilo to make a Meta stock chart. Watch the tool appear in the work queue. | Open the chart on your PC and select a button from outside the screen. Publish a module in the marketplace so other people can use it. |
+| Play tennis against Nilo in the monitor, or catch a ball kicked into the room. | Play [Demon Gate](reports/DEMON_GATE_GAMEPLAY.mp4) on the desktop, or share a [Gomoku board](reports/GOMOKU_PLAY.png) on a TV. |
+
+## How it works
+
+**One character across two displays.** Yonder maps the intersection of a pointing ray and the physical monitor to a desktop pixel. The headset and PC share a transition clock. During the crossing, each renderer shows the part of Nilo on its side of the glass. [Architecture](ARCHITECTURE.md)
+
+**New tools during a session.** Unity runs the room and character. Lightweight Lua scripts define new module behavior, so Nilo can build and run a tool while you work, without reinstalling the app.
+
+## For developers
+
+| Directory or guide | Contents |
+| --- | --- |
+| [Unity project](MetaVRHack/) | Unity 6000.3.13f1, C#, OpenXR, XR Hands, AR Foundation and URP. The Quest and Windows players share character assets and protocol code. |
+| [Companion](Companion/) | .NET 8 Windows host, marketplace hub, diagnostics, Mac companion and tests. |
+| [Runbook](RUNBOOK.md) | Build commands, simulator, pairing, calibration and troubleshooting. |
+| [Device audit](reports/DEVICE_AUDIT_KO.md) · [Test results](TEST_RESULTS.md) | Device observations and test coverage. |
+| [Filming guide](Movie/Yonder%20Filming%20Guide.md) | Spoken demo cues for the coffee sequence. |
+
+To package an exported Windows build, run **python tools/Build-WindowsInstaller.py** with NSIS 3 on PATH. To sign an exported Quest APK, use [Sign-QuestRelease.ps1](tools/Sign-QuestRelease.ps1) on the Windows account that owns the release key. [Back up the signing identity](tools/Backup-QuestReleaseKey.ps1) to a private location with a password you choose before moving to another PC.
