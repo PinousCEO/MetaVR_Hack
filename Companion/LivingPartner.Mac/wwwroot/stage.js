@@ -100,7 +100,7 @@ function draw(s) {
   el("speak").checked=s.speak;
   if (s.active && (game && !previousGame || s.portal && !el("panel").hidden)) fold(true);
   previousGame=game;
-  const b=el("bambi"); b.hidden=!s.active||s.opacity<=0||game;
+  const b=el("bambi"); b.hidden=!s.active||s.opacity<=0||showTable||!!(s.game && s.game.pet?.visible !== false);
   b.style.left=(100*s.x)+"%"; b.style.top=(100*s.y)+"%"; b.style.height=(100*s.height)+"%"; b.style.opacity=s.opacity;
   el("portal").hidden=!s.portal; el("portal").style.left=(s.u*100)+"%"; el("portal").style.top=(s.v*100)+"%";
   const flash=el("flash"); flash.hidden=!s.flash; if(s.flash) flash.style.backgroundColor="rgb("+s.flash.join(",")+")";

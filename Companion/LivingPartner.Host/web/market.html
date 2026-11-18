@@ -447,8 +447,8 @@ const T = {
     tries: ["Will you make me an umbrella?", "Make a game about catching stars", "Play some music"],
     makingNow: (kind, name, pct) => `Making ${kind ? "a " + kind.toLowerCase() : "something"}${name ? " · " + name : ""} · ${pct}%`,
     offerAsk: "Put it up in the marketplace?", offerYes: "Put it up", offerNo: "Keep it",
-    tabs: { all: "All", item: "Furniture", skill: "Skills", game: "Games", ambience: "Surroundings", ability: "Abilities", mine: "My shop" },
-    kinds: { item: "Thing", skill: "Skill", game: "Game", ambience: "Surroundings", ability: "Ability" },
+    tabs: { all: "All", item: "Furniture", skill: "Skills", game: "Games", tool: "Tools", ambience: "Surroundings", ability: "Abilities", mine: "My shop" },
+    kinds: { item: "Thing", skill: "Skill", game: "Game", tool: "Tool", ambience: "Surroundings", ability: "Ability" },
     people: "Made by people", peopleSub: "things others made and put up for sale",
     haveGone: "Yours, no longer on sale",
     free: "Free", have: "Yours", onSale: "On sale", gone: "Off sale", installed: "Installed", yours: "Mine", official: "Official shop",
@@ -484,8 +484,8 @@ const T = {
     tries: ["우산 만들어줄래?", "별 잡는 게임 만들어볼래?", "노래 틀어줘"],
     makingNow: (kind, name, pct) => `${kind || "새로운 것"} 만드는 중${name ? " · " + name : ""} · ${pct}%`,
     offerAsk: "마켓플레이스에 공개할까요?", offerYes: "올리기", offerNo: "그냥 둘게요",
-    tabs: { all: "전체", item: "가구", skill: "스킬", game: "게임", ambience: "분위기", ability: "능력", mine: "내 상점" },
-    kinds: { item: "물건", skill: "스킬", game: "게임", ambience: "분위기", ability: "능력" },
+    tabs: { all: "전체", item: "가구", skill: "스킬", game: "게임", tool: "도구", ambience: "분위기", ability: "능력", mine: "내 상점" },
+    kinds: { item: "물건", skill: "스킬", game: "게임", tool: "도구", ambience: "분위기", ability: "능력" },
     people: "이웃들이 만든 것", peopleSub: "다른 사람들이 만들어서 올린 물건이에요",
     haveGone: "가지고 있지만 이제 안 파는 것",
     free: "무료", have: "보유 중", onSale: "판매 중", gone: "판매 종료", installed: "설치됨", yours: "내 것", official: "공식 상점",
@@ -573,6 +573,7 @@ function badge(m) {
   const known = BY_ID[m.id];
   if (known && known.startsWith("art:")) return tile(known.slice(4));
   if (known) return face(glyph(known));
+  if (m.kind === "tool") return tile("tile-i-find.png");
   if (m.kind === "game") return TILES[m.template] ? tile(TILES[m.template]) : face(glyph("ghost"));
   if (m.kind === "skill") return tile("skill-any.png");
   if (m.kind === "ambience") return face(glyph(G[d.pattern] ? d.pattern : "none"));
@@ -608,8 +609,8 @@ const nameOf = m => (isKo() && m.alias) || m.name;
 const givesOf = m => (isKo() && m.koGives) || m.gives;
 const sumOf = m => (isKo() && m.koSummary) || m.summary;
 const sellerOf = m => m.seller || "?";
-// A kind goes into class names: only the five kinds there are ever do (a listing comes from a hub, and a hub is somebody else's server).
-const KINDS = ["item", "skill", "game", "ambience", "ability"];
+// A kind goes into class names: only the known kinds there are ever do (a listing comes from a hub, and a hub is somebody else's server).
+const KINDS = ["item", "skill", "game", "tool", "ambience", "ability"];
 const kindOf = m => KINDS.includes(m.kind) ? m.kind : "item";
 // A colour goes into a style attribute: only #RRGGBB ever does.
 const colour = c => /^#[0-9a-fA-F]{6}$/.test(c || "") ? c : "#FFF8EA";
@@ -694,9 +695,9 @@ function render() {
   const list = state.list || [];
   const onSale = list.filter(m => m.listed), mine = list.filter(m => m.mine);
   const counts = { all: onSale.length, mine: mine.length };
-  for (const k of ["item", "skill", "game", "ambience", "ability"]) counts[k] = onSale.filter(m => m.kind === k).length;
+  for (const k of KINDS) counts[k] = onSale.filter(m => m.kind === k).length;
   const dots = { item: "--tan", skill: "--lav", game: "--rose", ambience: "--sky", ability: "--sage" };
-  const tabsHtml = ["all", "item", "skill", "game", "ambience", "ability"].map(k =>
+  const tabsHtml = ["all", ...KINDS].map(k =>
     `<button class="tab${tab === k ? " on" : ""}" data-tab="${k}">${dots[k] ? `<span class="dot" style="background:var(${dots[k]})"></span>` : ""}${esc(t.tabs[k])}<i>${counts[k]}</i></button>`).join("") +
     `<button class="tab shop${tab === "mine" ? " on" : ""}" data-tab="mine">${ICON.shop}${esc(t.tabs.mine)}<i>${counts.mine}</i></button>`;
 
@@ -719,7 +720,7 @@ function render() {
       (unsold.length ? `<section class="section"><h2>${esc(t.unsold)}<small>${unsold.length}</small></h2><div class="rows">${unsold.map(m => row(m, t)).join("")}</div></section>` : "") +
       (!selling.length && !unsold.length ? (query ? emptyBox(t.emptySearch, t.emptySearchSub) : emptyBox(t.emptyMine, t.emptyMineSub)) : "");
   } else {
-    const kinds = tab === "all" ? ["item", "skill", "game", "ambience", "ability"] : [tab];
+    const kinds = tab === "all" ? KINDS : [tab];
     const shown = onSale.filter(matches).sort(ORDER[sort]);
     // what other people made stands in front: this is a marketplace, not a catalogue
     const people = tab === "all" && !seller ? shown.filter(m => !m.official && !m.mine) : [];
@@ -843,7 +844,7 @@ function renderDrawer() {
   let inside = "";
   if (d.steps && d.steps.length) inside += `<h4>${esc(t.does)}</h4>${stepsOf(d, t)}`;
   if (d.phrases && d.phrases.length) inside += `<h4>${esc(t.say)}</h4>` + d.phrases.slice(0, 5).map(p => `<span class="quote">${esc(p)}</span>`).join("");
-  if (m.kind === "game") {
+  if (m.kind === "game" || m.kind === "tool") {
     if (d.howTo) inside += `<h4>${esc(t.how)}</h4><p class="sum">${esc(d.howTo)}</p>`;
     if (m.template === "survival" || m.template === "pop") {
       if (d.seconds) inside += `<div class="facts"><div class="fact"><b>${Math.round(d.seconds)}</b><span>${esc(t.seconds)}</span></div><div class="fact"><b>${esc(d.lives)}</b><span>${esc(t.lives)}</span></div><div class="fact"><b>×${(+d.speed).toFixed(1)}</b><span>${esc(t.pace)}</span></div></div>`;

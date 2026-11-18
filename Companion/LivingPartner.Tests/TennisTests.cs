@@ -18,9 +18,12 @@ public class TennisTests
     [Theory]
     [InlineData(0f, -1f)]
     [InlineData(12f, 1f)]
-    public void A_kick_reaches_the_keeper_within_half_a_second_and_stops_at_the_ground(float tilt, float aim)
+    [InlineData(-17f, -1f, -.578f)]
+    [InlineData(-17f, 1f, -.578f)]
+    public void A_kick_reaches_the_keeper_within_half_a_second_and_stops_at_the_ground(float tilt, float aim, float desk = -.24f)
     {
         var court = Court(tilt);
+        court.deskHeight = desk;
         court.radius = Tennis.BallRadius("keeper");
         var from = Tennis.ServePoint(court, 0);
         var kick = Tennis.PartnerShot(court, 1, from, Eye, aim, 10, keeper: true);

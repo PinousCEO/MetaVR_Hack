@@ -161,6 +161,7 @@ namespace LivingPartner.Shared
     public static class GlassDisplay
     {
         public const float Floor = 0.035f, FlatScale = 0.86f, FlatBottom = 0.02f, ToolScale = 0.85f;
+        public static bool IsStockChart(GamePackDef pack) => pack?.script?.StartsWith("-- Yonder stock chart: ", StringComparison.Ordinal) == true;
         public static bool IsTool(GamePackDef pack) => pack != null && !string.IsNullOrEmpty(pack.script)
             && pack.script.IndexOf("button(", StringComparison.Ordinal) >= 0 && pack.script.IndexOf("lives(", StringComparison.Ordinal) < 0;
         public static float Scale(GamePackDef pack, bool flat) => flat ? FlatScale : IsTool(pack) ? ToolScale : 1f;

@@ -1025,7 +1025,8 @@ public sealed class Market
                 break;
             case ModuleKinds.Game:
                 MarketRules.Give(W, m);
-                line = seed != null ? Tell(seed.ko, seed.en, "happy", 5) : Tell($"{m.name} 깔았어! 놀이 메뉴에서 같이 하자.", $"{m.name} is installed! You'll find it on the Play page.", "happy", 5);
+                line = StockChart.IsPack(m.game) ? Tell($"{m.name} 설치했어. 도구 메뉴에 있어.", $"{m.name} is installed. Open it in Tools.", "happy", 5)
+                     : seed != null ? Tell(seed.ko, seed.en, "happy", 5) : Tell($"{m.name} 깔았어! 놀이 메뉴에서 같이 하자.", $"{m.name} is installed! You'll find it on the Play page.", "happy", 5);
                 break;
             default:
             {
@@ -1928,7 +1929,7 @@ public sealed class Market
                 var m = new MarketModule
                 {
                     id = id, kind = ModuleKinds.Game, name = pack.title, summary = pack.howTo.Length > 0 ? pack.howTo : Short(text, 160), gives = chart ? "Inspect daily stock prices by date and range." : "A new game: " + pack.title + ".",
-                    author = MarketRules.You, icon = icon, price = 0, tags = new[] { ScriptRules.Template }, publishedUnixMs = HostClock.UnixMs, game = pack,
+                    author = MarketRules.You, icon = icon, price = 0, tags = chart ? new[] { ScriptRules.Template, "stock-chart" } : new[] { ScriptRules.Template }, publishedUnixMs = HostClock.UnixMs, game = pack,
                 };
                 if (!Shelve(m))
                 {
@@ -1937,7 +1938,7 @@ public sealed class Market
                 }
                 _core.Workshop.Close(wjob, true, "module", id, ready);
                 Log.Info($"market: game {id} '{pack.title}' is a script of {written.Lines} lines ({written.repairs} repair(s), {written.calls} call(s) to the model, {written.seconds:0.0} s); check: {written.verdict?.Line}; critic: {(written.judged ? written.defects.Count + " defect(s)" + (written.judgedRepairTaken ? ", repaired" : written.defects.Count > 0 ? ", NOT repaired" : "") : "not asked")}");
-                Reveal(ModuleKinds.Game, id, pack.title, Ko ? "놀이 메뉴에 있어." : "It's on the Play page.");
+                Reveal(ModuleKinds.Game, id, pack.title, chart ? "It's in Tools." : Ko ? "놀이 메뉴에 있어." : "It's on the Play page.");
                 if (!chart) StickerLater(ai, m);
             });
         });
@@ -1993,7 +1994,7 @@ public sealed class Market
         m.game = pack; m.icon = pack.icon;
         m.summary = pack.howTo.Length > 0 ? pack.howTo : m.summary;
         m.gives = StockChart.IsPack(pack) ? "Inspect daily stock prices by date and range." : "A new game: " + pack.title + ".";
-        m.tags = new[] { ScriptRules.Template };
+        m.tags = StockChart.IsPack(pack) ? new[] { ScriptRules.Template, "stock-chart" } : new[] { ScriptRules.Template };
         m.version = double.TryParse(m.version, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double v) ? ((int)v + 1) + ".0" : "2.0";
         string problem = MarketRules.Problem(m);
         if (problem.Length > 0) { Log.Warn($"market: the remade {m.id} is not sound ({problem}): the old pack is kept"); m.game = old; m.icon = old.icon; MakeFailed(ModuleKinds.Game, MarketRules.CouldNotWriteLine(true), MarketRules.CouldNotWriteLine(false)); return false; }
@@ -2008,7 +2009,8 @@ public sealed class Market
         _lastMadeId = m.id; _lastMadeKind = ModuleKinds.Game;
         Touch();
         Log.Info($"market: REMADE {m.id} '{m.name}' from '{Short(words, 80)}': it was {old.template}, it is a script of {written.Lines} lines now ({written.repairs} repair(s), {written.calls} call(s), {written.seconds:0.0} s; check: {written.verdict?.Line}); version {m.version}; {(listed ? $"on sale at {price} stars - the listing is brought up to date" : "not on sale")}");
-        Tell($"{m.name}, 이번엔 진짜로 다시 만들었어! 놀이 메뉴에 있어.", $"I've made {m.name} again - the real thing this time! It's on the Play page.", "happy", 6);
+        if (StockChart.IsPack(pack)) Tell($"{m.name} 다시 만들었어. 도구 메뉴에 있어.", $"{m.name} is ready in Tools.", "happy", 6);
+        else Tell($"{m.name}, 이번엔 진짜로 다시 만들었어! 놀이 메뉴에 있어.", $"I've made {m.name} again - the real thing this time! It's on the Play page.", "happy", 6);
         if (listed) Publish(m.id, price);
         if (!StockChart.IsPack(pack) && !string.IsNullOrEmpty(written.script) && (string.IsNullOrEmpty(m.icon) || m.icon == old.icon)) StickerLater(_core.Talk.Ai, m);
         return true;
@@ -2601,7 +2603,7 @@ Fill in:
                 bool here = r.item != null || r.skill != null || r.local != null;
                 _webList.Add(new
                 {
-                    r.id, r.kind, name = r.record ? MarketRules.RecordName(r.name) : r.name, r.summary, gives = r.record ? MarketRules.RecordGives : r.gives, r.seller, r.official, r.icon, r.price, r.template, r.installed, r.mine, r.builtin, r.owned, r.listed, r.liked, r.installs, r.likes, r.created,
+                    r.id, kind = StockChart.IsPack(r.local?.game) || (r.kind == ModuleKinds.Game && r.tags.Contains("stock-chart")) ? "tool" : r.kind, name = r.record ? MarketRules.RecordName(r.name) : r.name, r.summary, gives = r.record ? MarketRules.RecordGives : r.gives, r.seller, r.official, r.icon, r.price, r.template, r.installed, r.mine, r.builtin, r.owned, r.listed, r.liked, r.installs, r.likes, r.created,
                     r.sold, earned = r.earned,
                     alias = r.seed?.koName ?? "", koSummary = r.seed?.koSummary ?? "", koGives = r.seed?.koGives ?? "",
                     // the pictures of a game's creature and pick-up, as files of this host's

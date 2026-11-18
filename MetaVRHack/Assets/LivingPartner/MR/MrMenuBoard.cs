@@ -420,8 +420,10 @@ namespace LivingPartner.MR
             }
             if (ring == RgThings || ring < 0)
                 for (int i = w.items.Count - 1; i >= 0; i--) _mbList.Add(new MbEntry { kind = MbKind.Item, item = w.items[i] });
-            if ((ring == RgGames || ring < 0) && w.games != null)
-                foreach (var g in w.games) _mbList.Add(new MbEntry { kind = MbKind.Game, game = g });
+            if ((ring == RgGames || ring == RgTools || ring < 0) && w.games != null)
+                foreach (var g in w.games)
+                    if (ring < 0 || (ring == RgTools) == GlassDisplay.IsStockChart(g))
+                        _mbList.Add(new MbEntry { kind = MbKind.Game, game = g });
             if (ring == RgSkills || ring < 0)
             {
                 // (not a skill of the bag: the passing one the PC makes for some seconds while a thing on the desk is being used)
@@ -504,7 +506,7 @@ namespace LivingPartner.MR
                     {
                         // a game pack looks like any other thing of the bag: the sticker drawn for it, else the picture of what is in it, else its kind's badge
                         var g = e.game; var pic = g.id == SwarmRules.PackId ? v.texDemonGate : Icon(g.icon) ?? Icon(g.enemyIcon) ?? Icon(g.pickupIcon);
-                        own = pic != null; tex = pic ?? PlainTile(g) ?? (g.template == "survival" ? v.texSurvival : v.texGame);
+                        own = pic != null; tex = pic ?? (GlassDisplay.IsStockChart(g) ? v.texFind : PlainTile(g)) ?? (g.template == "survival" ? v.texSurvival : v.texGame);
                         title = string.IsNullOrEmpty(g.title) ? "Game" : g.title; on = PackOn(g);
                         break;
                     }

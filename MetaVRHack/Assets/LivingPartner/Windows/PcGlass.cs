@@ -298,7 +298,7 @@ namespace LivingPartner.Windows
             var groundInk = new Color(0.29f, 0.18f, 0.15f, 0.85f * fade);
             _glGroundLine.SetColors(groundInk, groundInk);
             GlassSprites(g, fade);
-            bool petShown = GlassPet(g, dt, fade);
+            bool petShown = GlassDisplay.IsStockChart(_glPack) ? Roam(dt, false) : GlassPet(g, dt, fade);
             GlassHud(g, fade);
             PlaceHands(_glMon, g, _glInput, fade);
             PlaceLook(_glMon);
@@ -310,7 +310,9 @@ namespace LivingPartner.Windows
         void GlassLate()
         {
             if (_glMon == null || !GlassOverlayFor(_glMon)) return;
-            GlassRender(true);
+            bool chart = GlassDisplay.IsStockChart(_glPack);
+            GlassRender(!chart);
+            if (chart) return;
             if (_ov.Shown && _ovGlass.FramesPresented >= 2) _ov.Hide();      // the small window stays until the field shows the partner
             _dbgLabel.text = "";
             GlassDiag("game");

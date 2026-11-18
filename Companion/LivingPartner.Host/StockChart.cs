@@ -52,7 +52,7 @@ public static class StockChart
         if (symbols.Length > 3) throw new InvalidDataException("Choose up to three stocks for one chart.");
         if (symbols.Length == 0 && Regex.IsMatch(words, @"\b(for|of|about)\s+(?!me\b)\w",RegexOptions.IgnoreCase))
             throw new InvalidDataException("Say the ticker, for example: make a stock chart for ticker META.");
-        return symbols.Length == 0 ? new[] { "META" } : symbols;
+        return symbols.Length == 0 ? new[] { "META", "AAPL", "NVDA" } : symbols;
     }
 
     public static GamePackDef Find(IEnumerable<GamePackDef> games, string words)
@@ -65,8 +65,12 @@ public static class StockChart
     public static WorkJob InProgress(IEnumerable<WorkJob> jobs, string words)
     {
         var requested = NamedSymbols(words);
-        return jobs.FirstOrDefault(job => job.kind == "tool" && job.status is ("working" or "queued") &&
-            IsChart(job.asked) && (requested.Length == 0 || !requested.Except(NamedSymbols(job.asked).DefaultIfEmpty("META")).Any()));
+        return jobs.FirstOrDefault(job =>
+        {
+            if (job.kind != "tool" || job.status is not ("working" or "queued") || !IsChart(job.asked)) return false;
+            try { return requested.Length == 0 || !requested.Except(Symbols(job.asked)).Any(); }
+            catch (InvalidDataException) { return false; }
+        });
     }
 
     internal static Series Read(string symbol, JObject body, DateTimeOffset now)
@@ -148,6 +152,21 @@ public static class StockChart
             script = Marker + string.Join(",",series.Select(s => s.ticker)) + "\nlocal stocks = {" + data + "}\n" + View };
     }
 
+    // Upgrade our original stock-chart layout without changing saved prices or custom Lua.
+    public static void UpgradeSaved(IEnumerable<GamePackDef> games)
+    {
+        if (games == null) return;
+        foreach (var pack in games.Where(IsPack))
+        {
+            var script = pack.script.Replace("\r\n", "\n");
+            int view = script.IndexOf("\nlocal stock, period, picked", StringComparison.Ordinal);
+            if (view < 0) continue;
+            var hash = System.Security.Cryptography.SHA256.HashData(System.Text.Encoding.UTF8.GetBytes(script[(view+1)..]));
+            if (Convert.ToHexString(hash) == "05AB4E4966A10D19ACA8FD3DF45BB1849CC9BA4AF1DECED3125C3ED8D16C4FD6")
+                pack.script = script[..(view+1)] + View;
+        }
+    }
+
     const string View = """
 local stock, period, picked = 1, 2, nil
 local periods = {5, 21, 63}
@@ -159,13 +178,13 @@ function update(dt)
   for i,s in ipairs(stocks) do
     if button(s.symbol, .09+(i-.5)*bw, .90, bw-.02, .105, i==stock and 'mint' or 'white') then stock=i; picked=nil end
   end
-  if W>1.65 or #stocks==1 then text('DAILY CLOSE',W-.31,.90,.04,muted) end
+  if W>1.65 or #stocks==1 then text('Daily close',W-.29,.90,.052,muted) end
   local s=stocks[stock]; local d=s.days; local n=#d
   for i,count in ipairs(periods) do
     if button(count..'D', W/2+(i-2)*.25,.10,.22,.11,i==period and 'honey' or 'white') then period=i; picked=nil end
   end
   local first=math.max(1,n-periods[period]+1)
-  local left,right,bottom,top=.11,W-.26,.29,.64
+  local left,right,bottom,top=.11,W-.28,.285,.645
   for _,t in ipairs(taps()) do
     if t.x>=left and t.x<=right and t.y>=bottom and t.y<=top then
       picked=first+math.floor((t.x-left)/(right-left)*(n-first)+.5)
@@ -178,21 +197,23 @@ function update(dt)
   local function x(i) return left+(right-left)*(i-first)/(n-first) end
   local function y(v) return bottom+(top-bottom)*(v-lo)/(hi-lo) end
   local delta=(d[ix][2]/d[first][2]-1)*100
-  local color=d[n][2]>=d[first][2] and leaf or rose
-  text(string.format('$%.2f',d[ix][2]), W*.22,.751,.093,ink)
-  text(string.format('%+.2f%%',delta), W*.52,.756,.059,delta>=0 and leaf or rose)
-  text(d[ix][1], W*.80,.753,.048,muted)
+  local color=d[n][2]>=d[first][2] and '#BCE7AE' or '#FFC8A2'
+  text(string.format('$%.2f',d[ix][2]), W*.21,.765,.104,ink)
+  text(string.format('%+.2f%%',delta), W*.51,.765,.066,delta>=0 and leaf or rose)
+  text(d[ix][1], W*.80,.765,.055,muted)
+  rect(W/2,.46,W-.10,.446,'#264C47')
   for j=0,2 do
     local v=lo+(hi-lo)*j/2
-    line(left,y(v),right,y(v),.002,'brown',.23)
-    text(string.format('%.2f',v),W-.13,y(v),.035,muted)
+    line(left,y(v),right,y(v),.003,'#DFEEDB',.35)
+    text(string.format('%.2f',v),W-.165,y(v),.039,'#DFEEDB')
   end
-  for i=first+1,n do line(x(i-1),y(d[i-1][2]),x(i),y(d[i][2]),.009,color) end
-  line(x(ix),bottom,x(ix),y(d[ix][2]),.003,ink,.48)
-  disc(x(ix),y(d[ix][2]),.014,color)
-  text(string.sub(d[first][1],6),left+.07,.245,.037,muted)
-  text('Yahoo Finance  /  USD close',W*.49,.214,.036,muted)
-  text(string.sub(d[n][1],6),right-.05,.245,.037,muted)
+  for i=first+1,n do line(x(i-1),y(d[i-1][2]),x(i),y(d[i][2]),.012,color) end
+  line(x(ix),bottom,x(ix),y(d[ix][2]),.004,'#FFFFFF',.58)
+  disc(x(ix),y(d[ix][2]),.023,'#FAF3DA')
+  disc(x(ix),y(d[ix][2]),.012,'#477265')
+  text(string.sub(d[first][1],6),left+.07,.206,.043,muted)
+  text('Yahoo Finance',W*.5,.206,.039,muted)
+  text(string.sub(d[n][1],6),W-.19,.206,.043,muted)
 end
 """;
 }

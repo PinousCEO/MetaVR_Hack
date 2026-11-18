@@ -39,6 +39,7 @@ sealed partial class Stage
             }
         });
         RestoreCreations();
+        StockChart.UpgradeSaved(bag.World.games);
         bag.Tick();
     }
 
@@ -165,13 +166,15 @@ sealed partial class Stage
     void TickGames()
     {
         bag.Tick();
-        if (!machine.IsActive && tvGame != null && T.owner == Env.Mr)
+        if (!machine.IsActive && tvGame != null && T.owner == Env.Mr && !GlassDisplay.IsStockChart(tvPack))
         {
             var pack = tvPack; EndScreenGame();
             bag.Handle(Msg.GlassCommand, new GlassCommand { cmd = "start", game = pack.id });
         }
         else if (!machine.IsActive && tvGame == null && T.owner == Env.Pc && snap.glass?.side == Env.Mr && snap.glass.phase != "over")
-            GameButton(snap.glass.packId);
+        {
+            if (!GlassDisplay.IsStockChart(bag.World.games.Find(p => p.id == snap.glass.packId))) GameButton(snap.glass.packId);
+        }
         AdvanceGame();
     }
 
@@ -226,7 +229,7 @@ sealed partial class Stage
         if (g == null) return null;
         return new { w = g.W, scale, floor, title = tvPack.title, g.score, g.lives, g.level, g.phase, g.choices, g.banner, g.result,
             runId = serial, now = Now, quiet = snap.settings.quietMode, sounds = sounds.ToArray(),
-            pet = new { x = g.petX, y = g.petY, right = g.petFacesRight, line = g.petLineLeft > 0 ? g.petLine : "" },
+            pet = new { visible = !GlassDisplay.IsStockChart(tvPack), x = g.petX, y = g.petY, right = g.petFacesRight, line = g.petLineLeft > 0 ? g.petLine : "" },
             sprites = g.sprites.Select(s => new { s.art, s.x, s.y, s.size, s.w, s.rot, s.alpha, s.color, s.text, s.text2, s.frame }).ToArray(),
             hands = Enumerable.Range(0, 2).Where(i => controls.aimValid[i] || controls.valid[i])
                 .Select(i => new { x = controls.aimValid[i] ? controls.aimX[i] : controls.x[i], y = controls.aimValid[i] ? controls.aimY[i] : controls.y[i] }).ToArray() };

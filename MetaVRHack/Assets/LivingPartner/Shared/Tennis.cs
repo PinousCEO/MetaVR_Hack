@@ -298,6 +298,13 @@ namespace LivingPartner.Shared
             float h = M.Clamp(chest, c.deskHeight + 0.14f, c.deskHeight + 0.42f);
             Vector3 flat = new Vector3(tx, 0, tz);
             Vector3 target = flat + up * (h - Vector3.Dot(flat, up));
+            if (keeper)
+            {
+                // A deep desk below a tilted monitor can put the chest target below the
+                // pitch inside the display. Keep the kick in the opening until it emerges.
+                target.Y = M.Clamp(target.Y, from.Y + 0.05f, Math.Max(from.Y + 0.05f, c.height * 0.35f - c.radius));
+                target.Z = tz;
+            }
             var s = new TennisShot { seq = seq, by = "partner", p0 = from, t0 = t, keeperKick = keeper };
             float fastest = keeper ? 0.36f : 0.60f;
             float flight = keeper ? 0.52f - 0.06f * Math.Abs(aim) : 1.35f;

@@ -71,7 +71,7 @@
       ctx.restore();
     }
     const bambi=picture('/nilo.png'), petHeight=.20*u;
-    if (bambi) {
+    if (bambi && g.pet.visible !== false) {
       const petWidth=petHeight*bambi.width/bambi.height;
       ctx.save(); ctx.translate(X(g.pet.x),Y(g.pet.y)); if (!g.pet.right) ctx.scale(-1,1);
       ctx.drawImage(bambi,-petWidth/2,-petHeight,petWidth,petHeight); ctx.restore();

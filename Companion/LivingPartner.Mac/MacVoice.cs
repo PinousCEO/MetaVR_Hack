@@ -24,6 +24,7 @@ sealed partial class Stage
         if (string.IsNullOrWhiteSpace(words) || words.Length > 240 || headset == null) return;
         bool bare;
         bool named = openMic ? NameRules.Wake(words, out bare) : NameRules.Named(words, out bare);
+        if (named && !bare && NameRules.AddressedText(words) is string command) words = command;
         var google = PcRules.Google(NameRules.Strip(words));
         bool searchFollowUp = google?.@do == "webSearch" && Now <= googleUntil;
         if (openMic && !named && Now >= followUpUntil && !searchFollowUp) return;

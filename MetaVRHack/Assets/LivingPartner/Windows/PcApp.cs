@@ -588,8 +588,8 @@ namespace LivingPartner.Windows
             SwarmLate();                                                      // Screen Scamps: the monsters behind the glass, a window of their own (PcSwarm.cs)
             if (_tnOn && _ovGame != null && _suspended.Length == 0) { GlassFxLate(); TennisLate(); return; }
             TennisDropWindow();
-            if (_glOn && _suspended.Length == 0) { GlassLate(); return; }     // a glass game: the whole monitor, the partner in it
-            GlassFxLate();                                                    // hands' shadows, the frame of a look, a parcel: a window of their own, only while there is one of them
+            if (_glOn && _suspended.Length == 0) { GlassLate(); if (!GlassDisplay.IsStockChart(_glPack)) return; }
+            else GlassFxLate();
             if (!_drawSomething || _suspended.Length > 0) { _cam.enabled = false; _ov.Hide(); return; }
             // --- eye: tracked headset position when fresh, otherwise straight in front of the character
             Bounds b = new Bounds(_portalFx.Visible ? _portalFx.Position : _ring.transform.position, Vector3.one * _H);

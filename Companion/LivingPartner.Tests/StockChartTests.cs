@@ -37,6 +37,7 @@ public class StockChartTests
     public void Requested_stocks_survive_creation_and_named_open()
     {
         Assert.True(StockChart.CreateRequest("Make me a stock chart for Meta."));
+        Assert.Equal(new[] { "META", "AAPL", "NVDA" }, StockChart.Symbols("make me a stock chart"));
         Assert.False(StockChart.CreateRequest("Make a PDF report about a stock chart."));
         Assert.False(StockChart.OpenRequest("Show a screenshot of a stock chart."));
         Assert.Equal(new[] { "META", "AAPL" }, StockChart.Symbols("MAKE ME A STOCK CHART FOR META AND APPLE"));
@@ -67,6 +68,21 @@ public class StockChartTests
     {
         var start = new DateOnly(2026,7,1);
         return new(ticker,Enumerable.Range(0,63).Select(i => new StockChart.Day(start.AddDays(i).ToString("yyyy-MM-dd"),100m+i)).ToList());
+    }
+
+    [Fact]
+    public void Switching_watchlist_tabs_changes_the_visible_price()
+    {
+        var other = Prices("AAPL");
+        other = other with { days = other.days.Select(day => day with { close = day.close + 80m }).ToList() };
+        var pack = StockChart.Build(new[] { Prices("META"), other, Prices("NVDA") });
+        var game = GlassScriptTests.Game(pack.script, strict:true, touch:true);
+        GlassScriptTests.SkipIntro(game);
+        game.Step(1f/30f,GlassScriptTests.Hand(.51f,.90f,.08f));
+        game.Step(1f/30f,GlassScriptTests.Hand(.51f,.90f,.01f));
+        Assert.Contains(game.sprites, s => s.text == "$242.00");
+        Assert.DoesNotContain(game.sprites, s => s.text == "$162.00");
+        Assert.Empty(game.Error);
     }
 
     [Fact]

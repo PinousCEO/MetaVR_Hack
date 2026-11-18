@@ -159,6 +159,8 @@ public sealed class Core
         }
         catch (Exception e) { Log.Warn("state load failed: " + e.Message); }
         State.character ??= new CharacterInfo(); State.settings ??= new SettingsMsg();
+        StockChart.UpgradeSaved(State.world?.games);
+        StockChart.UpgradeSaved(State.market?.catalogue?.Select(module => module?.game));
         State.calibrations ??= new(); State.modules ??= new(); State.tasks ??= new();
         // the partner was renamed twice (Momo, then Bambyeol): a state file from before still carries the old name
         if (State.character.name is "Bambi" or "밤비" or "Momo" or "Bambyeol" or "밤별" or "모모" or "" or null) State.character.name = "Nilo";

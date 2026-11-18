@@ -256,6 +256,11 @@ public sealed class GlassHost
         if (_carry != null) { Follow(now); return; }
         if (_core.Coord.Machine.IsActive)
         {
+            if (StockChart.IsPack(_core.State.world.games.Find(p => p.id == S.packId)))
+            {
+                if (S.side == GlassRules.Pc) Stop("the desktop chart was closed on leaving the PC");
+                return;
+            }
             _carry = GlassRules.Pause(S);
             if (_carry == null) { Stop("the partner is going through the screen"); return; }
             _movingSince = now; _reporter = null; _relayPending = false;

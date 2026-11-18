@@ -288,6 +288,7 @@ public sealed class Conversation
         // speech after the Talk button are addressed by definition.
         bool nameOnly;
         bool named = open ? NameRules.Wake(u.text, out nameOnly) : Named(u.text, out nameOnly);
+        if (named && !nameOnly && NameRules.AddressedText(u.text) is string command) u.text = command;
         string gameWish = NameRules.Strip(u.text);
         var google = PcRules.Google(gameWish);
         bool searchFollowUp = google?.@do == "webSearch" && HostClock.Now <= _googleUntil;

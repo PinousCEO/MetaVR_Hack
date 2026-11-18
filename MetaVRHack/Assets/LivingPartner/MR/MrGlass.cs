@@ -206,7 +206,7 @@ namespace LivingPartner.MR
                 //  it stays here, frozen, until the run on the other side begins - or the host ends it because the crossing failed)
                 bool moving = on && here && g.runId == _gsRun && g.phase == "moving";
                 string why = !hostOk ? "the PC is gone" : !on ? "the PC cleared the game" : !here ? "it is played inside the screen now" : g.runId != _gsRun ? "another run begins"
-                    : _ch.owner != Env.Mr && !moving ? "the partner left the room" : null;
+                    : _ch.owner != Env.Mr && !moving && !GlassDisplay.IsStockChart(_gsPack) ? "the partner left the room" : null;
                 if (why != null)
                 {
                     bool tell = hostOk && here && g.runId == _gsRun && _gsLocal == null;      // (it still runs as far as the PC knows: it is told)
@@ -263,12 +263,15 @@ namespace LivingPartner.MR
             Vector3 flat = Input.HeadPos - o; flat.y = 0;
             float full = _H / GlassGames.PetHeight;
             _gsFlat = game.flat;
+            _gsHandTool = GlassDisplay.IsTool(pack);
+            _gsGrip = -1;
+            _gsSpan = 0f;
             string where;
             if (_gsFlat)
             {
                 // a flat field lies on the desk in front of the partner's spot when there is room for that, never in the user's
                 // lap; the stage's own frame then has its origin in the middle of the field's FAR edge (the sign stands there)
-                _gsUnit = GlassFlatUnit;
+                _gsUnit = _gsHandTool ? 0.18f : GlassFlatUnit;
                 float dHome = flat.magnitude, half = _gsUnit * 0.5f;
                 float middle = Mathf.Min(Mathf.Max(dHome - half - 0.06f, GlassFlatNear + half), dHome + 0.03f);      // how far its middle is from the user
                 _gsOrigin = o + toUser * (dHome - middle - half);
@@ -311,10 +314,16 @@ namespace LivingPartner.MR
                 _gsOrigin = o;
                 float fits = 2f * flat.magnitude * Mathf.Tan(GlassViewDeg * 0.5f * Mathf.Deg2Rad) / game.W;
                 _gsUnit = Mathf.Clamp(fits, full * GlassSmallest, full);
+                if (_gsHandTool)
+                {
+                    _gsUnit = 0.18f;
+                    _gsOrigin = Input.HeadPos - toUser * 0.48f - Vector3.up * 0.20f;
+                }
                 float U0 = GU;
                 where = $"the stage is {game.W * U0:0.00} x {U0:0.00} m ({(U0 >= full - 1e-4f ? "the partner's own size" : $"{U0 / full * 100f:0}% of it: the user is near")}) at {_gsOrigin.ToString("0.00")}";
             }
             v.stage.transform.SetPositionAndRotation(_gsOrigin, _gsRot);
+            v.hud.gameObject.SetActive(!_gsHandTool);
             if (!v.stage.activeSelf) v.stage.SetActive(true);
             v.veil.enabled = !_gsFlat; v.floor.enabled = true;
 
@@ -357,7 +366,8 @@ namespace LivingPartner.MR
             GlassSync(hostOk);
             var g = _gsGame;
             if (g == null) return;
-            _gsOrigin.y = _deskY;                          // (the desk may be measured anew while a game runs)
+            bool holding = _gsHandTool && MoveGlassTool(g);
+            if (!_gsHandTool || _gsFlat) _gsOrigin.y = _deskY;
             _stage.stage.transform.SetPositionAndRotation(_gsOrigin, _gsRot);
             _gsFade = Mathf.Clamp01(_gsFade + dt / 0.4f);
 
@@ -370,6 +380,7 @@ namespace LivingPartner.MR
                 Debug.Log(frozen ? $"[MR] glass: run {_gsRun} is paused - the partner is going through the screen (score {g.score}, level {g.level}, lives {g.lives})" : $"[MR] glass: run {_gsRun} goes on");
             }
             if (frozen) return;
+            if (holding) return;
             GlassHands(dt, g);
             g.touch = _gsFlat;                             // (on a flat field the hands are fingertips over the real desk: a tap is a fingertip coming down)
             g.Step(dt, _gsInput);
@@ -464,7 +475,39 @@ namespace LivingPartner.MR
         /// <summary>In a flat game the sign, the banner and the result card stand behind the far edge, leaning back this much (degrees).</summary>
         const float GlassFlatLean = 16f;
         static readonly Quaternion GlassLying = Quaternion.Euler(90f, 0f, 0f);
-        bool _gsFlat;
+        bool _gsFlat, _gsHandTool;
+        int _gsGrip = -1;
+        float _gsSpan, _gsGripUnit;
+        Vector3 _gsAnchor;
+
+        bool MoveGlassTool(GlassGame g)
+        {
+            var right = Input.Right;
+            var left = Input.Left;
+            bool r = right.tracked && right.pinch, l = left.tracked && left.pinch;
+            if (!r && !l) { _gsGrip = -1; _gsSpan = 0f; return false; }
+            bool Near(Vector3 tip, bool rim)
+            {
+                GlassDrop(g, tip, out float x, out float y, out _);
+                Vector3 local = Quaternion.Inverse(_gsRot) * (tip - _gsOrigin);
+                return Mathf.Abs(_gsFlat ? local.y : local.z) < .09f && x >= -.15f && x <= g.W+.15f && y >= -.15f && y <= 1.15f
+                    && (!rim || x < .12f || x > g.W-.12f || y < .05f || y > .95f);
+            }
+            bool both = r && l && (_gsSpan > 0f || Near(right.indexTip, false) && Near(left.indexTip, false));
+            int hand = both ? 2 : r && (_gsGrip == 0 || Near(right.indexTip, true)) ? 0 :
+                l && (_gsGrip == 1 || Near(left.indexTip, true)) ? 1 : -1;
+            if (hand < 0) { _gsGrip = -1; _gsSpan = 0f; return false; }
+            Vector3 grip = both ? (right.indexTip + left.indexTip) * .5f : hand == 0 ? right.indexTip : left.indexTip;
+            float span = Mathf.Max(.025f, Vector3.Distance(right.indexTip, left.indexTip));
+            if (_gsGrip != hand)
+            {
+                _gsGrip = hand; _gsAnchor = (grip - _gsOrigin) / GU;
+                _gsGripUnit = GU; _gsSpan = both ? span : 0f;
+            }
+            if (both) _gsUnit = Mathf.Clamp(_gsGripUnit * span / _gsSpan, .105f, .48f);
+            _gsOrigin = grip - _gsAnchor * GU;
+            return true;
+        }
 
         /// <summary>
         /// A point of the field in the stage's own frame. layer: metres on the viewer's side of the field - towards the
@@ -561,7 +604,7 @@ namespace LivingPartner.MR
         {
             GlassTick(dt);
             var g = _gsGame;
-            if (g == null || _ch.owner != Env.Mr || _gsFrozen) return false;      // (paused: the partner is on its way to the screen, by itself)
+            if (g == null || _ch.owner != Env.Mr || _gsFrozen || GlassDisplay.IsStockChart(_gsPack)) return false;
             float time = Time.time;
             Vector3 feet = GlassFeet(g);
             string pose = g.petPose ?? "idle";

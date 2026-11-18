@@ -22,13 +22,20 @@ public static class NameRules
     // The partner used to be called 밤별 (Bambyeol) and its owner still says both, so that name is the partner as well:
     // 밤별, 밤별아, 밤별이, 밤벌아, 밤볕아, 밤벼리 - and, only with the calling ending on it (they are words of their own
     // otherwise: 방별 = per room, 밤 별 = the stars at night), 방별아, 반별이, 박별아, 발별아, 밤 별아.
-    static readonly Regex WakePhrase = new(@"^\s*hey[\s,!.:;–—-]+(?:nilo|nee[\s-]?lo)\b[\s,!.:;–—-]*", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    static readonly Regex WakePhrase = new(@"\b(?:hey|hi|hello)[\s,!.:;–—-]+(?:nilo|niro|miro|nee[\s-]?[lr]o)\b[\s,?!.:;–—-]*", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    static readonly Regex Quoting = new(@"\b(?:said|say|saying|called|quote)\s*[,:'""“‘]?\s*$", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    public static string AddressedText(string input)
+    {
+        input ??= "";
+        for (var match = WakePhrase.Match(input); match.Success; match = match.NextMatch())
+            if (!Quoting.IsMatch(input[..match.Index])) return input[(match.Index + match.Length)..].Trim();
+        return null;
+    }
     public static bool Wake(string text, out bool only)
     {
-        string input = text ?? "";
-        var match = WakePhrase.Match(input);
-        only = match.Success && string.IsNullOrWhiteSpace(input.Substring(match.Length).Trim('?', '!', '.'));
-        return match.Success;
+        string command = AddressedText(text);
+        only = command == "";
+        return command != null;
     }
     public static readonly Regex NameRx = new(
         @"((밤|방|반|뱀|범|빰|밥)\s?(비|삐|피)|밤(별|뼐|볕|벌)(아|이|야)?|밤벼리|밤\s(별|벌)(아|야)|(방|반|빰|박|발)\s?(별|뼐|볕|벌)(아|이|야)|bam\s?-?\s?b(i|y|ie|ee)\b|bambi|bam\s?-?\s?[bp]?y(eo|u|o)l\b)\s*(야|아|얌|양)?",
@@ -131,7 +138,7 @@ public static class NameRules
     /// <summary>The sentence without the partner's name (for the plain parsers, which must not trip over it).</summary>
     public static string Strip(string text)
     {
-        string t = WakePhrase.Replace(text ?? "", "").TrimStart();
+        string t = (AddressedText(text) ?? text ?? "").TrimStart();
         var first = Regex.Match(t, @"^[\p{L}\p{Nd}]+");
         if (first.Success && NearCall(first.Value)) t = " " + t[first.Length..];
         return Regex.Replace(NameRx.Replace(t, " "), @"^Nilo\b[, ]*", "", RegexOptions.IgnoreCase);
