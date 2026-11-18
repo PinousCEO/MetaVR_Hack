@@ -20,7 +20,7 @@ Say **Hey, Nilo** (헤이 니-로) before each command when the microphone is li
 | 1:50–2:02 | **Read this screen.** Then **Open YouTube.** | Point at a page with a legible heading. Show Nilo identifying it, then the browser opening. |
 | 2:02–2:21 | **Make a PDF about how to enter the Meta VR Start contest.** When ready, **Show the PDF.** | Show the job starting, then cut forward to the finished report and turn to one requirement. |
 | 2:21–2:30 | **Hmm. I like this.** Then **Hey, Nilo, send the PDF to my PC.** | Open the delivered file. Match the heading across the cut. |
-| 2:30–2:37 | **Hey, Nilo, make me a stock chart for Meta.** | Show the request and the work queue. Cut to the completed module. |
+| 2:30–2:37 | **Hey, Nilo, make me a stock chart for Meta.** | Record the full work queue from the request through “100% complete” (at least 22 seconds). For the seven-second edit, keep the request, a chart check, and the completed row. [Uncut simulator take](META%20Stock%20Chart%20Creation.mp4) |
 | 2:37–2:47 | **Hey, Nilo, open my stock chart.** | Show META, the date and the USD close. Switch from 5D to 21D, then touch an earlier point to read that day's price. |
 | 2:47–2:55 | To camera: **I can share this chart, too.** | In the PC Marketplace, open **My shop**, find **META Stock Chart**, and click **Export**. End on the downloaded .yonder file. |
 

@@ -41,6 +41,11 @@ sealed partial class Stage
         }
         if (StockChart.OpenRequest(words))
         {
+            if (StockChart.InProgress(snap.work.jobs, words) != null)
+            {
+                response = "Your stock chart is in the work queue. You can open it when it's ready.";
+                return true;
+            }
             var chart = StockChart.Find(bag.World.games, words);
             response = chart == null ? "Make a stock chart first." : GameButton(chart.id);
             if (response.Length == 0) response = "Opening your chart.";
@@ -87,10 +92,14 @@ sealed partial class Stage
     {
         if (StockChart.IsChart(words))
         {
-            WorkStep(job, "Loading closing prices", .30f);
-            var chart = await StockChart.MakeAsync(words, ct);
+            var chart = await StockChart.MakeAsync(words, (label, progress) => WorkStep(job, label, progress), ct);
             chart.id = CreationId("game");
-            return () => SaveCreation(new Creation { game = chart }, null, job, ct);
+            return () =>
+            {
+                SaveCreation(new Creation { game = chart }, null, job, ct);
+                job.title = chart.title;
+                job.note = StockChart.ReadyNote;
+            };
         }
         var (genre, koreanTitle) = GamePattern(words);
         var example = GlassScriptExamples.Find(genre);

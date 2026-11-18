@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Globalization;
 using System.Text.RegularExpressions;
 using LivingPartner.Shared;
@@ -18,6 +19,7 @@ public static class StockChart
     };
     const string Topic = @"\b(?:stock|share price|stock price)\s+(?:price\s+)?charts?\b|(?:주식|주가)\s*(?:차트|그래프)";
     const string Marker = "-- Yonder stock chart: ";
+    public const string ReadyNote = "100% complete";
     const string OtherRequest = @"\b(don['’]t|do not|never|pdf|report|screenshot|logo|icon|image|document|png)\b|만들지\s*마|보고서|문서|이미지|스크린샷";
     public static bool IsChart(string words) => Regex.IsMatch(words ?? "", Topic, RegexOptions.IgnoreCase) &&
         !Regex.IsMatch(words, OtherRequest, RegexOptions.IgnoreCase);
@@ -60,6 +62,13 @@ public static class StockChart
             pack.script.Split('\n', 2)[0][Marker.Length..].Split(',').Contains(symbol)));
     }
 
+    public static WorkJob InProgress(IEnumerable<WorkJob> jobs, string words)
+    {
+        var requested = NamedSymbols(words);
+        return jobs.FirstOrDefault(job => job.kind == "tool" && job.status is ("working" or "queued") &&
+            IsChart(job.asked) && (requested.Length == 0 || !requested.Except(NamedSymbols(job.asked).DefaultIfEmpty("META")).Any()));
+    }
+
     internal static Series Read(string symbol, JObject body, DateTimeOffset now)
     {
         var data = body.SelectToken("chart.result[0]");
@@ -93,8 +102,40 @@ public static class StockChart
         return Read(symbol, JObject.Parse(await reply.Content.ReadAsStringAsync(ct)), DateTimeOffset.UtcNow);
     }
 
-    public static async Task<GamePackDef> MakeAsync(string words, CancellationToken ct)
-        => Build(await Task.WhenAll(Symbols(words).Select(s => Download(s, ct))));
+    // Minimum screen time per milestone keeps the real work queue readable during a take.
+    // A slow download or check counts toward its own milestone. Cancellation interrupts every hold.
+    internal static async Task<GamePackDef> MakeAsync(string words, Action<string, float> step, CancellationToken ct,
+        Func<string, CancellationToken, Task<Series>> load = null)
+    {
+        var symbols = Symbols(words);
+        var elapsed = Stopwatch.StartNew();
+        async Task ShowFor(int seconds)
+        {
+            var remaining = TimeSpan.FromSeconds(seconds) - elapsed.Elapsed;
+            if (remaining > TimeSpan.Zero) await Task.Delay(remaining, ct);
+            ct.ThrowIfCancellationRequested();
+            elapsed.Restart();
+        }
+
+        ct.ThrowIfCancellationRequested();
+        step("Loading " + string.Join(" / ", symbols) + " daily closes", .08f);
+        load ??= Download;
+        var data = await Task.WhenAll(symbols.Select(symbol => load(symbol, ct)));
+        await ShowFor(5);
+
+        step("Building chart and time ranges", .35f);
+        var pack = Build(data);
+        await ShowFor(5);
+
+        step("Testing chart controls", .65f);
+        var check = GlassScriptCheck.Run(pack.script, pack);
+        if (!check.ok || !check.drew) throw new InvalidDataException("The chart could not be verified.");
+        await ShowFor(7);
+
+        step("Chart checks passed", .95f);
+        await ShowFor(5);
+        return pack;
+    }
 
     internal static GamePackDef Build(IReadOnlyList<Series> series)
     {

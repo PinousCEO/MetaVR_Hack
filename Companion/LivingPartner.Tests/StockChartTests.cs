@@ -1,12 +1,38 @@
 using LivingPartner.Host;
 using LivingPartner.Shared;
 using Newtonsoft.Json.Linq;
+using System.Diagnostics;
 using Xunit;
 
 namespace LivingPartner.Tests;
 
 public class StockChartTests
 {
+    [Fact]
+    public async Task A_fast_feed_still_shows_the_build_stages_for_at_least_twenty_seconds()
+    {
+        var progress = new List<float>();
+        var watch = Stopwatch.StartNew();
+        var chart = await StockChart.MakeAsync("Make me a stock chart for META",
+            (_, value) => progress.Add(value), CancellationToken.None,
+            (symbol, _) => Task.FromResult(Prices(symbol)));
+        Assert.True(watch.Elapsed >= TimeSpan.FromSeconds(20));
+        Assert.Equal(new[] { .08f, .35f, .65f, .95f }, progress);
+        Assert.True(StockChart.IsPack(chart));
+    }
+
+    [Theory]
+    [InlineData("working", "open my stock chart", true)]
+    [InlineData("queued", "open the stock chart for Meta", true)]
+    [InlineData("working", "open the stock chart for Apple", false)]
+    [InlineData("done", "open my stock chart", false)]
+    [InlineData("cancelled", "open my stock chart", false)]
+    public void Opening_a_chart_respects_its_active_job(string status, string request, bool pending)
+    {
+        var job = new WorkJob { kind = "tool", asked = "Make me a stock chart for Meta.", status = status };
+        Assert.Equal(pending, StockChart.InProgress(new[] { job }, request) == job);
+    }
+
     [Fact]
     public void Requested_stocks_survive_creation_and_named_open()
     {

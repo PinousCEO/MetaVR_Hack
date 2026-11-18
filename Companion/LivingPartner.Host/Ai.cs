@@ -360,8 +360,9 @@ public sealed class Conversation
         if (StockChart.OpenRequest(gameWish) && (!open || named || HostClock.Now <= _attentionUntil))
         {
             if (open && !named) _attentionUntil = -1;
-            var chart = StockChart.Find(_core.State.world.games, gameWish);
-            if (chart != null) _core.Shop.PlayPack(c, chart, u, pt);
+            if (StockChart.InProgress(_core.Work.Open, gameWish) != null)
+                Say("Your stock chart is in the work queue. You can open it when it's ready.", "neutral", 4, "stock chart");
+            else if (StockChart.Find(_core.State.world.games, gameWish) is {} chart) _core.Shop.PlayPack(c, chart, u, pt);
             else Say("Make a stock chart first. Which stock would you like?", "curious", 4, "stock chart");
             HeardAs(u, "playGame"); return;
         }
