@@ -139,7 +139,7 @@ public sealed class GomokuTable
             if(run>=5){won=true;break;}
         }
         turn=won||moves==stones.Length?0:3-side;
-        status=won?(side==1?"흑 승리":"백 승리"):turn==0?"무승부":turn==1?"흑 차례 · 헤드셋에서 교차점을 가리키고 핀치하세요.":"백 차례 · 상대가 빈 교차점을 가리켜 잠시 유지하세요.";
+        status=won?(side==1?"흑 승리":"백 승리"):turn==0?"무승부":turn==1?"흑 차례 · 헤드셋에서 교차점을 가리키고 핀치하세요.":"착용자는 상대 손과 TV를 함께 보세요. 상대는 원하는 칸을 0.9초 가리켜요.";
     }
     public void Camera(JObject p)
     {

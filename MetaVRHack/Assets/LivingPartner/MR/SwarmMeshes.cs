@@ -4,14 +4,13 @@ using UnityEngine;
 
 namespace LivingPartner.MR
 {
-    // All platforms draw these same closed meshes. The hood, lining, cheeks, clasp and
-    // cuffs use the costume construction and proportions of Bambi's original model.
+    // The hood opening, eyes and horns are geometry shared by the desktop and room views.
     public static class SwarmMeshes
     {
         static Color Dye(int rgb) => new Color(((rgb >> 16) & 255) / 255f, ((rgb >> 8) & 255) / 255f, (rgb & 255) / 255f);
-        static readonly Color Ink = Dye(0x38243B), Ivory = Dye(0xFFF0D1), Flesh = Dye(0xFFE4BC),
-            Cheek = Dye(0xF59A87), Brass = Dye(0xDDA14B), Gold = Dye(0xFFE0A0), Shade = Dye(0x553445);
-        public static readonly Color[] Body = { Dye(0xAC5076), Dye(0x7665A5), Dye(0x709184), Dye(0xC86782), Dye(0xD98658), Dye(0x754563) };
+        static readonly Color Ink = Dye(0x251B2A), Ivory = Dye(0xFFF0D1), EmberEye = Dye(0xB27952),
+            WingLining = Dye(0x925365), Brass = Dye(0xBC864B), Gold = Dye(0xFFE0A0), Shade = Dye(0x553445);
+        public static readonly Color[] Body = { Dye(0x954455), Dye(0x706187), Dye(0x557369), Dye(0x955165), Dye(0xAD6346), Dye(0x8F3546) };
 
         sealed class Model
         {
@@ -103,7 +102,7 @@ namespace LivingPartner.MR
             }
 
             // A flared traveling cloak with a scalloped brass hem. The back hangs lower
-            // than the front so that the two feet and the clasp stay visible.
+            // than the front so the feet stay visible.
             public void Mantle(float width, Color cloth, float hemY)
             {
                 const int sides=32, rings=8; int last=0;
@@ -142,7 +141,7 @@ namespace LivingPartner.MR
                     new Vector2(.34f,.02f),new Vector2(.29f,-.05f),new Vector2(.22f,-.14f)};
                 Vector3 At(Vector2 p,float z) => new Vector3(sign*(.2f+(p.x-.2f)*span),p.y,z);
                 Vector2 hub=new Vector2(.32f,.14f);
-                Color membrane=Color.Lerp(edge,Cheek,.38f);
+                Color membrane=Color.Lerp(edge,WingLining,.38f);
                 int front=Point(At(hub,.065f),Vector3.back,membrane);
                 int rear=Point(At(hub,.18f),Vector3.forward,edge);
                 int start=vertices.Count;
@@ -163,6 +162,39 @@ namespace LivingPartner.MR
                 }
             }
 
+            public void Hood(Color cloth)
+            {
+                // The opening comes to a point above the brow. Its lining recedes into
+                // the hood so it stays in shadow when a figure turns sideways.
+                const int sides=12;
+                float[] widths={.018f,.21f,.32f,.31f,.254f,.17f,.018f};
+                float[] heights={.021f,.21f,.30f,.30f,.242f,.156f,.018f};
+                float[] depths={.24f,.19f,.045f,-.19f,-.26f,-.21f,-.19f};
+                int last=0;
+                for(int k=0;k<widths.Length;k++)
+                {
+                    bool lining=k>=4;
+                    int row=vertices.Count;
+                    for(int i=0;i<sides;i++)
+                    {
+                        float a=2f*Mathf.PI*i/sides, x=Mathf.Cos(a), y=Mathf.Sin(a);
+                        float peak=Mathf.Pow(Mathf.Max(0f,y),9f);
+                        var p=new Vector3(widths[k]*x,.14f+heights[k]*(y+.17f*peak),depths[k]-(k==3?.055f*peak:0f));
+                        var n=lining?new Vector3(-.12f*x,-.12f*y,-1f):new Vector3(x,y,k<2?.85f:k==2?.1f:-.6f);
+                        Point(p,n,lining?Ink:cloth);
+                    }
+                    if(k>0) Join(last,row,sides);
+                    if(k==0||k==widths.Length-1)
+                    {
+                        int cap=Point(new Vector3(0,.14f,depths[k]),lining?Vector3.back:Vector3.forward,lining?Ink:cloth);
+                        for(int i=0;i<sides;i++) Tri(cap,row+i,row+(i+1)%sides);
+                    }
+                    last=row;
+                }
+                for(int side=-1;side<=1;side+=2)
+                    Oval(new Vector3(side*.097f,.143f,-.222f),new Vector3(.028f,.0065f,.005f),EmberEye,3,8,side*4f);
+            }
+
             public Mesh Bake(string name, bool flash)
             {
                 var mesh=new Mesh {name=name};
@@ -179,32 +211,6 @@ namespace LivingPartner.MR
             }
         }
 
-        static void Hood(Model m, Color cloth, bool solemn)
-        {
-            Color trim=Color.Lerp(cloth,Shade,.41f);
-            m.Oval(new Vector3(0,.144f,.005f),new Vector3(.342f,.295f,.283f),cloth,10,18);
-            m.Oval(new Vector3(0,.134f,-.187f),new Vector3(.283f,.233f,.122f),trim,8,16);
-            m.Oval(new Vector3(0,.129f,-.205f),new Vector3(.261f,.209f,.124f),Flesh,8,18);
-            // Individual dashes follow the recessed seam; leave the button and collar clear.
-            for(int i=0;i<18;i++)
-            {
-                float a = (.02f + i / 17f * .96f) * Mathf.PI;
-                var p = new Vector3(.276f*Mathf.Cos(a),.131f+.228f*Mathf.Sin(a),-.245f);
-                m.Oval(p,new Vector3(.012f,.0038f,.0038f),Color.Lerp(cloth,Gold,.45f),3,5,a*Mathf.Rad2Deg+90f);
-            }
-            for(int side=-1;side<=1;side+=2)
-            {
-                float s=side;
-                m.Oval(new Vector3(s*.105f,.145f,-.319f),new Vector3(.033f,.055f,.017f),Ink,6,9,s*5);
-                m.Oval(new Vector3(s*.105f-.009f,.163f,-.334f),new Vector3(.010f,.011f,.004f),Ivory,4,6);
-                m.Oval(new Vector3(s*.17f,.085f,-.292f),new Vector3(.038f,.017f,.012f),Cheek,5,8,s*8);
-                if(solemn)
-                    m.Sweep(new Vector3(s*.07f,.211f,-.313f), new Vector3(s*.09f,.212f,-.31f),new Vector3(s*.135f,.239f,-.29f),new Vector3(s*.15f,.222f,-.28f),.012f,.004f,Shade,6,6);
-            }
-            m.Sweep(new Vector3(-.034f,.066f,-.325f),new Vector3(-.012f,.037f,-.332f),new Vector3(.02f,.049f,-.331f),new Vector3(.035f,.073f,-.324f),.0065f,.0035f,Shade,6,6);
-            m.Sweep(new Vector3(.027f,.057f,-.325f),new Vector3(.03f,.05f,-.327f),new Vector3(.027f,.036f,-.327f),new Vector3(.024f,.032f,-.326f),.0085f,.001f,Ivory,4,6);
-        }
-
         static void Imp(Model m,int kind,Color cloth)
         {
             bool warden=kind==SwarmKind.Tank, regent=kind==SwarmKind.Boss, moth=kind==SwarmKind.Flyer, ember=kind==SwarmKind.Mini;
@@ -216,8 +222,7 @@ namespace LivingPartner.MR
                 float s=side;
                 m.Oval(new Vector3(s*.12f,-.355f,-.033f),new Vector3(.084f,.079f,.107f),boots,6,10,s*8);
                 m.Oval(new Vector3(s*.224f,-.10f,-.021f),new Vector3(.081f,.115f,.088f),coat,6,10,s*31);
-                m.Oval(new Vector3(s*.265f,-.167f,-.067f),new Vector3(.064f,.065f,.066f),Flesh,6,9);
-                m.Oval(new Vector3(s*.065f,-.054f,-.162f),new Vector3(.087f,.056f,.035f),Ivory,5,10,s*16);
+                m.Oval(new Vector3(s*.265f,-.167f,-.067f),new Vector3(.053f,.067f,.057f),boots,6,8,s*15f);
                 if(moth||regent||kind==SwarmKind.Hopper) m.Wing(s,moth?1.16f:regent?.92f:.56f,coat);
                 float w=warden?.47f:regent?.49f:.35f;
                 m.Sweep(new Vector3(s*.226f,.308f,.004f),new Vector3(s*w,.35f,.06f),
@@ -226,26 +231,15 @@ namespace LivingPartner.MR
                 if(warden)
                     m.Oval(new Vector3(s*.219f,-.052f,.012f),new Vector3(.13f,.085f,.114f),Brass,6,10,s*21);
             }
-            m.Oval(new Vector3(0,-.084f,-.200f),new Vector3(.038f,.04f,.02f),Brass,5,10);
-            for(int ray=0;ray<5;ray++)
-            {
-                float a=ray*72f*Mathf.Deg2Rad;
-                var center=new Vector3(0,-.084f,-.211f);
-                var tip=center+new Vector3(Mathf.Sin(a),Mathf.Cos(a),0)*.055f;
-                m.Sweep(center,Vector3.Lerp(center,tip,.35f),Vector3.Lerp(center,tip,.67f),tip,.021f,.002f,Gold,3,6,false,.42f);
-            }
-            m.Oval(new Vector3(0,-.078f,-.218f),new Vector3(.016f,.018f,.005f),Gold,4,7);
-            Hood(m,cloth,regent||warden);
+            m.Hood(cloth);
             if(regent)
             {
-                m.Sweep(new Vector3(.026f,.36f,.07f),new Vector3(.047f,.55f,.085f),new Vector3(.19f,.61f,.02f),new Vector3(.205f,.494f,-.026f),.095f,.006f,cloth,12,9,false,.86f);
-                m.Oval(new Vector3(.205f,.483f,-.026f),Vector3.one*.029f,Gold,5,8);
                 m.Oval(new Vector3(0,.411f,.003f),new Vector3(.155f,.028f,.134f),Brass);
                 for(int i=0;i<5;i++)
                 {
                     float a=i*2f*Mathf.PI/5f;
                     var p=new Vector3(.114f*Mathf.Cos(a),.415f,.095f*Mathf.Sin(a));
-                    m.Sweep(p,p+Vector3.up*.064f,p+Vector3.up*.082f,p+new Vector3(.024f*Mathf.Cos(a),.112f,.024f*Mathf.Sin(a)),.038f,.008f,Gold,5,6);
+                    m.Sweep(p,p+Vector3.up*.064f,p+Vector3.up*.082f,p+new Vector3(.042f*Mathf.Cos(a),.145f,.042f*Mathf.Sin(a)),.038f,.008f,Gold,5,6);
                 }
             }
             else if(ember || kind==SwarmKind.Hopper || moth)

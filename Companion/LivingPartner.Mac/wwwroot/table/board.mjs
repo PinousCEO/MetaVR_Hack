@@ -3,9 +3,6 @@ const board=el('board'),canvas=board.querySelector('canvas'),ctx=canvas.getConte
 const viewer=crypto.randomUUID(), inset=.052;
 let state={},registered='',lastLayout=0,layoutReady=false,latest=-1,frameKey='',busy=false,detector,detectorPromise,closed=false,visionError='';
 let displaysKey='',lastPaint='',embedded=false;
-const stoneArt=new Image();
-stoneArt.onload=()=>{lastPaint='';boardPaint(state);};
-stoneArt.src='/table/stones.png';
 try{embedded=window.parent!==window&&window.parent.location.origin===location.origin;}catch{}
 function full(){const d=embedded?window.parent.document:document;return !!(d.fullscreenElement||d.webkitFullscreenElement);}
 const post=(action,data,keepalive=false)=>fetch('/table/api/'+action,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),keepalive});
@@ -39,9 +36,9 @@ function boardPaint(s){
   if(key===lastPaint)return;lastPaint=key;
   if(canvas.width!==size||canvas.height!==size){canvas.width=size;canvas.height=size;}else ctx.clearRect(0,0,size,size);
   const p=size*inset,step=(size-2*p)/14,at=n=>p+n*step;
-  ctx.strokeStyle='#644426';ctx.lineWidth=Math.max(.9,size*.0012);ctx.beginPath();
+  ctx.strokeStyle='#966e50';ctx.lineWidth=Math.max(1,size*.0016);ctx.beginPath();
   for(let i=0;i<15;i++){ctx.moveTo(at(i),p);ctx.lineTo(at(i),at(14));ctx.moveTo(p,at(i));ctx.lineTo(at(14),at(i));}ctx.stroke();
-  ctx.fillStyle='#674928';
+  ctx.fillStyle='#67483e';
   for(const [x,y] of [[3,3],[11,3],[7,7],[3,11],[11,11]]){ctx.beginPath();ctx.arc(at(x),at(y),step*.09,0,Math.PI*2);ctx.fill();}
   ctx.font=Math.round(step*.29)+'px sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
   for(let i=0;i<15;i++){ctx.fillText('ABCDEFGHJKLMNOP'[i],at(i),p*.48);ctx.fillText(String(15-i),p*.46,at(i));}
@@ -49,19 +46,20 @@ function boardPaint(s){
     const stone=s.stones[i];if(!stone)continue;
     const x=at(i%15),y=at(Math.floor(i/15)),r=step*.45;
     ctx.save();
-    ctx.shadowBlur=r*.12;ctx.shadowOffsetX=r*.065;ctx.shadowOffsetY=r*.14;ctx.shadowColor='#684529bd';
-    if(stoneArt.complete&&stoneArt.naturalWidth){
-      const tile=stoneArt.naturalWidth/2,side=r*2.21;
-      ctx.drawImage(stoneArt,(stone-1)*tile,0,tile,stoneArt.naturalHeight,x-side/2,y-side/2,side,side);
-    }else{
-      ctx.fillStyle=stone===1?'#302534':'#ffe8c2';ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
-    }
+    ctx.shadowBlur=r*.18;ctx.shadowOffsetX=r*.07;ctx.shadowOffsetY=r*.15;ctx.shadowColor='#68433288';
+    const glaze=ctx.createRadialGradient(x-r*.29,y-r*.35,0,x,y,r);
+    glaze.addColorStop(0,stone===1?'#735565':'#fffaf1');
+    glaze.addColorStop(.68,stone===1?'#533749':'#f8ead6');
+    glaze.addColorStop(1,stone===1?'#342231':'#d8bc9c');
+    ctx.fillStyle=glaze;ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill();
+    ctx.shadowColor='transparent';ctx.strokeStyle=stone===1?'#352333':'#95765f';
+    ctx.lineWidth=Math.max(1,r*.054);ctx.stroke();
     ctx.restore();
     if(i===s.last){ctx.strokeStyle=stone===1?'#eec57c':'#785c3d';ctx.lineWidth=step*.049;ctx.beginPath();ctx.arc(x,y,r*.38,0,Math.PI*2);ctx.stroke();}
   }
   if(s.turn&&s.hover>=0){
     const x=at(s.hover%15),y=at(Math.floor(s.hover/15)),r=step*.45;
-    ctx.strokeStyle=s.stones?.[s.hover]?'#ac3e27':s.turn===1?'#314439':'#fffcef';ctx.lineWidth=step*.079;
+    ctx.strokeStyle=s.stones?.[s.hover]?'#a73a2e':'#553548';ctx.lineWidth=step*.079;
     ctx.setLineDash([step*.16,step*.09]);ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.stroke();ctx.setLineDash([]);
     if(s.turn===2){ctx.strokeStyle='#187457';ctx.beginPath();ctx.arc(x,y,r*1.2,-Math.PI/2,-Math.PI/2+2*Math.PI*s.dwell);ctx.stroke();}
   }
@@ -74,6 +72,7 @@ function update(s){
   const playing=s.active&&full()&&select.value===s.monitorId&&layoutReady;
   el('setup').hidden=playing;el('start').disabled=!options.length||!s.connected;
   el('who').textContent=s.active?(s.turn===1?'흑 · 헤드셋 착용자':s.turn===2?'백 · 맞은편 사람':s.status):'대국 준비';
+  el('who').dataset.turn=s.active?s.turn:0;
   el('count').textContent=s.active?s.moves+'수':'';
   el('close').hidden=!playing;el('restart').hidden=!playing||s.turn!==0;
   el('guide').textContent=playing?(s.turn===2&&(s.guestNotice||visionError)||s.status):'';
