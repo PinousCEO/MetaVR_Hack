@@ -2,7 +2,7 @@
 
 **Final cut · 2:55 · Quest 3 and Windows Companion.** Start with a real sip. Give the viewer a moment to notice the handle or band of colour on your cup. That detail identifies the same object when Nilo drinks and when you show its 3D file on your computer.
 
-[Printable cue card](Yonder%20Cue%20Card.pdf) · [Slow English rehearsal audio](Yonder%20English%20Rehearsal.mp3) · [Cup animation from the simulator](Nilo%20Cup%20Rehearsal.mp4) · [Demon Gate desktop gameplay](Demon%20Gate%20Flight.mp4)
+[Printable cue card with META](Yonder%20Cue%20Card%20-%20META.pdf) · [Slow English rehearsal audio](Yonder%20English%20Rehearsal.mp3) · [Cup animation from the simulator](Nilo%20Cup%20Rehearsal.mp4) · [Demon Gate desktop gameplay](Demon%20Gate%20Flight.mp4)
 
 ## Shooting script
 
@@ -16,13 +16,17 @@ Say **Hey, Nilo** (헤이 니-로) before each command when the microphone is li
 | 0:42–0:55 | **Send the cup to my PC.** | Show the actual exported GLB in the Models folder. Turn it in a GLB viewer if one is installed. Match the handle to the opening shot. |
 | 0:55–1:12 | **Make it rain.** Then **Dance.** | Shield Nilo with your palm. Keep it there until the sheltered patch reads. Beat-cut to one dance move against the Night Sky ambience from the bag's Places tab. |
 | 1:12–1:39 | **Play tennis.** After the first return, say **Not fair!** Then **Hey, Nilo, go inside.** Once Nilo lands, say **Hey, Nilo, play tennis.** | Start the first rally on the MR desk. Point at the calibrated display for the crossing. Keep the bezel and racket visible in one take through the first return from inside the screen. |
-| 1:39–1:53 | **Play goalkeeper.** | End the tennis match first. Show one clean save and its feedback. Cut to four seconds of solo **Demon Gate** on the desktop, from an approaching enemy to an augment pick. Use the real game title on screen. |
-| 1:53–2:09 | **Read this screen.** Then **Open YouTube.** | Point at an innocuous page whose heading the viewer can read, let Nilo identify it, then show the browser opening. |
-| 2:09–2:36 | **Make a PDF about how to enter the Meta VR Start contest.** When ready: **Show the PDF.** | Show the research job starting. Cut forward to its result. Open the real report in MR and turn to a page with a concrete requirement and its source. |
-| 2:36–2:49 | To yourself: **Hmm. I like this.** Then **Hey, Nilo, send the PDF to my PC.** | Select the delivered PDF on the desktop. Hold on the same heading in the PC's PDF reader so the handoff is unmistakable. |
-| 2:49–2:55 | No dialogue. | Open Marketplace from the bag. Hold on an actual module, then cut back to the cup beside Nilo for the last frame. |
+| 1:39–1:50 | **Play goalkeeper.** | End the tennis match first. Show one save, then four seconds of solo Demon Gate. |
+| 1:50–2:02 | **Read this screen.** Then **Open YouTube.** | Point at a page with a legible heading. Show Nilo identifying it, then the browser opening. |
+| 2:02–2:21 | **Make a PDF about how to enter the Meta VR Start contest.** When ready, **Show the PDF.** | Show the job starting, then cut forward to the finished report and turn to one requirement. |
+| 2:21–2:30 | **Hmm. I like this.** Then **Hey, Nilo, send the PDF to my PC.** | Open the delivered file. Match the heading across the cut. |
+| 2:30–2:37 | **Hey, Nilo, make me a stock chart for Meta.** | Show the request and the work queue. Cut to the completed module. |
+| 2:37–2:47 | **Hey, Nilo, open my stock chart.** | Show META, the date and the USD close. Switch from 5D to 21D, then touch an earlier point to read that day's price. |
+| 2:47–2:55 | To camera: **I can share this chart, too.** | In the PC Marketplace, open **My shop**, find **META Stock Chart**, and click **Export**. End on the downloaded .yonder file. |
 
 ## Pickups and rehearsal
+
+- The stock module saves up to 63 trading sessions when you make it. The percentage measures the change from the first close in the selected range to the selected day. Keep the date in the shot. A second person can import the exported file in their Windows Marketplace and explore the same dates. [META module for retakes](../samples/modules/META%20Stock%20Chart.yonder) · [MR simulator screenshot](META%20Stock%20Chart.png)
 
 - Record a clean Quest view with passthrough and microphone audible. Record the PC window separately for the GLB, game and PDF close-ups. Cover edits with the same movement or object. Real-time beats that deserve the most room are the sip, the screen crossing and the return across the bezel.
 - Check calibration, camera and microphone. Keep one cup visible. If generation or research takes longer than the edit allows, film the request and its eventual result as separate takes. Keep the original object and report available for retakes.

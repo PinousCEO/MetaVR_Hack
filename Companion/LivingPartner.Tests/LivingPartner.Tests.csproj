@@ -27,6 +27,7 @@
     <Compile Include="..\LivingPartner.Host\HubContract.cs" Link="Host\HubContract.cs" />
     <!-- Modules are scripts: how a script is checked by running it (ScriptRules) and the writer that has a language model write one and repairs it until it passes (ScriptWriter; the tests give it a model that answers from a list). -->
     <Compile Include="..\LivingPartner.Host\ScriptRules.cs" Link="Host\ScriptRules.cs" />
+    <Compile Include="..\LivingPartner.Host\StockChart.cs" Link="Host\StockChart.cs" />
     <Compile Include="..\LivingPartner.Host\ScriptWriter.cs" Link="Host\ScriptWriter.cs" />
     <!-- (W1) the workshop: the agent loop, its simulated players and its rasteriser are pure (the model is an interface) -->
     <Compile Include="..\LivingPartner.Host\Workshop.cs" Link="Host\Workshop.cs" />

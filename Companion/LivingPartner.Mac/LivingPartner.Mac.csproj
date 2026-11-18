@@ -10,6 +10,7 @@
     <NoWarn>$(NoWarn);CS8632</NoWarn>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="../LivingPartner.Host/StockChart.cs" Link="Shared/StockChart.cs" />
     <Compile Include="../LivingPartner.Host/PhotoObject.cs" Link="Shared/PhotoObject.cs" />
     <Compile Include="../LivingPartner.Host/Tripo.cs" Link="Shared/Tripo.cs" />
     <Compile Include="../../MetaVRHack/Assets/LivingPartner/Shared/**/*.cs" LinkBase="Shared" />

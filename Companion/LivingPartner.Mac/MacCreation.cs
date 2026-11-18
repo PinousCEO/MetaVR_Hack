@@ -34,6 +34,18 @@ sealed partial class Stage
     {
         response = "";
         string words = WorldRules.TypedText(NameRules.Strip(said ?? ""));
+        if (StockChart.CreateRequest(words))
+        {
+            response = QueueWork("tool", "Stock chart", words, (job,ct) => MakeGame(job,words,ct));
+            return true;
+        }
+        if (StockChart.OpenRequest(words))
+        {
+            var chart = StockChart.Find(bag.World.games, words);
+            response = chart == null ? "Make a stock chart first." : GameButton(chart.id);
+            if (response.Length == 0) response = "Opening your chart.";
+            return true;
+        }
         bool identify = SightRules.WantsIdentification(words);
         if (identify || SightRules.Plain(words) == SightRules.Make)
         {
@@ -73,6 +85,13 @@ sealed partial class Stage
 
     async Task<Action> MakeGame(WorkJob job, string words, CancellationToken ct)
     {
+        if (StockChart.IsChart(words))
+        {
+            WorkStep(job, "Loading closing prices", .30f);
+            var chart = await StockChart.MakeAsync(words, ct);
+            chart.id = CreationId("game");
+            return () => SaveCreation(new Creation { game = chart }, null, job, ct);
+        }
         var (genre, koreanTitle) = GamePattern(words);
         var example = GlassScriptExamples.Find(genre);
         bool useRecipe = example != null && Matches(words, @"기본|내장|레시피|템플릿|\b(default|built.in|recipe|template)\b");

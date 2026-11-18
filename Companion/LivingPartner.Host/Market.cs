@@ -1529,6 +1529,7 @@ public sealed class Market
         if (text.Length == 0) return Tell("뭘 만들까? 말로 설명해 줘.", "What shall I make? Describe it to me.", "curious");
         // the answer to "이미 있어. 새로 만들까, 그걸 틀까?" may come here as the thing to make ("새로")
         if (_twice.Fresh(HostClock.Now) && PlayRules.DuplicateAnswer(text).Length > 0 && AskedTwice(c, text) is { } answered) return answered;
+        if (StockChart.IsChart(text) && (StockChart.CreateRequest(text) || string.IsNullOrEmpty(kind))) kind = ModuleKinds.Game;
         if (Array.IndexOf(ModuleKinds.All, kind) < 0) kind = KindWord(text);
         if (kind.Length > 0) return MakeKind(c, kind, text);
         // nothing in the words says what kind of module this is. Without a language model it is a thing (that is all that can be made then).
@@ -1831,7 +1832,9 @@ public sealed class Market
     string MakeGame(string text, MarketModule remake = null)
     {
         bool tool = GlassDisplay.IsTool(remake?.game) || !AskedForGame(text) && Regex.IsMatch(text, @"타이머|스톱워치|초시계|계산기|카운터|변환기|그림판|메모장|도구|\b(timer|stopwatch|calculator|counter|converter|notepad|tool|utility)\b", RegexOptions.IgnoreCase);
-        if (tool && !HasAi) return NoKey();
+        bool chart = StockChart.IsChart(text);
+        tool |= chart;
+        if (tool && !chart && !HasAi) return NoKey();
         if (!tool && _core.Workshop.GameModel == null) return Tell("새 게임을 만들려면 PC에 Anthropic API 키(ANTHROPIC_API_KEY)를 설정해 줘.", "Set ANTHROPIC_API_KEY on the PC to create a new game with Claude.", "worried", 5);
         string jobKind = tool ? "tool" : ScriptRequest.Game, jobTitle = remake?.name ?? (tool ? "New tool" : "New game");
         // (W1) one making at a time: what is asked for meanwhile hangs in the work queue and is started when its turn comes
@@ -1842,6 +1845,7 @@ public sealed class Market
         // (W1) a game is WORK FOR THE PC: a job of the work queue from here to the end; the partner goes into the PC for it when it can
         var (startKo, startEn) = _core.Workshop.StartLine(jobKind);
         var wjob = _core.Workshop.Open(jobKind, jobTitle, text);
+        var workToken = _core.Workshop.Token(wjob);
         string line = remake != null ? Tell($"응, {remake.name} 처음부터 다시 만들어 볼게! 작업 큐에 걸어 둘게.", $"Okay, I'll make {remake.name} again from scratch - it's in your work queue.")
                                      : Tell(startKo, startEn);
         string id = remake?.id ?? "game-" + Maker.NewId(), lang = _core.Talk.LastLanguage, keepTitle = remake?.name ?? "";
@@ -1855,7 +1859,14 @@ public sealed class Market
                 using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(10));
                 // (the writing is 0 .. 0.88 of the job, the pictures the rest)
                 // (W1: the WORKSHOP writes it - an agent loop that runs, plays and looks at what it wrote; Workshop.WriteAsync( falls back on ScriptWriter.WriteAsync( without a key for it)
-                written = await _core.Workshop.WriteAsync(wjob, request, (stage, n, p) => _core.Post(() => WriterStage(stage, n, p * 0.88f)), l => Log.Info("market: " + l), cts.Token, 0.88f);
+                if (chart)
+                {
+                    _core.Post(() => _core.Workshop.Step(wjob, "Loading closing prices", .30f));
+                    using var stop = CancellationTokenSource.CreateLinkedTokenSource(cts.Token, workToken);
+                    var chartPack = await StockChart.MakeAsync(text, stop.Token);
+                    written = new ScriptResult { ok = true, title = chartPack.title, howTo = chartPack.howTo, script = chartPack.script };
+                }
+                else written = await _core.Workshop.WriteAsync(wjob, request, (stage, n, p) => _core.Post(() => WriterStage(stage, n, p * 0.88f)), l => Log.Info("market: " + l), cts.Token, 0.88f);
                 if (written.ok) pack = MarketRules.ScriptGame(id, keepTitle.Length > 0 ? keepTitle : written.title.Length > 0 ? written.title : Short(text, 24), written.howTo, written.script, written.art.Select(a => a.name));
                 if (pack != null)
                 {
@@ -1875,7 +1886,11 @@ public sealed class Market
                     Log.Info($"market: game {id} '{title}': {pack.art.Count} picture(s) painted for its script{(failed > 0 ? $", {failed} failed and left out" : "")}{(pack.art.Count > 0 ? " (" + string.Join(", ", pack.art.Select(a => a.name + " = " + a.file)) + ")" : "")}; its sticker: {(icon.Length > 0 ? icon : "none yet")}");
                 }
             }
-            catch (Exception e) { Log.Warn($"market: game {id} could not be made: {e.Message}"); }
+            catch (Exception e)
+            {
+                Log.Warn($"market: game {id} could not be made: {e.Message}");
+                if (chart) written = new ScriptResult { why = e is InvalidDataException ? e.Message : "The price feed could not be reached. Please try again." };
+            }
             _core.Post(() =>
             {
                 EndJob();
@@ -1886,7 +1901,7 @@ public sealed class Market
                 {
                     Log.Warn($"market: game {id} for '{Short(text, 80)}' was NOT made: {(written == null ? "the writer gave nothing" : written.why.Length > 0 ? written.why : "no title")}");
                     _core.Workshop.Close(wjob, false, note: written == null ? "The workshop could not be reached." : Short(written.why.Length > 0 ? written.why : "No version passed its playtests.", 160));
-                    MakeFailed(ModuleKinds.Game, MarketRules.CouldNotWriteLine(true), MarketRules.CouldNotWriteLine(false));
+                    MakeFailed(ModuleKinds.Game, MarketRules.CouldNotWriteLine(true), chart && !string.IsNullOrEmpty(written?.why) ? written.why : MarketRules.CouldNotWriteLine(false));
                     return;
                 }
                 pack.icon = icon;
@@ -1894,13 +1909,13 @@ public sealed class Market
                 if (remake != null) { Remade(remake, pack, written, text); return; }
                 var m = new MarketModule
                 {
-                    id = id, kind = ModuleKinds.Game, name = pack.title, summary = pack.howTo.Length > 0 ? pack.howTo : Short(text, 160), gives = "A new game: " + pack.title + ".",
+                    id = id, kind = ModuleKinds.Game, name = pack.title, summary = pack.howTo.Length > 0 ? pack.howTo : Short(text, 160), gives = chart ? "Inspect daily stock prices by date and range." : "A new game: " + pack.title + ".",
                     author = MarketRules.You, icon = icon, price = 0, tags = new[] { ScriptRules.Template }, publishedUnixMs = HostClock.UnixMs, game = pack,
                 };
                 if (!Shelve(m)) { MakeFailed(ModuleKinds.Game, MarketRules.CouldNotWriteLine(true), MarketRules.CouldNotWriteLine(false)); return; }
                 Log.Info($"market: game {id} '{pack.title}' is a script of {written.Lines} lines ({written.repairs} repair(s), {written.calls} call(s) to the model, {written.seconds:0.0} s); check: {written.verdict?.Line}; critic: {(written.judged ? written.defects.Count + " defect(s)" + (written.judgedRepairTaken ? ", repaired" : written.defects.Count > 0 ? ", NOT repaired" : "") : "not asked")}");
                 Reveal(ModuleKinds.Game, id, pack.title, Ko ? "놀이 메뉴에 있어." : "It's on the Play page.");
-                StickerLater(ai, m);
+                if (!chart) StickerLater(ai, m);
             });
         });
         return line;
@@ -1953,7 +1968,9 @@ public sealed class Market
         pack.song = old.song; pack.ambience = old.ambience;
         if (string.IsNullOrEmpty(pack.icon)) pack.icon = !string.IsNullOrEmpty(old.icon) ? old.icon : m.icon;
         m.game = pack; m.icon = pack.icon;
-        m.summary = pack.howTo.Length > 0 ? pack.howTo : m.summary; m.gives = "A new game: " + pack.title + "."; m.tags = new[] { ScriptRules.Template };
+        m.summary = pack.howTo.Length > 0 ? pack.howTo : m.summary;
+        m.gives = StockChart.IsPack(pack) ? "Inspect daily stock prices by date and range." : "A new game: " + pack.title + ".";
+        m.tags = new[] { ScriptRules.Template };
         m.version = double.TryParse(m.version, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out double v) ? ((int)v + 1) + ".0" : "2.0";
         string problem = MarketRules.Problem(m);
         if (problem.Length > 0) { Log.Warn($"market: the remade {m.id} is not sound ({problem}): the old pack is kept"); m.game = old; m.icon = old.icon; MakeFailed(ModuleKinds.Game, MarketRules.CouldNotWriteLine(true), MarketRules.CouldNotWriteLine(false)); return; }
@@ -1970,7 +1987,7 @@ public sealed class Market
         Log.Info($"market: REMADE {m.id} '{m.name}' from '{Short(words, 80)}': it was {old.template}, it is a script of {written.Lines} lines now ({written.repairs} repair(s), {written.calls} call(s), {written.seconds:0.0} s; check: {written.verdict?.Line}); version {m.version}; {(listed ? $"on sale at {price} stars - the listing is brought up to date" : "not on sale")}");
         Tell($"{m.name}, 이번엔 진짜로 다시 만들었어! 놀이 메뉴에 있어.", $"I've made {m.name} again - the real thing this time! It's on the Play page.", "happy", 6);
         if (listed) Publish(m.id, price);
-        if (string.IsNullOrEmpty(written.script) == false && (string.IsNullOrEmpty(m.icon) || m.icon == old.icon)) StickerLater(_core.Talk.Ai, m);
+        if (!StockChart.IsPack(pack) && !string.IsNullOrEmpty(written.script) && (string.IsNullOrEmpty(m.icon) || m.icon == old.icon)) StickerLater(_core.Talk.Ai, m);
     }
 
     /// <summary>Keeps a module the user has just had made as their own, installed, and gives it. It is not on sale: that is for them to say. false when it is not sound.</summary>

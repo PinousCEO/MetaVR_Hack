@@ -357,7 +357,15 @@ public sealed class Conversation
             Say(reason.Length>0?reason:stop?"Gomoku finished.":"Opening Gomoku on the TV.","happy",4,"two-player TV board");
             HeardAs(u,stop?"stopTennis":"playGame");return;
         }
-        if (Market.AskedForGame(gameWish))
+        if (StockChart.OpenRequest(gameWish) && (!open || named || HostClock.Now <= _attentionUntil))
+        {
+            if (open && !named) _attentionUntil = -1;
+            var chart = StockChart.Find(_core.State.world.games, gameWish);
+            if (chart != null) _core.Shop.PlayPack(c, chart, u, pt);
+            else Say("Make a stock chart first. Which stock would you like?", "curious", 4, "stock chart");
+            HeardAs(u, "playGame"); return;
+        }
+        if (Market.AskedForGame(gameWish) || StockChart.CreateRequest(gameWish))
         {
             if (open && !named && HostClock.Now > _attentionUntil) { HeardAs(u, "not for me"); return; }
             if (open && !named) _attentionUntil = -1;

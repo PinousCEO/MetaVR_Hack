@@ -148,6 +148,7 @@ public sealed class GlassHost
                 _core.Broadcast(Msg.IntentResult, new IntentResultMsg { kind = "enterPortal", pointer = pointer }, _core.IsMr);
             }
         }
+        if (StockChart.IsPack(pack)) return (true, Ko ? "주가 차트를 열었어." : $"Here's your {pack.title}.");
         return (true, GlassRules.StartLine(pack.title, Ko));
     }
 
