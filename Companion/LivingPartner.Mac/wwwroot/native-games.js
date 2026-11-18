@@ -2,7 +2,7 @@
   const byId = id => document.getElementById(id);
   const section=byId('native-game'), actors=byId('native-actors'), court=byId('native-court');
   const paint=court.getContext('2d'), portrait=new Image();
-  portrait.src='/bambi.png';
+  portrait.src='/nilo.png';
   const types=['Hopper','Flyer','Tank','Splitter','Mini','Boss'];
   let gl, program, locations, sphere, felt, meshes, loading, meshError=false;
   let frame, animation, previous=0, lastAck=-1000, received=0, previousBall, swing=0, choiceKey='';
@@ -130,8 +130,8 @@
       paint.beginPath();paint.ellipse(0,-ph*.38,ph*.086,ph*.13,0,0,2*Math.PI);paint.fillStyle='#cce4c67d';paint.strokeStyle='#f5b887';paint.lineWidth=ph*.023;paint.fill();paint.stroke();paint.restore();
     }
   }
-  const stateText={1:'왼손바닥으로 막고 오른손 검지로 조준하세요',2:'문을 빠져나온 악마는 방 안에서 막으세요',3:'헤드셋에서 세 가지 강화 중 하나를 고르세요',4:'전투가 끝났어요'};
-  const charms=['속사','쌍발','관통','폭발','연쇄 번개','별 고리','감속 안개','거대 탄환','회복','보석 자석','유성탄'];
+  const stateText={1:'Aim with your right index finger',2:'Stop the demons that reach your room',3:'Choose one upgrade in your headset',4:'Battle complete'};
+  const charms=['Rapid Fire','Twin Shot','Piercing Shot','Bloom Burst','Chain Lightning','Star Ring','Frost Mist','Giant Bolt','Healing','Gem Magnet','Comet Shot'];
   function drawChoices(choices){
     const key=choices.join(',');
     if(choiceKey===key)return;choiceKey=key;
@@ -149,12 +149,12 @@
     paint.clearRect(0,0,w,h);
     const g=frame,s=g.native==='swarm',hw=s?g.halfW:g.width*.5,hh=s?g.halfH:g.height*.5,eye=Math.max(.55,hw*1.25);
     if(!s)ballCourt(g,eye,time);
-    if(!setup()){byId('game-hint').textContent='TV에서 WebGL을 지원하는 브라우저로 열어 주세요.';return;}
+    if(!setup()){byId('game-hint').textContent='Open the TV view in a WebGL-compatible browser.';return;}
     gl.viewport(0,0,w,h);gl.clearColor(0,0,0,0);gl.clear(gl.COLOR_BUFFER_BIT|gl.DEPTH_BUFFER_BIT);
     gl.useProgram(program);gl.uniform2f(locations.opening,hw,hh);gl.uniform1f(locations.eye,eye);
     if(s){
       loadMeshes();
-      if(meshError)byId('game-hint').textContent='TV의 3D 모델을 불러오지 못했어요. 브라우저를 새로 고쳐 주세요.';
+      if(meshError)byId('game-hint').textContent='Unable to load the models. Refresh the TV browser.';
       if(meshes){
         for(const f of figures.values()){
           const t=time*.001+f.id*.37,k=1-Math.exp(-dt*14);f.x+=(f.tx-f.x)*k;f.y+=(f.ty-f.y)*k;f.p+=(f.press-f.p)*k;
@@ -164,8 +164,13 @@
         for(const shot of g.shots||[]){
           const [x,y]=project(shot.u*hw,shot.v*hh,0,hw,hh,eye);
           const r=Math.max(1,shot.r*w/(2*hw));
-          paint.fillStyle='#ffb45fa8';paint.beginPath();paint.arc(x,y,2*r,0,2*Math.PI);paint.fill();
-          paint.fillStyle='#fff4c9';paint.beginPath();paint.arc(x,y,r,0,2*Math.PI);paint.fill();
+          paint.save();paint.translate(x,y);paint.rotate(time*.003);
+          const glow=paint.createRadialGradient(0,0,0,0,0,3.6*r);
+          glow.addColorStop(0,'#fff9d6');glow.addColorStop(.32,shot.star?'#f38abb':'#ffc269');glow.addColorStop(1,'transparent');
+          paint.fillStyle=glow;paint.fillRect(-4*r,-4*r,8*r,8*r);
+          paint.fillStyle='#fff4cf';paint.beginPath();
+          for(let i=0;i<8;i++){const a=i*Math.PI/4,reach=r*(i%2?.4:3);paint.lineTo(Math.cos(a)*reach,Math.sin(a)*reach);}
+          paint.fill();paint.restore();
         }
         if(time-lastAck>450 && !gl.isContextLost() && document.visibilityState==='visible' && (document.fullscreenElement || document.webkitFullscreenElement)){
           lastAck=time;fetch('/swarm/visible',{method:'POST'}).catch(()=>{});
@@ -187,9 +192,9 @@
     if(!frame || frame.native!==g.native){figures.clear();sparks.length=0;previous=performance.now();}
     if(g.partnerHitAt!==frame?.partnerHitAt || g.phase!==frame?.phase)swing=1;
     frame=g;received=performance.now();section.hidden=false;section.classList.toggle('swarm',s);
-    byId('game-title').textContent=s?'악마의 문':keeper?'골키퍼':'테니스';
-    byId('game-score').textContent=s?('Lv. '+g.level+'　♥ '+g.hearts+'/'+g.maxHearts+'　XP '+g.xp+'/'+g.need+'　'+g.score+'점'):(keeper?'막은 공 ':'나 ')+g.scoreUser+'　'+(keeper?'실점 ':'밤비 ')+g.scorePartner;
-    byId('game-hint').textContent=s?(g.phase===4?(g.won?'악마의 문을 지켰어요!':'전투가 끝났어요'):(stateText[g.phase]||'오른손 검지로 조준하세요')):g.phase==='point'?(g.lastPoint==='user'?'득점!':'밤비 득점'):g.phase==='over'?'경기 종료':keeper?'TV 밖으로 나온 축구공을 손바닥으로 막으세요':'공이 TV 밖으로 나오면 손으로 받아치세요';
+    byId('game-title').textContent=s?'Demon Gate':keeper?'Goalkeeper':'Tennis';
+    byId('game-score').textContent=s?('Lv. '+g.level+'　♥ '+g.hearts+'/'+g.maxHearts+'　XP '+g.xp+'/'+g.need+'　'+g.score+' points'):(keeper?'Saves ':'You ')+g.scoreUser+'　'+(keeper?'Misses ':'Nilo ')+g.scorePartner;
+    byId('game-hint').textContent=s?(g.phase===4?(g.won?'Gate defended!':'Battle complete'):(stateText[g.phase]||'Point to aim')):g.phase==='point'?(g.lastPoint==='user'?(keeper?'Saved!':'Your point'):(keeper?'Goal':'Nilo scores')):g.phase==='over'?'Full time':keeper?'Catch the incoming ball with your palm':'Return the ball when it comes through the TV';
     drawChoices(s&&g.phase===3?g.choices||[]:[]);
     if(s){const seen=new Set();for(const a of g.actors){seen.add(a.id);
       if(!figures.has(a.id))figures.set(a.id,{id:a.id,kind:a.kind,x:a.u,y:a.v,p:a.press,radius:a.radius});

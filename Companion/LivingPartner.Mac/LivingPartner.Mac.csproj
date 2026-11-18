@@ -12,6 +12,7 @@
     <Compile Include="../../MetaVRHack/Assets/LivingPartner/Shared/**/*.cs" LinkBase="Shared" />
     <Compile Include="../../MetaVRHack/Assets/LivingPartner/MR/LocalWorld.cs" Link="Shared/LocalWorld.cs" />
     <Compile Include="../LivingPartner.Host/TalkRules.cs" Link="Shared/TalkRules.cs" />
+    <Compile Include="../LivingPartner.Host/QuestUsbUpdates.cs" Link="Shared/QuestUsbUpdates.cs" />
     <Compile Include="../LivingPartner.Host/GlassRules.cs" Link="Shared/GlassRules.cs" />
     <Compile Include="../LivingPartner.Host/GomokuTable.cs" Link="Shared/GomokuTable.cs" />
     <Compile Include="../LivingPartner.Host/GomokuWeb.cs" Link="Shared/GomokuWeb.cs" />
@@ -30,6 +31,7 @@
     <PackageReference Include="Whisper.net.Runtime" Version="1.9.1" />
     <Content Update="wwwroot/**/*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="Audio/wake.wav" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="../../MetaVRHack/Assets/LivingPartner/Art/Ui/logo.png" Link="wwwroot/yonder.png" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../MetaVRHack/Assets/LivingPartner/Art/Ui/glass-*.png" Link="wwwroot/art/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
   </ItemGroup>
 </Project>

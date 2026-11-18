@@ -29,6 +29,7 @@ namespace LivingPartner.Shared
         public int seq;
         public string by = "";          // partner | user
         public V3 p0, v0;
+        public bool keeperKick;
         public double t0;
     }
 
@@ -74,17 +75,17 @@ namespace LivingPartner.Shared
                 switch (s.phase)
                 {
                     case "ready": l += s.round == 0 ? "\nStop the ball with your palm" : "\nNext shot ..."; break;
-                    case "point": l += s.lastPoint == "user" ? "\nSaved!" : "\nGoal for Bambi"; break;
+                    case "point": l += s.lastPoint == "user" ? "\nSaved!" : "\nGoal for Nilo"; break;
                     case "over": l += s.scoreUser * 2 > s.rounds ? "\nYou win the shoot-out!" : "\nBambi wins the shoot-out!"; break;
                 }
                 return l;
             }
-            l = $"You  {s.scoreUser} : {s.scorePartner}  Bambi";
+            l = $"You  {s.scoreUser} : {s.scorePartner}  Nilo";
             switch (s.phase)
             {
                 case "ready": l += s.scoreUser + s.scorePartner == 0 ? "\nHit the ball back with an open hand" : "\nGet ready ..."; break;
                 case "rally": if (s.rally >= 2) l += "\nRally " + s.rally; break;
-                case "point": l += s.lastPoint == "user" ? "\nPoint to you!" : "\nPoint to Bambi!"; break;
+                case "point": l += s.lastPoint == "user" ? "\nPoint to you!" : "\nPoint to Nilo!"; break;
                 case "over": l += s.scoreUser > s.scorePartner ? "\nYou win!" : "\nBambi wins!"; break;
             }
             return l;
@@ -234,6 +235,11 @@ namespace LivingPartner.Shared
                     Vector3 n = front ? up : Vector3.UnitY;
                     float vn = Vector3.Dot(o.vel, n);
                     Vector3 tangent = (o.vel - n * vn) * FloorDrag;
+                    if (s.keeperKick)
+                    {
+                        o.dead = true; o.why = "goal"; o.vel = Vector3.Zero;
+                        return o;
+                    }
                     if (front) o.bouncesFront++; else o.bouncesBack++;
                     // on the desk the partner's half has lines, not walls: a ball that lands beyond them is out
                     if (c.room && !front && !o.dead && (Math.Abs(o.pos.X) > hw + 2f * c.radius || o.pos.Z > c.depth)) { o.dead = true; o.why = "out"; }
@@ -282,23 +288,25 @@ namespace LivingPartner.Shared
         /// The partner's stroke towards the user: from where it strikes the ball to a spot in front of the user's chest,
         /// in a time short enough for the arc to stay inside the opening. aim is -1..1, left to right of the user.
         /// </summary>
-        public static TennisShot PartnerShot(TennisCourt c, int seq, Vector3 from, Vector3 eye, float aim, double t)
+        public static TennisShot PartnerShot(TennisCourt c, int seq, Vector3 from, Vector3 eye, float aim, double t, bool keeper = false)
         {
             Vector3 up = M.SafeNormalize(c.up, Vector3.UnitY);
             float tz = M.Clamp(eye.Z * 0.62f, -0.50f, -0.30f);
-            float tx = M.Clamp(eye.X * 0.6f + aim * 0.11f, -0.26f, 0.26f);
+            float tx = M.Clamp(eye.X * 0.6f + aim * (keeper ? 0.20f : 0.11f), -0.26f, 0.26f);
             // chest height: a forearm's length below the eyes, but never down at the desk
             float chest = Vector3.Dot(eye, up) - 0.27f;
             float h = M.Clamp(chest, c.deskHeight + 0.14f, c.deskHeight + 0.42f);
             Vector3 flat = new Vector3(tx, 0, tz);
             Vector3 target = flat + up * (h - Vector3.Dot(flat, up));
-            var s = new TennisShot { seq = seq, by = "partner", p0 = from, t0 = t };
-            for (float T = 1.35f; T >= 0.6f; T -= 0.05f)
+            var s = new TennisShot { seq = seq, by = "partner", p0 = from, t0 = t, keeperKick = keeper };
+            float fastest = keeper ? 0.36f : 0.60f;
+            float flight = keeper ? 0.52f - 0.06f * Math.Abs(aim) : 1.35f;
+            for (float T = flight; T >= fastest; T -= (keeper ? 0.025f : 0.05f))
             {
                 s.v0 = VelocityFor(c, from, target, T);
                 if (PassesGlass(c, s, out _)) return s;
             }
-            s.v0 = VelocityFor(c, from, target, 0.6f);
+            s.v0 = VelocityFor(c, from, target, fastest);
             return s;
         }
 

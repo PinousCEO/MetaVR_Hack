@@ -774,7 +774,7 @@ namespace LivingPartner.Windows
         }
 
         // ------------------------------------------------------------------ behaviours
-        bool Roam(float dt, bool offline)
+        bool Roam(float dt, bool offline, float movementRate = 1f)
         {
             if (!UpdateWorkspace()) return false;
             if (!_initialised) { _initialised = true; _feetYM = _floorYM; }
@@ -806,7 +806,7 @@ namespace LivingPartner.Windows
                 _lastActivity = activity;
             }
             _mixer.Evaluate(Time.time, dt, _pose);
-            _motor.Update(dt, _H, _pose);
+            _motor.Update(dt * movementRate, _H, _pose);
             if (!offline) ShowPose(dt);      // a show asks something of its body: peering at a frame, hammering at its stall (PcShow.cs)
             if (!offline) DocsPose(dt);      // it holds up a file it carried in (PcDocs.cs)
             if (!offline) WorkPose(dt);      // it works at the queue panel (PcWork.cs)
@@ -950,8 +950,8 @@ namespace LivingPartner.Windows
             float targetX = PxToLocal(tgt.pxX, 0).x;
             if (_bound != IntPtr.Zero && (tgt.pxX < _boundRect.x + 0.3f * _H / Mpp || tgt.pxX > _boundRect.Right - 0.3f * _H / Mpp)) Unbind("exit is outside the workspace window");
             if (!_approachSent && (!_motor.HasTarget || Mathf.Abs(_motor.Pos.x - targetX) > 0.002f) && Mathf.Abs(_motor.Pos.x - targetX) > 0.002f)
-                _motor.MoveTo(new Vector2(targetX, PlanBuilder.ResidentDepth(_H)), Mathf.Abs(_motor.Pos.x - targetX) > 5f * _H, 180f);
-            bool ok = Roam(dt, false);
+                _motor.MoveTo(new Vector2(targetX, PlanBuilder.ResidentDepth(_H)), Mathf.Abs(_motor.Pos.x - targetX) > _H, 180f);
+            bool ok = Roam(dt, false, 1.65f);
             _nextWander = Time.realtimeSinceStartupAsDouble + 20;
             Vector3 portal = PxToLocal(tgt.pxX, tgt.pxY);
             ShowRing(portal, 0.5f + 0.5f * Mathf.Sin(Time.time * 4f));

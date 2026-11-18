@@ -48,7 +48,7 @@
     <Compile Include="..\LivingPartner.Host\DocsPdf.cs" Link="Host\DocsPdf.cs" />
     <Compile Include="..\LivingPartner.Host\DocsPages.cs" Link="Host\DocsPages.cs" />
     <Compile Include="..\LivingPartner.Host\DocsMaker.cs" Link="Host\DocsMaker.cs" />
-    <!-- (C1) "Show it and Bambi makes it in 3D": the plain wordings and lines (SightRules), the .glb writer and its check (GlbWriter), the picture of a sculpted thing (ModelRender): plain rules, no host in them. -->
+    <!-- (C1) "Show it and Nilo makes it in 3D": the plain wordings and lines (SightRules), the .glb writer and its check (GlbWriter), the picture of a sculpted thing (ModelRender): plain rules, no host in them. -->
     <Compile Include="..\LivingPartner.Host\SightRules.cs" Link="Host\SightRules.cs" />
     <Compile Include="..\LivingPartner.Host\GlbWriter.cs" Link="Host\GlbWriter.cs" />
     <Compile Include="..\LivingPartner.Host\ModelRender.cs" Link="Host\ModelRender.cs" />

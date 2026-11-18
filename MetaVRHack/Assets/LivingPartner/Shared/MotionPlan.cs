@@ -102,12 +102,12 @@ namespace LivingPartner.Shared
             // little room between the portal and the top of the lit area: enter flatter so the body does not leave the screen
             if (direction == 0) p.slope = Math.Min(p.slope, M.Lerp(0.2f, 1.15f, M.Clamp01((headroomAbovePortal - 0.9f * H) / (1.3f * H))));
             float lenIn = (float)Math.Sqrt(centreRise * centreRise + (direction == 0 ? mrDist * mrDist : 0.01f));
-            p.tPrepare = p.variant == (int)CrossVariant.RunLeap ? 0.26f : 0.42f;
-            p.tFlightIn = M.Clamp(0.34f + 1.5f * lenIn, 0.42f, 1.05f);
-            if (p.variant == (int)CrossVariant.BezelClimb) p.tFlightIn = 1.55f; // hop, hang on the bezel, pull up
-            p.tThread = 0.55f;
-            p.tFlightOut = M.Clamp(0.48f + 1.3f * (float)Math.Sqrt(Math.Max(0.0, dropDst) / 4.9f), 0.55f, 1.15f);
-            p.tLand = 0.22f; p.tRecover = 0.62f;
+            p.tPrepare = p.variant == (int)CrossVariant.RunLeap ? 0.10f : 0.15f;
+            p.tFlightIn = M.Clamp(0.18f + 0.95f * lenIn, 0.26f, 0.62f);
+            if (p.variant == (int)CrossVariant.BezelClimb) p.tFlightIn = 0.70f; // hop, hang on the bezel, pull up
+            p.tThread = 0.36f;
+            p.tFlightOut = M.Clamp(0.22f + 0.85f * (float)Math.Sqrt(Math.Max(0.0, dropDst) / 4.9f), 0.33f, 0.65f);
+            p.tLand = 0.15f; p.tRecover = 0.24f;
             return p;
         }
     }

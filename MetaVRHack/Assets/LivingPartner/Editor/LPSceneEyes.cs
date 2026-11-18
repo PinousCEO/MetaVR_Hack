@@ -6,7 +6,7 @@ namespace LivingPartner.EditorTools
 {
     /// <summary>
     /// The sign that stands beside the partner while it looks at what the user holds up (MR/MrEyes.cs): a small strip of
-    /// cream paper with the words "Bambi is looking" and a coral light that pulses for as long as the headset's camera
+    /// cream paper with the words "Nilo is looking" and a coral light that pulses for as long as the headset's camera
     /// is being read. Authored like everything else: real objects under MrCore, hidden, wired into MrApp.
     /// </summary>
     public static partial class LPSceneBuilder

@@ -50,7 +50,7 @@ namespace LivingPartner.MR
             if (_gomoku != null) return;
             if (LocalMode || !_link.Connected || _link.NeedsPairing)
             {
-                Caption("오목판을 띄울 Mac이나 Windows 컴패니언에 먼저 연결해 주세요.", 5f);
+                Caption("Connect the Mac or Windows companion to open the board.", 5f);
                 return;
             }
             if (_gomokuRequestedUntil > Time.unscaledTime) return;
@@ -63,7 +63,7 @@ namespace LivingPartner.MR
                     m.frame.origin, m.frame.x, m.frame.y, -m.frame.z, m.frame.widthM, m.frame.heightM, false);
                 if (rank < best) { best = rank; screen = m; }
             }
-            if (screen == null) { Caption("TV 위치를 확인한 뒤 오목판을 띄울 화면을 바라봐 주세요.", 5f); return; }
+            if (screen == null) { Caption("Calibrate the TV, then look at the screen for Gomoku.", 5f); return; }
             _gomokuSkippedRound = 0;
             _gomokuRequestedUntil = Time.unscaledTime + 7f;
             _link.Send("gomoku.start", new { monitorId = screen.desc.id });
@@ -84,15 +84,15 @@ namespace LivingPartner.MR
             {
                 _gomokuRequestedUntil = 0f;
                 _gomoku = null;
-                StopGames("오목 시작");
-                if (_tn.active || _tnPendingAt >= 0f) ToggleTennis("오목 시작");
+                StopGames("Start Gomoku");
+                if (_tn.active || _tnPendingAt >= 0f) ToggleTennis("Start Gomoku");
                 _gomokuCameraAllowed = false; _gomokuSeq = 0; _gomokuSpace = Input.SpaceEpoch;
             }
             if (old == null || old.round != state.round || old.revision != state.revision || old.turn != state.turn)
             {
                 _gomokuCaptureEpoch++; _gomokuAimShown = false; _gomokuLastAimAt = -1f; _gomokuCameraStatus = ""; _gomokuImageTime = 0;
                 if (old == null || old.round != state.round)
-                    Caption("흑돌은 교차점을 가리키고 핀치하세요.", 3f);
+                    Caption("Black: point at an intersection and pinch.", 3f);
             }
             _gomoku = state; _gomokuRequestedUntil = 0f;
         }
@@ -127,13 +127,13 @@ namespace LivingPartner.MR
             {
                 if (_gomokuRequestedUntil > 0f && now > _gomokuRequestedUntil)
                 {
-                    _gomokuRequestedUntil = 0f; Caption("TV에서 오목을 열고 전체 화면을 선택해 주세요.", 5f);
+                    _gomokuRequestedUntil = 0f; Caption("Open Gomoku on the TV in fullscreen.", 5f);
                 }
                 return;
             }
             if (Input.SpaceEpoch != _gomokuSpace || _calibrating)
             {
-                EndGomoku(true); Caption("TV 위치를 다시 맞춘 뒤 오목을 열어 주세요.", 4f); return;
+                EndGomoku(true); Caption("Calibrate the TV again, then open Gomoku.", 4f); return;
             }
             MonView screen = Mon(_gomoku.monitorId);
             if (screen == null || !Input.HeadTracked || !Application.isFocused)
@@ -183,9 +183,9 @@ namespace LivingPartner.MR
             if (_gomoku == null || _gomokuCameraStatus == status) return;
             _gomokuCameraStatus = status;
             _link.Send("gomoku.camera", new { _gomoku.round, _gomoku.revision, _gomoku.monitorId, status });
-            if (status == "disabled") Caption("가방 설정에서 카메라를 켜면 상대의 손을 읽을 수 있어요.", 5f);
-            else if (status == "permission") Caption("Quest 앱의 카메라 권한을 허용해 주세요.", 5f);
-            else if (status == "consent") Caption("오목 상대의 손을 읽으려면 오른손으로 한 번 핀치하세요.", 5f);
+            if (status == "disabled") Caption("Enable the camera in Bag settings to see the other player’s hand.", 5f);
+            else if (status == "permission") Caption("Allow headset camera access in Quest settings.", 5f);
+            else if (status == "consent") Caption("Pinch once with your right hand to read the other player’s move.", 5f);
         }
 
         void UpdateGomokuCamera(MonView screen, float now)

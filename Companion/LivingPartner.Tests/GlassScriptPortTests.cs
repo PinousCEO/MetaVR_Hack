@@ -36,7 +36,7 @@ namespace LivingPartner.Tests
 
         // ------------------------------------------------------------------ Shadow Umbrella
 
-        /// <summary>Where a good player holds the umbrella: under the lowest ink that is coming down on Bambi (a blob is stopped only by the middle of the hand), otherwise over Bambi.</summary>
+        /// <summary>Where a good player holds the umbrella: under the lowest ink that is coming down on Nilo (a blob is stopped only by the middle of the hand), otherwise over Nilo.</summary>
         static float Shelter(GlassScript g)
         {
             float x = g.petX, low = 9f;
@@ -55,7 +55,7 @@ namespace LivingPartner.Tests
             int drops = 0, squeaks = 0, picks = 0; bool walked = false, bent = false, cheered = false;
             for (int f = 0; f < 30 * 40 && g.phase == "play"; f++)
             {
-                hand.x[0] += Math.Clamp(Shelter(g) - hand.x[0], -2f * Dt, 2f * Dt);     // the umbrella stays over Bambi, and meets what comes
+                hand.x[0] += Math.Clamp(Shelter(g) - hand.x[0], -2f * Dt, 2f * Dt);     // the umbrella stays over Nilo, and meets what comes
                 Step(g, hand);
                 drops += g.sounds.Count(s => s == "drop"); squeaks += g.sounds.Count(s => s == "squeak"); picks += g.sounds.Count(s => s == "sparkle");
                 if (g.petPose == "walk") walked = true;
@@ -77,7 +77,7 @@ namespace LivingPartner.Tests
         [Fact]
         public void Umbrella_golden_drops_must_be_let_through_and_without_a_hand_it_ends()
         {
-            // the careful player: the umbrella is over Bambi - except while a golden drop is coming down on it
+            // the careful player: the umbrella is over Nilo - except while a golden drop is coming down on it
             var g = Start("umbrella", 9);
             var hand = GlassScriptTests.Hand(g.petX, 0.42f);
             int coins = 0, squeaks = 0;
@@ -107,7 +107,7 @@ namespace LivingPartner.Tests
             Assert.Equal(0, alone.lives); Assert.Equal(3, hits);
             Assert.True(cowered);
             Assert.Equal("down", alone.petPose);
-            Assert.Equal("Bambi gathered " + alone.score + " stars.", alone.result);
+            Assert.Equal("Nilo gathered " + alone.score + " stars.", alone.result);
             Assert.True(alone.seconds > 4f, "it does not end at once: " + alone.seconds);
             // the wind (from level 3) leans the drops
             var w = Start("umbrella", 4);
@@ -132,13 +132,13 @@ namespace LivingPartner.Tests
         {
             var g = Start("survival", 3);
             Assert.Equal(3, g.lives); Assert.Equal(1, g.level);
-            // the hand leads: Bambi walks under it
+            // the hand leads: Nilo walks under it
             var hand = GlassScriptTests.Hand(0.4f, 0.6f);
             Step(g, hand, 45);
             Assert.InRange(g.petX, 0.38f, 0.5f);
             Assert.InRange(g.petY, 0.55f, 0.62f);
             Assert.False(g.petFacesRight && g.petPose == "walk" && g.petX < 0.39f);
-            // play: go for the nearest gem, otherwise bop the nearest enemy that is not too close to Bambi
+            // play: go for the nearest gem, otherwise bop the nearest enemy that is not too close to Nilo
             int pops = 0, coins = 0, shotsSeen = 0;
             bool cards = false;
             for (int f = 0; f < 30 * 120 && !cards; f++)
@@ -166,7 +166,7 @@ namespace LivingPartner.Tests
             Assert.Equal(2, g.level);
             Assert.True(pops >= 4 && coins >= 5, pops + " pops, " + coins + " gems");      // (two in the same moment make one sound)
             Assert.True(g.score >= 7);
-            Assert.True(shotsSeen > 0, "Bambi shoots by itself");
+            Assert.True(shotsSeen > 0, "Nilo shoots by itself");
             Assert.Contains("pick a power", g.banner);
 
             // choosing: three different cards; the world stands still; a hand that rests on one fills its ring and takes it
@@ -263,7 +263,7 @@ namespace LivingPartner.Tests
             Assert.True(steps / frames < GlassScriptCheck.HeavyAverage, "average " + steps / frames);
             Assert.True(peak < LuaSandbox.DefaultBudget / 20, "the busiest frame: " + peak);     // twenty times of room under the budget
 
-            // nobody plays: Bambi holds the first waves by itself (its stars), but in the end it is lost
+            // nobody plays: Nilo holds the first waves by itself (its stars), but in the end it is lost
             var alone = Start("survival", 2);
             bool auto = false;
             for (int f = 0; f < 30 * 900 && alone.phase == "play"; f++)
@@ -278,7 +278,7 @@ namespace LivingPartner.Tests
             Assert.True(alone.score >= 10);
             _ = auto;
             Assert.Equal("down", alone.petPose);
-            Assert.Matches(@"^Bambi beat \d+ of them in \d+ seconds\.$", alone.result);
+            Assert.Matches(@"^Nilo beat \d+ of them in \d+ seconds\.$", alone.result);
         }
     }
 }

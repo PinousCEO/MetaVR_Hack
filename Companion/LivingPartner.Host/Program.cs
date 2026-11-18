@@ -21,6 +21,7 @@ public static class Program
     static NotifyIcon _tray;
     static ConnectionWindow _connection;
     static Process _client;
+    static readonly CancellationTokenSource UsbStop = new();
     static int _clientRestarts;
     static bool _loopbackOnly, _noClient, _quitting;
     static string _clientArgs = "";
@@ -106,13 +107,13 @@ public static class Program
         _clientArgs = Arg(args, "--client-args", "");
         Core = new Core { Port = int.Parse(Arg(args, "--port", Proto.DefaultPort.ToString())), ClientExePath = Arg(args, "--client", "") };
         Core.Init();
-        Log.Info($"Living AI Partner host starting. port={Core.Port} loopbackOnly={_loopbackOnly} pid={Environment.ProcessId} session={Process.GetCurrentProcess().SessionId}");
+        Log.Info($"Yonder host starting. port={Core.Port} loopbackOnly={_loopbackOnly} pid={Environment.ProcessId} session={Process.GetCurrentProcess().SessionId}");
 
         var web = StartWeb(out string portProblem);
         if (web == null)
         {
             // said once, in a box the user cannot miss (not with --no-tray: an unattended run has nobody to press OK; the log and the exit code say it)
-            if (!args.Contains("--no-tray")) MessageBox.Show(portProblem, "Living AI Partner");
+            if (!args.Contains("--no-tray")) MessageBox.Show(portProblem, "Yonder");
             Environment.ExitCode = 2;
             try { Core.Shop?.Stop(); } catch { }
             Log.Info("host stopped: it could not listen");
@@ -120,6 +121,11 @@ public static class Program
         }
         if (!_loopbackOnly) StartBeacon();
         if (!_noClient) StartClient();
+        if (!_noClient && !HostPaths.Trial)
+        {
+            string apk = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "LivingAIPartner-Quest", "LivingAIPartner.apk"));
+            _ = QuestUsbUpdates.Watch(apk, Core.Port, () => Core.Post(Core.EnableUsb), Log.Info, UsbStop.Token);
+        }
 
         Application.EnableVisualStyles();
         bool interactive = !args.Contains("--no-tray");
@@ -332,7 +338,7 @@ public static class Program
         var pair = new ToolStripMenuItem("pairing");
         pair.Click += (_, _) => ShowConnection();
         var diag = new ToolStripMenuItem("Diagnostics...");
-        diag.Click += (_, _) => MessageBox.Show(Proto.ToJson(Diagnostics(), true), "Living AI Partner - diagnostics");
+        diag.Click += (_, _) => MessageBox.Show(Proto.ToJson(Diagnostics(), true), "Yonder - diagnostics");
         var overlay = new ToolStripMenuItem("Portal debug overlay") { CheckOnClick = true };
         overlay.Click += (_, _) => Core.Post(() => { Core.State.settings.debugOverlay = overlay.Checked; Core.MarkDirty(); });
         var quiet = new ToolStripMenuItem("Quiet mode") { CheckOnClick = true };
@@ -349,7 +355,7 @@ public static class Program
         var read = new ToolStripMenuItem("Show a file to the partner (PDF, picture, text)...");
         read.Click += (_, _) =>
         {
-            using var dlg = new OpenFileDialog { Title = "Show a file to Bambi", Filter = "PDF, pictures, text|*.pdf;*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.gif;*.txt;*.md|All files|*.*" };
+            using var dlg = new OpenFileDialog { Title = "Show a file to Nilo", Filter = "PDF, pictures, text|*.pdf;*.png;*.jpg;*.jpeg;*.webp;*.bmp;*.gif;*.txt;*.md|All files|*.*" };
             if (dlg.ShowDialog() != DialogResult.OK) return;
             string path = dlg.FileName;
             Core.Post(() => Core.Tasks.OnCommand(new TaskCommand { cmd = "read", projectPath = path, prompt = "Please read this file." }));
@@ -357,13 +363,13 @@ public static class Program
         var reviews = new ToolStripMenuItem("Open the reviews folder");
         reviews.Click += (_, _) => { try { Directory.CreateDirectory(TaskManager.ReviewRoot); Process.Start(new ProcessStartInfo(TaskManager.ReviewRoot) { UseShellExecute = true }); } catch { } };
         // talking to the partner by typing: the box on the shop's page (that is also where new things are asked for)
-        var chat = new ToolStripMenuItem("Talk to Bambi ...");
+        var chat = new ToolStripMenuItem("Talk to Nilo ...");
         chat.Click += (_, _) => { try { Process.Start(new ProcessStartInfo($"http://127.0.0.1:{Core.Port}/market#talk") { UseShellExecute = true }); } catch (Exception e) { Log.Warn("the page could not be opened: " + e.Message); } };
         var shop = new ToolStripMenuItem("Open the marketplace");
         shop.Click += (_, _) => { try { Process.Start(new ProcessStartInfo($"http://127.0.0.1:{Core.Port}/market") { UseShellExecute = true }); } catch (Exception e) { Log.Warn("the marketplace page could not be opened: " + e.Message); } };
-        var solo = new ToolStripMenuItem("악마의 문 · 혼자 플레이");
+        var solo = new ToolStripMenuItem("Demon Gate · Solo");
         solo.Click += (_,_) => OpenGamePage(Core.Port, "/demon-gate/");
-        var table = new ToolStripMenuItem("오목 · Quest와 두 사람");
+        var table = new ToolStripMenuItem("Gomoku · Two players");
         table.Click += (_,_) => OpenGamePage(Core.Port, "/table/");
         var cancel = new ToolStripMenuItem("Stop current task / transition");
         cancel.Click += (_, _) => Core.Post(() => { Core.Coord.CancelByUser("stopped from tray"); Core.Tasks.CancelRunning("stopped from tray"); });
@@ -378,7 +384,7 @@ public static class Program
             look.Enabled = read.Enabled = Core.Talk.Enabled;
             talk.Enabled = Core.Talk.Enabled; talk.Text = Core.Talk.Enabled ? "Talk to the partner (microphone)" : "Talk to the partner (needs an OpenAI key)";
         };
-        _tray = new NotifyIcon { Icon = System.Drawing.SystemIcons.Application, Visible = true, Text = "Living AI Partner", ContextMenuStrip = menu };
+        _tray = new NotifyIcon { Icon = System.Drawing.SystemIcons.Application, Visible = true, Text = "Yonder", ContextMenuStrip = menu };
         _tray.DoubleClick += (_,_) => ShowConnection();
     }
 
@@ -407,7 +413,7 @@ public static class Program
     static void UpdateTrayText()
     {
         if (_tray == null) return;
-        string s = "Living AI Partner - " + TrayStatus();
+        string s = "Yonder - " + TrayStatus();
         _tray.Text = s.Length > 63 ? s[..63] : s;
     }
 
@@ -426,6 +432,7 @@ public static class Program
     {
         if (_quitting) return;
         _quitting = true;
+        UsbStop.Cancel();
         try { Core.Save(); } catch { }
         try { if (_tray != null) { _tray.Visible = false; _tray.Dispose(); } } catch { }
         try { if (_client is { HasExited: false }) _client.Kill(); } catch { }

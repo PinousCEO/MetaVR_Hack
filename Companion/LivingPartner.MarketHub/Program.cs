@@ -111,7 +111,7 @@ public static class Program
         });
 
         // (hubId: which hub this is - a client keeps it beside its account, and so knows when another hub answers at the same address)
-        app.MapGet("/api/hello", () => Json(new { name = "Bambi Market Hub", api = 1, official = HubRules.Official, hubId = hub.HubId, revision = hub.Revision, users = hub.Users, listings = hub.Listed }));
+        app.MapGet("/api/hello", () => Json(new { name = "Nilo Market Hub", api = 1, official = HubRules.Official, hubId = hub.HubId, revision = hub.Revision, users = hub.Users, listings = hub.Listed }));
 
         // (each of these is written with a `return`: an async lambda that takes only the HttpContext and merely *is* an
         // expression would be taken for a plain request handler, and what it answers would be thrown away)

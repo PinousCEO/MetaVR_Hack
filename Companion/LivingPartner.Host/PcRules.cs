@@ -3,7 +3,7 @@ using System.Text.RegularExpressions;
 
 namespace LivingPartner.Host;
 
-// PC ACTIONS, the rules. "Bambi must be able to WORK on my computer: refresh, put on another YouTube video, open
+// PC ACTIONS, the rules. "Nilo must be able to WORK on my computer: refresh, put on another YouTube video, open
 // Notepad, make a folder." Everything the partner can do on the PC is in ONE FIXED LIST (Dos). There is no free
 // command line, nothing is deleted and nothing is overwritten:
 //   openApp     arg = a program from the allow-list (Apps) - never a path, never a command ("browser" = the user's
@@ -202,7 +202,7 @@ public static class PcRules
     {
         string first = (text ?? "").Split('\n')[0].Trim();
         if (first.Length > 24) first = first[..24];
-        return SafeName(first, korean ? "밤비 메모" : "Bambi note");
+        return SafeName(first, korean ? "밤비 메모" : "Nilo note");
     }
 
     public const int MaxNote = 4000, MaxType = 500;

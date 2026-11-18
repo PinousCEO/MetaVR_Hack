@@ -100,7 +100,7 @@ namespace LivingPartner.MR
                 _w.items.Add(new ItemDef
                 {
                     id = "item-" + kind, name = name, asked = name, kind = kind, uses = k.uses, sizeM = k.sizeM, color = k.color, status = "ready", progress = 1f,
-                    icon = Pic("item-" + kind), script = RoomScriptExamples.ForKind(kind) ?? "", note = "Came with Bambi.",
+                    icon = Pic("item-" + kind), script = RoomScriptExamples.ForKind(kind) ?? "", note = "Came with Nilo.",
                 });
             }
             // ---- two things the partner made when it was asked (their scripts are the ones it wrote: RoomScriptExamples.Made)
@@ -112,7 +112,7 @@ namespace LivingPartner.MR
                     _w.items.Add(new ItemDef
                     {
                         id = "item-" + made, name = e.name, asked = e.requestEn, kind = e.kind, uses = e.uses, sizeM = made == "bat" ? 0.09f : e.sizeM, color = made == "bat" ? "#E9C99A" : "#FFD66B",
-                        status = "ready", progress = 1f, icon = made == "bat" ? Pic("item-bat") : "", script = e.script, note = "Bambi made this.",
+                        status = "ready", progress = 1f, icon = made == "bat" ? Pic("item-bat") : "", script = e.script, note = "Nilo made this.",
                         parts = made == "bat" ? BatParts() : WandParts(),
                     });
                 }
@@ -281,7 +281,7 @@ namespace LivingPartner.MR
                 _sent = c;
             }
             var s = new StateSnapshot { sessionId = _session, hostTime = now, seq = ++_seq, world = _sent, glass = CopyGlass(), pc = null, mr = null, tennis = _courtView };
-            s.character.quietMode = _settings.quietMode;      // (owner mr, name Bambi, idle: as a CharacterInfo begins)
+            s.character.quietMode = _settings.quietMode;      // (owner mr, name Nilo, idle: as a CharacterInfo begins)
             s.settings = new SettingsMsg { quietMode = _settings.quietMode, rain = _settings.rain, micEnabled = false, voiceReplies = false, cameraEnabled = false, debugOverlay = _settings.debugOverlay };
             s.connectedRoles.Add(Roles.Quest);
             return s;

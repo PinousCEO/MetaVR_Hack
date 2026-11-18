@@ -16,7 +16,7 @@ public static class HubRules
     public const int DefaultPort = 47620;
     public const string DefaultUrl = "http://127.0.0.1:47620";
     /// <summary>The account the makers of the partner sell under. Nobody can take this name, and nobody can sign in as it.</summary>
-    public const string Official = "Bambi Studio";
+    public const string Official = "Nilo Studio";
     public const int StartStars = 300, MaxPrice = 999;
     public const int MaxModuleJson = 300_000, MaxFileBytes = 16 * 1024 * 1024, MaxFiles = 8, MaxIdLength = 40;
     /// <summary>
@@ -51,7 +51,7 @@ public static class HubRules
         int length = new StringInfo(n).LengthInTextElements;
         if (length < NickMin || length > NickMax || n.Length > NickMax * 3 || !NickRx.IsMatch(n) || !n.Any(char.IsLetterOrDigit)) return "nickname-invalid";
         // (also "bambi_studio", "BAMBI  STUDIO": nothing that reads as the makers' name)
-        return Flat(n) == Flat(Official) ? "nickname-reserved" : "";
+        return (Flat(n) == Flat(Official) || Flat(n) == "bambistudio") ? "nickname-reserved" : "";
     }
 
     /// <summary>A plain file name of one of the two kinds a module carries (a picture, a model): nothing with a path in it.</summary>

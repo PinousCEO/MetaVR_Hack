@@ -467,7 +467,7 @@ public class MarketTests
         Assert.Equal(MarketRules.You, m.author); Assert.False(m.builtin); Assert.Equal(12, m.price); Assert.Equal(5000, m.publishedUnixMs);
         Assert.Equal("item-1a2b3c4d.png", m.icon);
         Assert.Equal("소파다! 이제 앉아서 쉴 수 있겠다.", m.summary);
-        Assert.Equal("Bambi can sit on it and nap on it.", m.gives);
+        Assert.Equal("Nilo can sit on it and nap on it.", m.gives);
         // the payload is a copy that goes into a bag, not the thing on the desk
         Assert.NotSame(item, m.item);
         Assert.False(m.item.inRoom); Assert.Equal(0f, m.item.x); Assert.Equal("item-1a2b3c4d.glb", m.item.model);
@@ -503,7 +503,7 @@ public class MarketTests
         var m = MarketRules.Wrap(skill, 0, 1);
         Assert.Equal("", MarketRules.Problem(m));
         Assert.Equal(ModuleKinds.Skill, m.kind); Assert.Equal("skill-9f8e7d6c", m.id); Assert.Equal(MarketRules.You, m.author);
-        Assert.Equal("When asked, Bambi lets it rain on the desk, puts a tune on and studies.", m.gives);
+        Assert.Equal("When asked, Nilo lets it rain on the desk, puts a tune on and studies.", m.gives);
         Assert.Equal(new[] { "집중 모드", "focus mode" }, m.tags);
         Assert.NotSame(skill, m.skill);
     }

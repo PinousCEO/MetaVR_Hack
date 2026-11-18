@@ -35,27 +35,27 @@ public sealed class GomokuTable
     void Begin()
     {
         Array.Clear(stones);round++;revision=1;turn=1;moves=0;last=-1;wearerSeq=-1;waiting=false;
-        ClearFrame();CursorOff();notify=true;status="흑 차례 · 헤드셋에서 교차점을 가리키고 핀치하세요.";
+        ClearFrame();CursorOff();notify=true;status="Black to play. Point at an intersection and pinch.";
     }
     void End(string reason)
     {
         if(!waiting&&!IsLive)return;
         Array.Clear(stones);moves=turn=0;waiting=ask=open=false;last=-1;revision++;CursorOff();ClearFrame();status=reason;notify=true;
     }
-    public void Disconnect(){lock(gate){connected=false;End("헤드셋 연결이 끊겼어요.");}}
-    public void Stop(){lock(gate)End("대국을 마쳤어요.");}
-    public void Stop(int r,string id){lock(gate)if(r==round&&id==monitor)End("대국을 마쳤어요.");}
+    public void Disconnect(){lock(gate){connected=false;End("Headset disconnected.");}}
+    public void Stop(){lock(gate)End("Game finished.");}
+    public void Stop(int r,string id){lock(gate)if(r==round&&id==monitor)End("Game finished.");}
     public void Update(bool paired,TableDisplay[] available,Action<TableWire> state,Action<string> start,Action show)
     {
         TableWire send=null;string launch=null;bool showPage;
         lock(gate)
         {
             displays=available;connected=paired;
-            if(!paired)End("먼저 Quest를 연결해 주세요.");
-            else if((waiting||IsLive)&&!displays.Any(d=>d.Id==monitor&&d.Calibrated))End("TV 위치를 다시 확인해 주세요.");
-            if(IsLive&&!Full)End("TV 전체 화면이 닫혔어요.");
+            if(!paired)End("Connect your Quest first.");
+            else if((waiting||IsLive)&&!displays.Any(d=>d.Id==monitor&&d.Calibrated))End("Recalibrate the TV.");
+            if(IsLive&&!Full)End("TV exited fullscreen.");
             if(waiting&&Full)Begin();
-            if(waiting&&time()-requestAt>90)End("TV에서 다시 대국을 시작하세요.");
+            if(waiting&&time()-requestAt>90)End("Start another game on the TV.");
             if(time()-lastPoint>.8)CursorOff();
             if(frame!=null && time()-frameAt>1.1)frame=null;
             if(guestNotice.Length>0 && time()-noticeAt>4)guestNotice="";
@@ -71,11 +71,11 @@ public sealed class GomokuTable
     {
         lock(gate)
         {
-            if(!connected)return "Quest를 먼저 연결해 주세요.";
+            if(!connected)return "Connect your Quest first.";
             if(string.IsNullOrEmpty(id))id=displays.FirstOrDefault(d=>d.Id==layout?.MonitorId&&d.Calibrated)?.Id??displays.FirstOrDefault(d=>d.Calibrated)?.Id;
-            if(!displays.Any(d=>d.Id==id&&d.Calibrated))return "먼저 헤드셋에서 TV 위치를 확인해 주세요.";
-            if(waiting||IsLive){if(id!=monitor)return "이미 다른 TV에서 대국 중이에요.";notify=true;return "";}
-            monitor=id;waiting=true;requestAt=time();notify=true;status="선택한 TV에서 오목판을 전체 화면으로 여세요.";
+            if(!displays.Any(d=>d.Id==id&&d.Calibrated))return "Calibrate the TV in your headset first.";
+            if(waiting||IsLive){if(id!=monitor)return "A game is already running on another TV.";notify=true;return "";}
+            monitor=id;waiting=true;requestAt=time();notify=true;status="Open Gomoku fullscreen on the selected TV.";
             ask=!fromQuest;open=!Full;
             if(Full)Begin();
             return "";
@@ -86,7 +86,7 @@ public sealed class GomokuTable
         if(value==null || !Guid.TryParse(value.Viewer,out _) || value.MonitorId==null)return false;
         lock(gate)
         {
-            if(!value.Full){if(layout?.Viewer==value.Viewer){layout=null;End("TV 전체 화면이 닫혔어요.");}return true;}
+            if(!value.Full){if(layout?.Viewer==value.Viewer){layout=null;End("TV exited fullscreen.");}return true;}
             if(!displays.Any(d=>d.Id==value.MonitorId&&d.Calibrated) || (waiting||IsLive)&&value.MonitorId!=monitor)return false;
             if(layout!=null && layout.Viewer!=value.Viewer && time()-seen<4)return false;
             if(!double.IsFinite(value.Left+value.Top+value.Width+value.Height) || value.Left<0||value.Top<0||value.Width<.08||value.Height<.08||
@@ -103,12 +103,12 @@ public sealed class GomokuTable
     {
         lock(gate)
         {
-            if(p==null || !Guid.TryParse(p.Viewer,out _) || p.Viewer!=layout?.Viewer||!layout.Full||time()-seen>=4||p.MonitorId!=layout.MonitorId)return "이 TV에서 전체 화면을 먼저 켜세요.";
+            if(p==null || !Guid.TryParse(p.Viewer,out _) || p.Viewer!=layout?.Viewer||!layout.Full||time()-seen>=4||p.MonitorId!=layout.MonitorId)return "Switch this TV to fullscreen.";
             if(action=="start")return Request(p.MonitorId);
-            if(!IsLive||p.Round!=round||p.Revision!=revision||p.MonitorId!=monitor)return "판이 바뀌었어요.";
-            if(action=="stop"){End("대국을 마쳤어요.");return "";}
+            if(!IsLive||p.Round!=round||p.Revision!=revision||p.MonitorId!=monitor)return "Board changed.";
+            if(action=="stop"){End("Game finished.");return "";}
             if(action=="restart"){Begin();ask=true;return "";}
-            return "알 수 없는 명령이에요.";
+            return "Unknown command.";
         }
     }
     bool Matches(int r,int rev,string id,int side)=>Full&&IsLive&&r==round&&rev==revision&&id==monitor&&turn==side;
@@ -139,7 +139,7 @@ public sealed class GomokuTable
             if(run>=5){won=true;break;}
         }
         turn=won||moves==stones.Length?0:3-side;
-        status=won?(side==1?"흑 승리":"백 승리"):turn==0?"무승부":turn==1?"흑 차례 · 헤드셋에서 교차점을 가리키고 핀치하세요.":"착용자는 상대 손과 TV를 함께 보세요. 상대는 원하는 칸을 0.9초 가리켜요.";
+        status=won?(side==1?"Black wins":"White wins"):turn==0?"Draw":turn==1?"Black to play. Point at an intersection and pinch.":"Keep the TV and the other player’s hand in view. Point at an intersection for a moment.";
     }
     public void Camera(JObject p)
     {
@@ -191,9 +191,9 @@ public sealed class GomokuTable
             case "gomoku.camera":
                 lock(gate)if(!Matches(r,(int?)p["revision"]??-1,id,2))return;
                 Notice(r,id,(string)p["status"] switch{
-                    "consent"=>"착용자가 오른손을 핀치해 상대의 손을 볼 수 있게 해 주세요.",
-                    "disabled"=>"Quest 설정에서 카메라를 켜세요.","permission"=>"Quest에서 헤드셋 카메라 권한을 허용하세요.",
-                    "tracking"=>"상대의 손과 TV가 보이도록 고개를 돌려 주세요.","warming"=>"헤드셋 카메라를 준비하는 중이에요.",_=>""});
+                    "consent"=>"Pinch with your right hand to enable the other player’s move.",
+                    "disabled"=>"Enable the camera in Quest settings.","permission"=>"Allow camera access in Quest settings.",
+                    "tracking"=>"Look toward the TV and the other player’s hand.","warming"=>"Preparing the headset camera.",_=>""});
                 break;
         }
     }

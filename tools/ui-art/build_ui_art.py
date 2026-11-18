@@ -145,8 +145,8 @@ def build_html():
     for k, (n, body) in enumerate((('star', star), ('spark', spark), ('glow', '<div class="glow"></div>'))):
         parts.append(f'<div class="cell" style="left:{k * SMALL}px;top:{y_small}px;width:{SMALL}px;height:{SMALL}px">{body}</div>')
         rects[n] = (k * SMALL, y_small, SMALL, SMALL)
-    parts.append(f'<div class="cell" style="left:{4 * SMALL}px;top:{y_small}px;width:{5 * RIB_W - 4 * SMALL}px;height:{SMALL}px"><div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2.2l2.7 6 6.5.7-4.9 4.4 1.4 6.4-5.7-3.3-5.7 3.3 1.4-6.4-4.9-4.4 6.5-.7z" fill="#FFDD66" stroke="{INK}" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Bambi</span></div></div>')
-    rects['logo'] = (4 * SMALL, y_small, 5 * RIB_W - 4 * SMALL, SMALL)
+    parts.append(f'<div class="cell" style="left:{4 * SMALL}px;top:{y_small}px;width:{5 * RIB_W - 4 * SMALL}px;height:{SMALL}px"><div class="logo"><svg viewBox="0 0 24 24"><path d="M12 2.2l2.7 6 6.5.7-4.9 4.4 1.4 6.4-5.7-3.3-5.7 3.3 1.4-6.4-4.9-4.4 6.5-.7z" fill="#FFDD66" stroke="{INK}" stroke-width="1.6" stroke-linejoin="round"/></svg><span>Yonder</span></div></div>')
+    # The illustrated Yonder wordmark is maintained in Art/Ui/logo.png.
     y_extra = height
     height += RIB_H
     cut = f'stroke="{CREAM}" stroke-width="4.4" stroke-linejoin="round" fill="{CREAM}"'
@@ -180,7 +180,7 @@ def build_html():
     rects['place-hills'] = (2 * RIB_W + 2 * SMALL, y_extra, SMALL, SMALL)
     parts.append(f'<div class="cell" style="left:{RIB_W}px;top:{y_extra}px;width:{RIB_W}px;height:{RIB_H}px"><div class="ribbon"><span>Marketplace</span></div></div>')
     rects['market-ribbon'] = (RIB_W, y_extra, RIB_W, RIB_H)
-    # the ribbon over the menu fan: the same ribbon with nothing written on it (the app writes the page's name: Bag, Bambi, Tools, Help)
+    # the ribbon over the menu fan: the same ribbon with nothing written on it (the app writes the page's name: Bag, Nilo, Tools, Help)
     parts.append(f'<div class="cell" style="left:{3 * RIB_W}px;top:{y_extra}px;width:{RIB_W}px;height:{RIB_H}px"><div class="ribbon"><span></span></div></div>')
     rects['menu-ribbon'] = (3 * RIB_W, y_extra, RIB_W, RIB_H)
     width = max(COLS * CELL, 5 * RIB_W)

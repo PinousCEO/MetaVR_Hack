@@ -27,11 +27,11 @@ namespace LivingPartner.Shared
     public static class GlassScriptExamples
     {
         // ------------------------------------------------------------------ 1. omok
-        public const string Omok = @"-- Omok: five in a row on a 9 x 9 board. The player has stone-a and moves first, Bambi has stone-b.
+        public const string Omok = @"-- Omok: five in a row on a 9 x 9 board. The player has stone-a and moves first, Nilo has stone-b.
 flat(true)
 local N = 9
 local g = grid(N, N, W / 2, 0.5, 0.9, 0.9)
-local board = {}                    -- board[(row - 1) * N + col]: 0 empty, 1 the player, 2 Bambi
+local board = {}                    -- board[(row - 1) * N + col]: 0 empty, 1 the player, 2 Nilo
 for i = 1, N * N do board[i] = 0 end
 local function col(i) return (i - 1) % N + 1 end
 local function row(i) return math.floor((i - 1) / N) + 1 end
@@ -48,9 +48,9 @@ for c = 1, N do for r = 1, N do
   end
 end end
 
-local turn = 1                      -- whose move: 1 the player, 2 Bambi
-local think = 0                     -- seconds until Bambi's stone lands
-local move = nil                    -- the cell Bambi has chosen
+local turn = 1                      -- whose move: 1 the player, 2 Nilo
+local think = 0                     -- seconds until Nilo's stone lands
+local move = nil                    -- the cell Nilo has chosen
 local win = nil                     -- the five cells of the winning line
 local stones, clock = 0, 0
 
@@ -65,9 +65,9 @@ local function line_through(i)
   return nil
 end
 
--- Bambi's move. A window that holds stones of ONE colour only is worth something to each of its cells:
--- most when Bambi can win there, nearly as much when the player could (block!), less for lines that are still short.
-local MINE = {1, 6, 40, 500, 1000000}       -- by Bambi's stones already in the window: 0, 1, 2, 3, 4
+-- Nilo's move. A window that holds stones of ONE colour only is worth something to each of its cells:
+-- most when Nilo can win there, nearly as much when the player could (block!), less for lines that are still short.
+local MINE = {1, 6, 40, 500, 1000000}       -- by Nilo's stones already in the window: 0, 1, 2, 3, 4
 local YOURS = {1, 5, 35, 2500, 60000}       -- by the player's stones in it
 local function choose()
   local value = {}
@@ -101,7 +101,7 @@ local function place(i, who)
   win = line_through(i)
   if win then
     if who == 1 then add(1)  sound('win')  pet_pose('down')  finish('You win - five in a row!')
-    else sound('lose')  pet_pose('cheer')  finish('Bambi wins this time.') end
+    else sound('lose')  pet_pose('cheer')  finish('Nilo wins this time.') end
   elseif stones == N * N then
     finish('A draw - the board is full.')
   else
@@ -120,12 +120,12 @@ function update(dt)
       local c, r = g:cell(t.x, t.y)
       if c and turn == 1 and board[(r - 1) * N + c] == 0 then
         place((r - 1) * N + c, 1)
-        if turn == 2 then                       -- Bambi thinks, and walks to the side of the board nearest its move
+        if turn == 2 then                       -- Nilo thinks, and walks to the side of the board nearest its move
           move = choose()
           think = 0.9
           local x, y = g:center(col(move), row(move))
           pet_goto(x < W / 2 and W / 2 - 0.6 or W / 2 + 0.6, y)
-          banner('Bambi is thinking...', 1)
+          banner('Nilo is thinking...', 1)
         end
       end
     end
@@ -165,7 +165,7 @@ end
 ";
 
         // ------------------------------------------------------------------ 2. catching stars
-        public const string Catch = @"-- Catch the falling stars. The basket follows your hand and Bambi runs along under it.
+        public const string Catch = @"-- Catch the falling stars. The basket follows your hand and Nilo runs along under it.
 -- Five misses and it is over; it starts slowly and every 8 stars they fall faster.
 local stars = {}              -- each {x, y, vy, turn}
 local pops = {}               -- a sparkle where one was caught, a puff where one was missed: {x, y, age, miss}
@@ -303,7 +303,7 @@ end
 
         // ------------------------------------------------------------------ 4. a focus timer
         public const string Pomodoro = @"-- A focus timer: 25 minutes of work, then 5 of rest, round after round.
--- Tap the ring to start or to pause. Bambi sits and studies along, and cheers when a round is done.
+-- Tap the ring to start or to pause. Nilo sits and studies along, and cheers when a round is done.
 local FOCUS, REST = 25 * 60, 5 * 60       -- seconds
 local left = FOCUS
 local running, resting = false, false
@@ -378,10 +378,10 @@ end
 ";
 
         // ------------------------------------------------------------------ 5. tag
-        public const string Tag = @"-- Tag: Bambi runs about on the desk - touch it with a finger to catch it. Thirty seconds.
+        public const string Tag = @"-- Tag: Nilo runs about on the desk - touch it with a finger to catch it. Thirty seconds.
 flat(true)
 local ROUND = 30
-local goal_x, goal_y = W / 2, 0.5     -- where Bambi is heading
+local goal_x, goal_y = W / 2, 0.5     -- where Nilo is heading
 local pause = 0                       -- it stands still for this long (caught, out of breath)
 local safe = 0                        -- and cannot be caught again for this long
 local puffs = {}                      -- where it was caught: {x, y, age}
@@ -408,7 +408,7 @@ function update(dt)
 
   if left <= 0 then
     pet_pose('cheer')
-    finish('You caught Bambi ' .. score() .. ' times!')
+    finish('You caught Nilo ' .. score() .. ' times!')
   elseif pause > 0 then
     pause = pause - dt
     if pause <= 0 then goal_x, goal_y = somewhere()  pet_goto(goal_x, goal_y, 1.0) end
@@ -431,7 +431,7 @@ function update(dt)
 
   rect(W / 2, 0.5, W - 0.06, 0.94, 'mint', 0.45)                  -- the meadow
   rect(W / 2, 0.95, (W - 0.2) * clamp(left / ROUND, 0, 1), 0.02, 'honey')    -- the time that is left
-  disc(px, py, 0.07, 'green', 0.35)                               -- Bambi's shadow
+  disc(px, py, 0.07, 'green', 0.35)                               -- Nilo's shadow
   for i = #puffs, 1, -1 do
     local p = puffs[i]
     p.age = p.age + dt
@@ -443,17 +443,17 @@ end
 ";
 
         // ------------------------------------------------------------------ 6. Shadow Umbrella (the game that used to be GlassUmbrella.cs)
-        public const string Umbrella = @"-- Shadow Umbrella: Bambi gathers stars from the floor while ink rains down. Your hand is the umbrella:
--- hold it over Bambi. Golden drops are good - lift the hand and let them through.
+        public const string Umbrella = @"-- Shadow Umbrella: Nilo gathers stars from the floor while ink rains down. Your hand is the umbrella:
+-- hold it over Nilo. Golden drops are good - lift the hand and let them through.
 local stars = {}              -- the x of the three stars on the floor
 local drops = {}              -- each {x, y, vx, vy, kind}; kind: 'drop', 'blob' (big: meet it with the middle of the hand), 'gold'
 local fx = {}                 -- short effects: {pic, x, y, age, text}
 local SIZE = {drop = 0.055, blob = 0.10, gold = 0.07}
 local next_drop = 1.5         -- seconds until the next drop
 local wind, wind_turn = 0, 6  -- from level 3 the wind carries the drops sideways and turns every six seconds
-local picking = 0             -- seconds Bambi still bends down for a star
+local picking = 0             -- seconds Nilo still bends down for a star
 local safe = 0                -- it cannot be hit again for this long
-local hush = 0                -- while a golden drop comes down no ink is aimed at Bambi: the umbrella can be lifted
+local hush = 0                -- while a golden drop comes down no ink is aimed at Nilo: the umbrella can be lifted
 local picked, clock = 0, 0
 local over = false
 local FLOOR, HEAD = 0.05, 0.22
@@ -477,7 +477,7 @@ local function new_drop()
   elseif hush > 0 then
     x = px < W / 2 and px + rnd(0.3, 0.8) or px - rnd(0.3, 0.8)
   elseif rnd() < 0.6 then
-    x = clamp(px + rnd(-0.1, 0.1), 0.08, W - 0.08)              -- most are aimed at Bambi
+    x = clamp(px + rnd(-0.1, 0.1), 0.08, W - 0.08)              -- most are aimed at Nilo
   end
   local drift = kind == 'gold' and 0 or wind                 -- (the wind does not move the golden ones)
   drops[#drops + 1] = {x = x - drift * 0.9, y = 1.06, vx = drift, vy = fall, kind = kind}
@@ -497,13 +497,13 @@ function update(dt)
       wind_turn = wind_turn - dt
       if wind_turn <= 0 then wind_turn = 6  wind = (wind > 0 and -1 or 1) * rnd(0.08, 0.16)  sound('whoosh') end
     end
-    local threat = false                      -- ink right above Bambi, and no hand between
+    local threat = false                      -- ink right above Nilo, and no hand between
     for i = #drops, 1, -1 do
       local d = drops[i]
       local r = SIZE[d.kind] / 2
       d.x = d.x + d.vx * dt
       d.y = d.y - d.vy * dt
-      if d.kind == 'gold' then d.x = d.x + clamp(px - d.x, -0.22 * dt, 0.22 * dt) end      -- a golden one leans towards Bambi
+      if d.kind == 'gold' then d.x = d.x + clamp(px - d.x, -0.22 * dt, 0.22 * dt) end      -- a golden one leans towards Nilo
       local caught = false
       for _, h in ipairs(hs) do
         local reach = d.kind == 'blob' and h.r * 0.8 or h.r + r
@@ -513,13 +513,13 @@ function update(dt)
         table.remove(drops, i)
         if d.kind == 'gold' then effect('puff', d.x, d.y)  sound('squeak')       -- a golden one wasted
         else effect('splash', d.x, d.y)  sound('drop') end
-      elseif d.y < HEAD and math.abs(d.x - px) < 0.045 + r then                   -- it reaches Bambi
+      elseif d.y < HEAD and math.abs(d.x - px) < 0.045 + r then                   -- it reaches Nilo
         table.remove(drops, i)
         if d.kind == 'gold' then
           add(3)  sound('coin')  effect('sparkle', px, HEAD + 0.05, '+3')
         elseif safe <= 0 then
           lives(lives() - 1)  safe = 1.2  sound('error')  pet_hurt(1.2)  effect('heart', px, HEAD + 0.06)
-          if lives() <= 0 then over = true  sound('lose')  pet_pose('down')  finish('Bambi gathered ' .. score() .. ' stars.') end
+          if lives() <= 0 then over = true  sound('lose')  pet_pose('down')  finish('Nilo gathered ' .. score() .. ' stars.') end
         end
       elseif d.y < FLOOR then
         table.remove(drops, i)
@@ -529,7 +529,7 @@ function update(dt)
       end
     end
 
-    -- Bambi: cowers under ink that nobody stops, otherwise walks to the nearest star and bends down for it
+    -- Nilo: cowers under ink that nobody stops, otherwise walks to the nearest star and bends down for it
     if over then
     elseif threat then
       pet_pose('cower')  pet_goto(px)  picking = 0
@@ -565,7 +565,7 @@ end
 ";
 
         // ------------------------------------------------------------------ 7. Vampire Night (the game that used to be GlassSurvival.cs)
-        public const string Survival = @"-- Vampire Night: they keep coming. Bambi fights by itself and follows your hand; your hand bops what it touches.
+        public const string Survival = @"-- Vampire Night: they keep coming. Nilo fights by itself and follows your hand; your hand bops what it touches.
 flat(true)
 local pulse_time, sigils, mx, my = 6, {}, {}, {}
 local foes, shots, gems, fx = {}, {}, {}, {}
@@ -578,7 +578,7 @@ local POWERS = {
   {id = 'star',  name = 'Star Shot',   note = 'more stars, faster'},
   {id = 'moons', name = 'Moons',       note = 'one more moon circles'},
   {id = 'frost', name = 'Frost',       note = 'they come slower'},
-  {id = 'swift', name = 'Swift Feet',  note = 'Bambi is faster'},
+  {id = 'swift', name = 'Swift Feet',  note = 'Nilo is faster'},
   {id = 'giant', name = 'Big Hand',    note = 'your hand is bigger'},
   {id = 'bolt',  name = 'Lightning',   note = 'strikes the nearest'},
   {id = 'heart', name = 'Extra Heart', note = 'one more heart'},
@@ -730,7 +730,7 @@ function update(dt)
       local f = nearest(px, MID, 0.9)
       if f then effect('bolt', f.x, (f.y + 1) / 2, 1 - f.y)  hurt(f, 2) end
     end
-    local slow = (1 - 0.13 * has.frost) * math.min(1, 0.34 + wave * 0.16)           -- the enemies: towards Bambi; hands and moons hurt them; touching Bambi costs a heart
+    local slow = (1 - 0.13 * has.frost) * math.min(1, 0.34 + wave * 0.16)           -- the enemies: towards Nilo; hands and moons hurt them; touching Nilo costs a heart
     for _, f in ipairs(foes) do
       local k = KIND[f.kind]
       local d = math.max(0.001, dist(f.x, f.y, px, MID))
@@ -758,7 +758,7 @@ function update(dt)
         lives(lives() - 1)  sound('error')  pet_hurt(1.2)  effect('heart', px, MID)
         if lives() <= 0 then
           over = true  sound('lose')  pet_pose('down')
-          finish('Bambi beat ' .. score() .. ' of them in ' .. math.floor(time()) .. ' seconds.')
+          finish('Nilo beat ' .. score() .. ' of them in ' .. math.floor(time()) .. ' seconds.')
         end
       end
     end
@@ -770,7 +770,7 @@ function update(dt)
       if s.life <= 0 then table.remove(shots, i) end
     end
     for i = #foes, 1, -1 do if foes[i].dead then table.remove(foes, i) end end
-    for i = #gems, 1, -1 do                     -- gems: a hand or Bambi gathers them
+    for i = #gems, 1, -1 do                     -- gems: a hand or Nilo gathers them
       local g = gems[i]
       g.age = g.age + dt
       local gap = dist(g.x, g.y, px, MID)
@@ -817,11 +817,11 @@ end
 ";
 
         // ------------------------------------------------------------------ 8. Glass Keeper (through the glass: the user's football idea)
-        public const string Keeper = @"-- Glass Keeper: Bambi kicks balls OUT of the field at you - out of the screen when it plays inside the PC, up from
+        public const string Keeper = @"-- Glass Keeper: Nilo kicks balls OUT of the field at you - out of the screen when it plays inside the PC, up from
 -- the desk otherwise. Stop them with an open hand: a save is a point. Five goals against you and it is over.
 local GOALS, FLOOR = 5, 0.06
 local wait = 3.5              -- seconds until the next kick (first a moment to get ready)
-local swing = -1              -- >= 0 while Bambi winds up: seconds since it began
+local swing = -1              -- >= 0 while Nilo winds up: seconds since it began
 local spot = W / 2            -- where the ball lies
 local ball = nil              -- the ball on its way to the glass: {x1, y1, t}
 local flying = {}             -- balls in the room: flying[id] = {x, y, age}, where each left the field
@@ -887,7 +887,7 @@ function update(dt)
             banner('Level ' .. level() .. ' - harder shots!', 1.5)
           end
         elseif e.what == 'hit' then
-          lives(lives() - 1)  sound('error')  pet_play('cheer', 1)  banner('Goal for Bambi!', 1.2)
+          lives(lives() - 1)  sound('error')  pet_play('cheer', 1)  banner('Goal for Nilo!', 1.2)
           if lives() <= 0 then
             over = true  sound('lose')  pet_pose('cheer')
             finish('You saved ' .. score() .. ' shots!')
@@ -973,15 +973,15 @@ end
 ";
 
         // ------------------------------------------------------------------ 9. Clone Shooter (aiming, firing and being shot at: the user's shooting idea)
-        public const string Shooter = @"-- Clone Shooter: little clones of Bambi pop up around the field. Point at one and pinch to pop it (a tap works too).
--- The real Bambi shoots back, out of the field at you: hold an open hand in the way. Three hits and it is over.
+        public const string Shooter = @"-- Clone Shooter: little clones of Nilo pop up around the field. Point at one and pinch to pop it (a tap works too).
+-- The real Nilo shoots back, out of the field at you: hold an open hand in the way. Three hits and it is over.
 local clones = {}             -- each {x, y, age, stay, tint}
 local pops = {}               -- short effects: {pic, x, y, age}
 local streak, last_hit, trails = 0, -10, {}
-local bolts = {}              -- Bambi's shots in the room: bolts[id] = {x, y, age}
+local bolts = {}              -- Nilo's shots in the room: bolts[id] = {x, y, age}
 local next_clone = 1.0        -- seconds until the next clone
-local next_bolt = 6.5         -- seconds until Bambi shoots (not at once: first the player learns to aim)
-local charge = -1             -- >= 0 while Bambi winds up for a shot
+local next_bolt = 6.5         -- seconds until Nilo shoots (not at once: first the player learns to aim)
+local charge = -1             -- >= 0 while Nilo winds up for a shot
 local popped, clock = 0, 0
 local over = false
 local FLOOR, R = 0.05, 0.065  -- the floor; how big a clone is
@@ -1004,7 +1004,7 @@ local function pop_clone(c)
   if popped % 8 == 0 then level(level() + 1); banner('Level ' .. level() .. ' - faster!', 1.5); sound('sparkle') end
 end
 
-local function clone(c, k)                -- a little Bambi: a round head with two ears and two eyes; k = how far it is out
+local function clone(c, k)                -- a little Nilo: a round head with two ears and two eyes; k = how far it is out
   local r = R * k
   local flame=(0.48+0.11*math.sin(clock*8+c.stay))*r
   rect(c.x,c.y-r*0.86,0.53*r,flame*2,'#FFAE78',0.90,45)
@@ -1107,7 +1107,7 @@ function update(dt)
         end
       end
     end
-    -- Bambi shoots back: it winds up (the shot grows in its hand), then the shot LEAVES the field
+    -- Nilo shoots back: it winds up (the shot grows in its hand), then the shot LEAVES the field
     if charge < 0 then
       next_bolt = next_bolt - dt
       if next_bolt <= 0 then charge = 0  pet_goto(px)  pet_play('fling')  pet_say('Take this!', 0.8) end
@@ -1188,7 +1188,7 @@ end
 
         // ------------------------------------------------------------------ 10. a calculator (a TOOL: upright, panel + display + buttons)
         public const string Calculator = @"-- Calculator: a real one, in the app's own look. Tap the keys (through a screen: rest a hand on a key, or point at
--- it and pinch). It chains from left to right like a pocket calculator, and Bambi reads out the result.
+-- it and pinch). It chains from left to right like a pocket calculator, and Nilo reads out the result.
 local KEYS = {                -- from the top row down
   {'C', '<', '%', '/'},
   {'7', '8', '9', 'x'},
@@ -1197,7 +1197,7 @@ local KEYS = {                -- from the top row down
   {'0', '.', '+/-', '='},
 }
 local TINT = {C = 'pink', ['<'] = 'pink', ['%'] = 'sky', ['/'] = 'sky', x = 'sky', ['-'] = 'sky', ['+'] = 'sky', ['='] = 'honey'}
-local CX = W / 2 + 0.22       -- the middle of the calculator (Bambi stands on its left)
+local CX = W / 2 + 0.22       -- the middle of the calculator (Nilo stands on its left)
 local g = grid(4, 5, CX, 0.355, 1.04, 0.67)
 local shown = '0'             -- what the display shows
 local acc, op = nil, nil      -- the result so far, and the operation that waits for its second number
@@ -1271,16 +1271,16 @@ end
 ";
 
         // ------------------------------------------------------------------ 11. Rock Paper Scissors (what the hand SHOWS: all_hands, shape)
-        public const string Rps = @"-- Rock Paper Scissors: Bambi counts - rock, paper, scissors, shoot! - and on 'shoot' both show a hand at once.
+        public const string Rps = @"-- Rock Paper Scissors: Nilo counts - rock, paper, scissors, shoot! - and on 'shoot' both show a hand at once.
 -- Hold a hand up where it can be seen, anywhere: a fist, an open hand or two fingers. First to three wins.
 local SIGNS = {'rock', 'paper', 'scissors'}
 local BEAT = 0.6                  -- seconds from one word of the count to the next
 local state = 'count'             -- count -> read -> show -> count ... and at the end: done
 local t = -2                      -- seconds in this state (the very first count waits a moment longer)
-local mine = 1                    -- Bambi's sign in this round: 1 rock, 2 paper, 3 scissors
+local mine = 1                    -- Nilo's sign in this round: 1 rock, 2 paper, 3 scissors
 local yours = 0                   -- the player's, as far as it has been read (0 = no hand seen yet)
 local votes = {0, 0, 0}           -- how often the hand showed each sign while it was read
-local bambi = 0                   -- rounds Bambi has won (the player's are the score)
+local bambi = 0                   -- rounds Nilo has won (the player's are the score)
 local word, beat_was = 'First to three!', -9
 local UX, BX, Y = W * 0.3, W * 0.72, 0.46
 
@@ -1298,7 +1298,7 @@ motion('show', 0.4, function(u, p)          -- the hand held out
 end)
 
 local function new_round()
-  -- NO CHEATING: Bambi chooses now, before the count - long before it gets to see the player's hand.
+  -- NO CHEATING: Nilo chooses now, before the count - long before it gets to see the player's hand.
   mine = rndi(1, 3)
   yours = 0  votes = {0, 0, 0}
   state = 'count'  beat_was = -9
@@ -1351,13 +1351,13 @@ function update(dt)
       local w = yours > 0 and winner(yours, mine) or -1
       if w < 0 then word = 'Show me your hand!'  sound('error')
       elseif w == 1 then add(1)  word = 'You win this one!'  sound('coin')
-      elseif w == 2 then bambi = bambi + 1  lives(3 - bambi)  word = 'Bambi wins this one!'  sound('drop')  pet_pose('cheer')
+      elseif w == 2 then bambi = bambi + 1  lives(3 - bambi)  word = 'Nilo wins this one!'  sound('drop')  pet_pose('cheer')
       else word = 'A draw!'  sound('tap') end
     end
   elseif state == 'show' and t >= 2 then
     if score() >= 3 or bambi >= 3 then
       state = 'done'  pet_pose('cheer')  sound(score() >= 3 and 'win' or 'lose')
-      word = score() >= 3 and 'You win the match!' or 'Bambi wins the match!'
+      word = score() >= 3 and 'You win the match!' or 'Nilo wins the match!'
       finish(word .. ' ' .. score() .. ' : ' .. bambi)
     else
       t = 0  word = 'Ready ...'
@@ -1367,7 +1367,7 @@ function update(dt)
 
   -- draw: the word of the moment, the score, and the two hands side by side
   text(word, W / 2, 0.82, 0.09)                -- (the top tenth of the field is left free: the frame's sign may lie over it)
-  text('You  ' .. score() .. ' : ' .. bambi .. '  Bambi', W / 2, 0.71, 0.055, 'brown')
+  text('You  ' .. score() .. ' : ' .. bambi .. '  Nilo', W / 2, 0.71, 0.055, 'brown')
   if state == 'count' then
     local drop = -0.05 * math.abs(math.sin(math.max(0, t) / BEAT * math.pi))   -- both fists come down with the count
     pic('rock', UX, Y + drop, 0.26)
@@ -1409,7 +1409,7 @@ function update(dt)
       stars[#stars + 1] = {x = rnd(0.14, W - 0.14), y = -0.05, sway = rnd(0, 6.28), gold = gold, age = 0,
                            vy = lerp(0.14, 0.26, pace) * rnd(0.9, 1.1) * (gold and 1.15 or 1)}
       next_star = lerp(1.1, 0.42, pace)
-      pet_goto(stars[#stars].x, 0, 0.9)         -- Bambi runs to where it comes up
+      pet_goto(stars[#stars].x, 0, 0.9)         -- Nilo runs to where it comes up
     end
     -- 2. they rise and drift; a hand that touches one pops it
     local hs = hands()
@@ -1474,11 +1474,11 @@ end
 ";
 
         // ------------------------------------------------------------------ 13. Red Light (how STILL a hand can be: all_hands, speed)
-        public const string RedLight = @"-- Red Light, Green Light: Bambi turns its back and counts. While it counts, lead the star along the track with a
--- hand - it only creeps. When Bambi spins round: FREEZE. A hand that still moves is caught and the star goes
--- back to the start. Bring the star to Bambi and you win; three catches and Bambi wins.
+        public const string RedLight = @"-- Red Light, Green Light: Nilo turns its back and counts. While it counts, lead the star along the track with a
+-- hand - it only creeps. When Nilo spins round: FREEZE. A hand that still moves is caught and the star goes
+-- back to the start. Bring the star to Nilo and you win; three catches and Nilo wins.
 local START, TRACK, CREEP = 0.3, 0.14, 0.42
-local GOAL = W - 0.48             -- the star has arrived here: right beside Bambi
+local GOAL = W - 0.48             -- the star has arrived here: right beside Nilo
 local FAST, GRACE, TOO_LONG = 0.10, 0.4, 0.2   -- metres a second that count as moving; seconds to stop; seconds of moving that are caught
 local CHANT = 'Green light ... one ... two ... three ...'
 local star = START                -- how far the star has got
@@ -1554,7 +1554,7 @@ function update(dt)
     if t >= len then
       if lives() <= 0 then
         go('over')  sound('lose')
-        finish('Caught three times - Bambi wins!')
+        finish('Caught three times - Nilo wins!')
       else
         star = START  hold = 0
         go('ready')  pet_pose('idle')
@@ -1592,7 +1592,7 @@ end
             {
                 id = "omok", title = "Omok", ship = false, flat = true, lua = Omok,
                 requestKo = "오목 게임 만들어줘", requestEn = "Make me an omok game (five in a row) to play against you.",
-                about = "Five in a row on a 9 x 9 board that lies on the desk; Bambi answers every stone with a real heuristic.",
+                about = "Five in a row on a 9 x 9 board that lies on the desk; Nilo answers every stone with a real heuristic.",
                 howTo = "Five in a row wins. Tap a square to put your stone there.",
             },
             new GlassScriptExample
@@ -1613,28 +1613,28 @@ end
             {
                 id = "pomodoro", title = "Focus Timer", ship = true, lua = Pomodoro,
                 requestKo = "뽀모도로 타이머 만들어줘", requestEn = "Make me a pomodoro timer.",
-                about = "Not a game: 25 minutes of focus and 5 of rest with a ring that fills; Bambi studies along (a motion of its own).",
+                about = "Not a game: 25 minutes of focus and 5 of rest with a ring that fills; Nilo studies along (a motion of its own).",
                 howTo = "Tap the ring to start or pause.",
             },
             new GlassScriptExample
             {
-                id = "tag", title = "Tag with Bambi", ship = true, flat = true, lua = Tag,
-                requestKo = "밤비랑 술래잡기 하고 싶어", requestEn = "I want to play tag with Bambi.",
-                about = "Bambi runs about on the desk and flees from the hand; touch it to catch it, thirty seconds.",
-                howTo = "Touch Bambi to catch it!",
+                id = "tag", title = "Tag with Nilo", ship = true, flat = true, lua = Tag,
+                requestKo = "밤비랑 술래잡기 하고 싶어", requestEn = "I want to play tag with Nilo.",
+                about = "Nilo runs about on the desk and flees from the hand; touch it to catch it, thirty seconds.",
+                howTo = "Touch Nilo to catch it!",
             },
             new GlassScriptExample
             {
                 id = "umbrella", title = "Shadow Umbrella", ship = false, lua = Umbrella,
                 requestKo = "잉크 비를 손으로 막아주는 게임 만들어줘", requestEn = "Make a game where my hand is an umbrella that keeps ink rain off you.",
-                about = "Bambi gathers stars while ink rains; the hand shelters it, golden drops must be let through; wind from level 3.",
+                about = "Nilo gathers stars while ink rains; the hand shelters it, golden drops must be let through; wind from level 3.",
                 howTo = "Your hand is the umbrella. Let the golden drops through!",
             },
             new GlassScriptExample
             {
                 id = "survival", title = "Vampire Night", ship = true, flat = true, lua = Survival,
                 requestKo = "몰려오는 적을 물리치는 뱀파이어 서바이벌 게임 만들어줘", requestEn = "Make a survival game where enemies keep coming and you fight them off.",
-                about = "Waves of enemies; Bambi shoots by itself and follows the hand, the hand bops; gems give levels and a choice of seven powers on cards.",
+                about = "Waves of enemies; Nilo shoots by itself and follows the hand, the hand bops; gems give levels and a choice of seven powers on cards.",
                 howTo = "Dodge the horde. Gather gems, choose powers and parry crystals with your palm!",
             },
             // The three below are NOT for the shelf either: they are what the user asked the partner for, and it has to make them.
@@ -1642,22 +1642,22 @@ end
             {
                 id = "keeper", title = "Glass Keeper", ship = false, lua = Keeper,
                 requestKo = "축구 게임 만들어줘. 네가 화면 안에서 차고 내가 막을게", requestEn = "Make a football game: you kick from inside the screen and I block.",
-                about = "THROUGH THE GLASS: Bambi winds up and kicks balls out of the field at the player (shoot_out); out_events says saved, goal or wide. Five goals end it.",
-                howTo = "Bambi kicks at YOU. Block the ball with an open hand!",
+                about = "THROUGH THE GLASS: Nilo winds up and kicks balls out of the field at the player (shoot_out); out_events says saved, goal or wide. Five goals end it.",
+                howTo = "Nilo kicks at YOU. Block the ball with an open hand!",
             },
             new GlassScriptExample
             {
                 id = "shooter", title = "Clone Shooter", ship = false, lua = Shooter,
-                requestKo = "슈팅 게임 만들어줘. 밤비가 나한테 쏘면 손으로 막고, 나는 밤비 분신들을 쏠게", requestEn = "Make a shooting game: Bambi shoots at me, I block with my hand and shoot its little clones.",
-                about = "AIMING AND FIRING: the player points and pinches (aim, shots, hit_at) to pop clones; Bambi shoots back out of the field (shoot_out, out_events). Three hits end it.",
-                howTo = "Point and pinch to pop the clones. Block Bambi's shots with an open hand!",
+                requestKo = "슈팅 게임 만들어줘. 밤비가 나한테 쏘면 손으로 막고, 나는 밤비 분신들을 쏠게", requestEn = "Make a shooting game: Nilo shoots at me, I block with my hand and shoot its little clones.",
+                about = "AIMING AND FIRING: the player points and pinches (aim, shots, hit_at) to pop clones; Nilo shoots back out of the field (shoot_out, out_events). Three hits end it.",
+                howTo = "Point and pinch to pop the clones. Block Nilo's shots with an open hand!",
             },
             new GlassScriptExample
             {
                 id = "calculator", title = "Calculator", ship = false, lua = Calculator,
                 requestKo = "계산기 만들어줘", requestEn = "Make me a calculator.",
-                about = "A TOOL in the app's look: upright, a panel, a display and a 4 x 5 grid of buttons; real chained arithmetic; Bambi says the result.",
-                howTo = "Tap the keys. Bambi tells you the result.",
+                about = "A TOOL in the app's look: upright, a panel, a display and a 4 x 5 grid of buttons; real chained arithmetic; Nilo says the result.",
+                howTo = "Tap the keys. Nilo tells you the result.",
             },
             // The three games that used to be C# in the headset (MrPlay.cs), as the scripts they are now. They read what a
             // hand SHOWS and how fast it MOVES (all_hands: shape, speed) - a hand anywhere in view plays.
@@ -1665,7 +1665,7 @@ end
             {
                 id = "rps", title = "Rock Paper Scissors", ship = true, lua = Rps,
                 requestKo = "가위바위보 하자. 진짜 손 모양으로", requestEn = "Let's play rock paper scissors with my real hand.",
-                about = "WHAT THE HAND SHOWS: Bambi counts and chooses before it looks; all_hands().shape is read for a moment on 'Shoot!'; first to three.",
+                about = "WHAT THE HAND SHOWS: Nilo counts and chooses before it looks; all_hands().shape is read for a moment on 'Shoot!'; first to three.",
                 howTo = "Show rock, paper or scissors with your hand on 'Shoot!'",
             },
             new GlassScriptExample
@@ -1679,8 +1679,8 @@ end
             {
                 id = "redlight", title = "Red Light", ship = true, lua = RedLight,
                 requestKo = "무궁화 꽃이 피었습니다 하자", requestEn = "Let's play red light, green light.",
-                about = "HOW STILL A HAND IS: Bambi turns its back (a motion) and counts while the hand leads a star along; when it turns round, all_hands().speed over 0.15 for 0.2 s is caught.",
-                howTo = "Lead the star to Bambi while it counts. Freeze when it turns round!",
+                about = "HOW STILL A HAND IS: Nilo turns its back (a motion) and counts while the hand leads a star along; when it turns round, all_hands().speed over 0.15 for 0.2 s is caught.",
+                howTo = "Lead the star to Nilo while it counts. Freeze when it turns round!",
             },
         };
 

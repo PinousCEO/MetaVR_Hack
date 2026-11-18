@@ -7,7 +7,7 @@ namespace LivingPartner.Host;
 
 /// <summary>
 /// A module as something that travels: to the hub when it is put up for sale, from the hub when it is bought, and as
-/// a .bambi file from one person to another. Plain rules again (compiled into the host, the hub and the tests): which
+/// a .yonder file from one person to another. Plain rules again (compiled into the host, the hub and the tests): which
 /// files a module names, how it is made safe when it comes from somewhere else, what the shop may show of it before
 /// it is paid for, and how it is packed into one file.
 /// </summary>
@@ -141,7 +141,7 @@ public static class MarketPack
         string problem = MarketRules.Problem(m);
         // A SCRIPT THAT COMES FROM SOMEWHERE ELSE IS RUN BEFORE ANYTHING IS DONE WITH IT (ScriptRules.Problem): one that
         // breaks is refused, with the line it breaks on; one that only earns warnings is taken. The hub (putting up
-        // for sale), a purchase and a .bambi file all come through here.
+        // for sale), a purchase and a .yonder file all come through here.
         return problem.Length > 0 ? problem : ScriptRules.Problem(m);
     }
 
@@ -189,11 +189,11 @@ public static class MarketPack
         };
     }
 
-    // ------------------------------------------------------------------ a module as one file (.bambi)
+    // ------------------------------------------------------------------ a module as one file (.yonder)
     // A zip with module.json (the MarketModule) and files/<name> for every file the module names. Small enough to mail.
 
-    public const string Extension = ".bambi";
-    /// <summary>The most a .bambi file may be: room for a model of 16 MB, its pictures and the module, with as much again to spare. (Eight files of 16 MB - 128 MB read into memory at once - was what it used to allow.)</summary>
+    public const string Extension = ".yonder";
+    /// <summary>The most a .yonder file may be: room for a model of 16 MB, its pictures and the module, with as much again to spare. (Eight files of 16 MB - 128 MB read into memory at once - was what it used to allow.)</summary>
     public const int MaxBambiBytes = 40 * 1024 * 1024;
 
     public static byte[] Pack(MarketModule m, IReadOnlyDictionary<string, byte[]> files)
@@ -218,7 +218,7 @@ public static class MarketPack
     }
 
     /// <summary>
-    /// Opens a .bambi file. Returns what is wrong with it ("" = nothing): not a zip, no module in it, a module that is
+    /// Opens a .yonder file. Returns what is wrong with it ("" = nothing): not a zip, no module in it, a module that is
     /// not sound, too large. The module comes back made safe (Sanitise), with only the files it names - and nothing is
     /// ever read past the limits, whatever the zip claims about its sizes.
     /// </summary>

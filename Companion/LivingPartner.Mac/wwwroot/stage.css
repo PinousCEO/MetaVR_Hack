@@ -34,3 +34,6 @@ input,select{background:#f0f3e8;color:#1b3836;border:0;border-radius:.35rem;padd
 #queue-toggle{font-weight:650;padding:.5rem .8rem;background:#224441f5}#jobs{position:absolute;bottom:calc(100% + .4rem);right:0;width:min(20rem,88vw);max-height:55vh;overflow:auto;background:#173b38f7;border:1px solid #739084;border-radius:.65rem;padding:.75rem;text-align:left}#jobs article+article{border-top:1px solid #739084;padding-top:.65rem;margin-top:.65rem}#jobs article strong{overflow-wrap:anywhere}#jobs progress{width:100%;accent-color:#f9c979}#jobs button,#jobs a{font-size:.84rem;padding:.3rem .5rem;margin:.15rem}#jobs a{color:#f7d399}
 
 .solo-launch { display:block; color:#ffebc9; background:#48334a; border-radius:10px; padding:10px 12px; margin:8px 0; text-align:center; text-decoration:none; font-weight:700; }
+
+#panel .wordmark{width:118px;height:auto;vertical-align:middle;margin-right:.2em}
+@media(prefers-reduced-motion:no-preference){#panel .wordmark{animation:yonder-in .75s ease-out both}@keyframes yonder-in{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}}

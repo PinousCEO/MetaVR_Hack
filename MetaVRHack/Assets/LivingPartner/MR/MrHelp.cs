@@ -52,7 +52,7 @@ namespace LivingPartner.MR
                 if (text.Length > 0)
                 {
                     _heardNot = note == "not for me";
-                    _heard.text = "“" + Cut(text, 38) + "”" + (_heardNot ? "\nsay “Bambi” first" : "");
+                    _heard.text = "“" + Cut(text, 38) + "”" + (_heardNot ? "\nsay “Hey, Nilo” first" : "");
                     _heard.color = _heardNot ? new Color(0.52f, 0.48f, 0.45f) : Ui.Pal.TextDim;
                     _heardUntil = Time.time + 4f; _heardPop = 0f;
                     Debug.Log($"[MR] heard: '{Cut(text, 60)}'{(_heardNot ? " (not taken as meant for the partner)" : "")}");

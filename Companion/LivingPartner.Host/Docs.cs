@@ -15,7 +15,7 @@ namespace LivingPartner.Host;
 ///   designs   "이 디자인 별로지 않아? 아이콘 새로 만들어 줘" - what the user points at on a display is cut out, and four
 ///             new versions are drawn: PNG each, and a PDF sheet of all of them
 /// The snapshot's docs (View) lists the documents of this sitting; their pictures are served under /docs/&lt;id&gt;/ from
-/// %LOCALAPPDATA%\LivingAIPartner\docs (emptied when the host starts); the user's files are in Documents\Bambi\
+/// %LOCALAPPDATA%\LivingAIPartner\docs (emptied when the host starts); the user's files are in Documents\Nilo\
 /// &lt;date time&gt; &lt;title&gt;\. "컴퓨터에 넣어 줘": the partner carries the file into the PC (DeliverShow; the snapshot's
 /// show, kind "file"), leaves a copy on the Desktop, and a click on it there (doc.command reveal) opens the real file.
 /// All state is touched on the core thread; the model calls run on the thread pool and post their results back.
@@ -33,7 +33,7 @@ public sealed class DocsHost
     public DocsHost(Core core)
     {
         _core = core;
-        // the pictures of earlier sittings are not kept (the documents themselves are the user's, in Documents\Bambi)
+        // the pictures of earlier sittings are not kept (the documents themselves are the user's, in Documents\Nilo)
         try
         {
             Directory.CreateDirectory(HostPaths.Docs);
@@ -48,7 +48,7 @@ public sealed class DocsHost
     public object Diagnostics => new { documents = View.items.Count, open = View.openId, page = View.page, reports = _reports, designs = _designs, carrying = _carry.stage, folder = UserRoot };
 
     // (a TRIAL host - LP_HOME - keeps to its own folder: its documents and its "Desktop" are in there, never the user's)
-    public static string UserRoot => HostPaths.Trial ? Path.Combine(HostPaths.Root, "Documents", "Bambi") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Bambi");
+    public static string UserRoot => HostPaths.Trial ? Path.Combine(HostPaths.Root, "Documents", "Nilo") : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments), "Nilo");
     static string Desktop
     {
         get

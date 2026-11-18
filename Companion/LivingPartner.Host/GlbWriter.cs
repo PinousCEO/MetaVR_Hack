@@ -35,7 +35,7 @@ public static class GlbWriter
     {
         if (mesh == null || mesh.indices == null || mesh.indices.Length < 3 || mesh.positions == null || mesh.positions.Length < 9) return null;
         if (!(metres > 1e-4f) || float.IsInfinity(metres)) metres = 1f;
-        name = string.IsNullOrWhiteSpace(name) ? "Bambi model" : name.Trim();
+        name = string.IsNullOrWhiteSpace(name) ? "Nilo model" : name.Trim();
         int vertexCount = mesh.positions.Length / 3;
 
         // the triangles of each colour (every vertex of a part has the part's colour: the first corner speaks for the triangle)
@@ -117,7 +117,7 @@ public static class GlbWriter
 
         var root = new JObject
         {
-            ["asset"] = new JObject { ["version"] = "2.0", ["generator"] = "Living AI Partner (Bambi's toy maker)" },
+            ["asset"] = new JObject { ["version"] = "2.0", ["generator"] = "Yonder (Nilo's toy maker)" },
             ["scene"] = 0,
             ["scenes"] = new JArray(new JObject { ["name"] = name, ["nodes"] = new JArray(0) }),
             ["nodes"] = new JArray(new JObject { ["name"] = name, ["mesh"] = 0 }),

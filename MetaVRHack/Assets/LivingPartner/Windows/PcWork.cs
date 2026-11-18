@@ -9,7 +9,7 @@ using UnityEngine.Rendering.Universal;
 namespace LivingPartner.Windows
 {
     /// <summary>
-    /// THE WORK QUEUE ON THE PC. "A more complex piece of work: Bambi comes INTO the PC and hangs it in MY WORK QUEUE.
+    /// THE WORK QUEUE ON THE PC. "A more complex piece of work: Nilo comes INTO the PC and hangs it in MY WORK QUEUE.
     /// So the program must be visible on the PC too" (the user, 2026-11-18). The host owns the list
     /// (StateSnapshot.work, Shared/Work.cs); here it is a storybook panel on the desktop:
     ///   - open jobs first: kind icon, title, the step line, a percent bar with the number, the time it has taken, the

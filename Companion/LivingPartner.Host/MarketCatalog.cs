@@ -65,10 +65,10 @@ public sealed class MarketSeedEntry
 /// <summary>What happened when a module was installed or removed on this PC (paying for one is the hub's business).</summary>
 public enum Deal { Done, Unknown, Already, NotInstalled }
 
-/// <summary>The shelf as it is on the first day: everything "Bambi Studio" made.</summary>
+/// <summary>The shelf as it is on the first day: everything "Nilo Studio" made.</summary>
 public static class MarketSeed
 {
-    public const string Author = "Bambi Studio";
+    public const string Author = "Nilo Studio";
 
     static MarketSeedEntry Entry(MarketModule m, bool pre, string koName, string ko, string en, string draw = "")
     {
@@ -201,15 +201,15 @@ public static class MarketSeed
         var list = new List<MarketSeedEntry>();
 
         var tennis = StarterGames.Tennis(); var keeper = StarterGames.Keeper(); var defense = StarterGames.Defense();
-        list.Add(Game(keeper.id, keeper.template, keeper.title, 0, true, "골키퍼", "Save Bambi’s five penalty kicks. Each save sends the ball back across the glass.", "Includes the 3D penalty shoot-out.", keeper.howTo, new[] { "골키퍼", "승부차기", "축구", "penalty", "goalkeeper" }, keeper));
-        list.Add(Game(tennis.id, tennis.template, tennis.title, 0, true, "테니스", "A rally across the screen. Return Bambi’s serve with either hand.", "Play tennis with Bambi.", tennis.howTo, new[] { "테니스", "tennis", "sports" }, tennis));
+        list.Add(Game(keeper.id, keeper.template, keeper.title, 0, true, "골키퍼", "Save Nilo’s five penalty kicks. Each save sends the ball back across the glass.", "Includes the 3D penalty shoot-out.", keeper.howTo, new[] { "골키퍼", "승부차기", "축구", "penalty", "goalkeeper" }, keeper));
+        list.Add(Game(tennis.id, tennis.template, tennis.title, 0, true, "테니스", "A rally across the screen. Return Nilo’s serve with either hand.", "Play tennis with Nilo.", tennis.howTo, new[] { "테니스", "tennis", "sports" }, tennis));
         list.Add(Game(defense.id, defense.template, defense.title, 0, true, "악마의 문", "Defend the gate from incoming demons in your room. Block with the left palm and cast with the right hand.", "Includes the 3D defense game.", defense.howTo, new[] { "악마의 문", "디펜스", "demon gate", "defense" }, defense));
         var table=StarterGames.Gomoku(); table.title="Gomoku"; table.howTo="Black points and pinches. White points to an empty intersection until the stone is placed.";
         list.Add(Game(table.id,table.template,table.title,0,true,"오목","Play five in a row together on your TV. The headset wearer pinches to place black stones, the other player points to place white stones.","Includes the shared TV board.",table.howTo,new[]{"오목","gomoku","five in a row"},table));
         // ---- skills: dancing comes with the partner; the others are bought. There is no "Music" skill any more: music is
         // ONE thing, the record player and its records (see MarketRules.Records). The three below stay skills - each also
         // changes the surroundings and dances, studies or naps - and the tune of an installed one is a record as well.
-        list.Add(Skill(Dance(), 0, true, "춤", "A club tune, club lights round your work area, and Bambi dancing in the middle of it.", "Bambi can dance - lights, tune and all.", "춤", "댄스", "dance", "club"));
+        list.Add(Skill(Dance(), 0, true, "춤", "A club tune, club lights round your work area, and Nilo dancing in the middle of it.", "Nilo can dance - lights, tune and all.", "춤", "댄스", "dance", "club"));
         list.Add(Skill(new SkillDef
         {
             id = "skill-dj", name = "DJ Booth", note = "Turns the room round the desk into a club, puts the Neon set on and dances.",
@@ -217,84 +217,84 @@ public static class MarketSeed
             steps = new List<SkillStep> { new SkillStep { act = "ambience" }, new SkillStep { act = "music" }, new SkillStep { act = "emote", arg = "happy", seconds = 1.5f }, new SkillStep { act = "dance" } },
             song = NeonTune(),
             ambience = new AmbienceDef { id = "amb-dj", name = "DJ Booth", pattern = "spots", c0 = "#0E0A2A", c1 = "#FFD23F", c2 = "#B66DFF", dim = 0.85f, speed = 1.4f, density = 1.4f, beat = true },
-        }, 40, false, "디제이 부스", "Bambi takes the decks: a second club tune of its own (\"Neon\"), gold and violet lights that pulse with it, and a dance.", "Bambi can turn your desk into a club night and dance to its own set.", "디제이 부스", "디제이", "클럽", "dj", "club", "party"));
+        }, 40, false, "디제이 부스", "Nilo takes the decks: a second club tune of its own (\"Neon\"), gold and violet lights that pulse with it, and a dance.", "Nilo can turn your desk into a club night and dance to its own set.", "디제이 부스", "디제이", "클럽", "dj", "club", "party"));
         list.Add(Skill(new SkillDef
         {
             id = "skill-rainyfocus", name = "Rainy Focus", note = "Lets rain fall round the work area, puts lo-fi on and sits down to study beside you.",
             phrases = new[] { "rainy focus", "집중 모드", "비 오는 집중", "focus mode", "공부 모드", "let's focus" },
             steps = new List<SkillStep> { new SkillStep { act = "ambience" }, new SkillStep { act = "music" }, new SkillStep { act = "activity", arg = "study" } },
             song = WorldDefaults.Lofi(), ambience = WorldDefaults.RainAll(),
-        }, 25, false, "비 오는 집중", "Rain on every side, a lo-fi loop, and Bambi studying next to you (when it has a desk and a chair).", "Bambi can set up a rainy afternoon to concentrate in - and study along.", "집중 모드", "집중", "비", "focus", "rain", "study"));
+        }, 25, false, "비 오는 집중", "Rain on every side, a lo-fi loop, and Nilo studying next to you (when it has a desk and a chair).", "Nilo can set up a rainy afternoon to concentrate in - and study along.", "집중 모드", "집중", "비", "focus", "rain", "study"));
         list.Add(Skill(new SkillDef
         {
             id = "skill-lullaby", name = "Lullaby", note = "Brings the night sky out, plays a lullaby and goes to sleep.",
             phrases = new[] { "lullaby", "자장가", "자장가 불러 줘", "잘 시간이야", "bedtime", "sing me to sleep" },
             steps = new List<SkillStep> { new SkillStep { act = "ambience" }, new SkillStep { act = "music" }, new SkillStep { act = "activity", arg = "nap" } },
             song = WorldDefaults.Lullaby(), ambience = WorldDefaults.NightSky(),
-        }, 20, false, "자장가", "Stars come out round the desk, a slow lullaby plays, and Bambi curls up for a nap (when it has a bed).", "Bambi can wind the day down: night sky, a lullaby, and a nap.", "자장가", "잠", "밤하늘", "lullaby", "sleep", "night"));
+        }, 20, false, "자장가", "Stars come out round the desk, a slow lullaby plays, and Nilo curls up for a nap (when it has a bed).", "Nilo can wind the day down: night sky, a lullaby, and a nap.", "자장가", "잠", "밤하늘", "lullaby", "sleep", "night"));
 
         // ---- surroundings: rain and the night sky come with the partner
-        list.Add(Mood(WorldDefaults.RainAll(), 0, true, "비", "Rain all round the work area, soft and steady.", "Bambi can make it rain round your desk.", "비", "rain"));
-        list.Add(Mood(WorldDefaults.NightSky(), 0, true, "밤하늘", "The room goes dark and fills with slow stars.", "Bambi can bring the night sky out.", "밤하늘", "별", "night", "stars"));
-        list.Add(Mood(WorldDefaults.ClubLights(), 12, false, "클럽", "Pink and blue lights sweeping the room, pulsing with whatever tune is on.", "Bambi can turn the room into a club.", "클럽", "club", "party"));
-        list.Add(Mood(WorldDefaults.Aurora(), 15, false, "오로라", "Green and violet curtains of light drifting overhead.", "Bambi can hang an aurora over your desk.", "오로라", "aurora"));
-        list.Add(Mood(WorldDefaults.Petals(), 10, false, "봄", "A bright spring day with petals floating by.", "Bambi can bring spring in, petals and all.", "봄", "벚꽃", "꽃잎", "spring", "petals"));
-        list.Add(Mood(WorldDefaults.Snow(), 10, false, "눈", "Quiet snowfall on a pale winter morning.", "Bambi can let it snow.", "눈", "겨울", "snow", "winter"));
+        list.Add(Mood(WorldDefaults.RainAll(), 0, true, "비", "Rain all round the work area, soft and steady.", "Nilo can make it rain round your desk.", "비", "rain"));
+        list.Add(Mood(WorldDefaults.NightSky(), 0, true, "밤하늘", "The room goes dark and fills with slow stars.", "Nilo can bring the night sky out.", "밤하늘", "별", "night", "stars"));
+        list.Add(Mood(WorldDefaults.ClubLights(), 12, false, "클럽", "Pink and blue lights sweeping the room, pulsing with whatever tune is on.", "Nilo can turn the room into a club.", "클럽", "club", "party"));
+        list.Add(Mood(WorldDefaults.Aurora(), 15, false, "오로라", "Green and violet curtains of light drifting overhead.", "Nilo can hang an aurora over your desk.", "오로라", "aurora"));
+        list.Add(Mood(WorldDefaults.Petals(), 10, false, "봄", "A bright spring day with petals floating by.", "Nilo can bring spring in, petals and all.", "봄", "벚꽃", "꽃잎", "spring", "petals"));
+        list.Add(Mood(WorldDefaults.Snow(), 10, false, "눈", "Quiet snowfall on a pale winter morning.", "Nilo can let it snow.", "눈", "겨울", "snow", "winter"));
         // the grand ones: whole views that take the place of the room outside the work area
-        list.Add(Mood(WorldDefaults.Peak(), 30, false, "산 정상", "A mountain top at first light: ranges all round, one great peak, a sea of cloud far below.", "Bambi can move your desk to the top of a mountain.", "산 정상", "산", "산꼭대기", "mountain", "peak", "view"));
-        list.Add(Mood(WorldDefaults.Coast(), 30, false, "바닷가", "The seaside on a clear day: the horizon, sun glittering on the water, islands, foam on the sand.", "Bambi can move your desk to the seaside.", "바닷가", "바다", "해변", "sea", "beach", "coast", "view"));
-        list.Add(Mood(WorldDefaults.SunsetCoast(), 25, false, "노을 해변", "The same beach at dusk: a violet sky, an orange sun low over the water.", "Bambi can take your desk to a beach at sunset.", "노을 해변", "노을", "석양", "sunset", "beach", "view"));
+        list.Add(Mood(WorldDefaults.Peak(), 30, false, "산 정상", "A mountain top at first light: ranges all round, one great peak, a sea of cloud far below.", "Nilo can move your desk to the top of a mountain.", "산 정상", "산", "산꼭대기", "mountain", "peak", "view"));
+        list.Add(Mood(WorldDefaults.Coast(), 30, false, "바닷가", "The seaside on a clear day: the horizon, sun glittering on the water, islands, foam on the sand.", "Nilo can move your desk to the seaside.", "바닷가", "바다", "해변", "sea", "beach", "coast", "view"));
+        list.Add(Mood(WorldDefaults.SunsetCoast(), 25, false, "노을 해변", "The same beach at dusk: a violet sky, an orange sun low over the water.", "Nilo can take your desk to a beach at sunset.", "노을 해변", "노을", "석양", "sunset", "beach", "view"));
 
         // ---- things: one of each built-in shape. Each `gives` promises only what that kind of thing allows (Activities).
-        list.Add(Thing("desk", "Desk", "책상", 0, "A little wooden desk, just Bambi's size.", "Bambi gets a place to work - and can study, once there is a chair too.",
+        list.Add(Thing("desk", "Desk", "책상", 0, "A little wooden desk, just Nilo's size.", "Nilo gets a place to work - and can study, once there is a chair too.",
             "책상이다! 의자만 있으면 앉아서 공부할 수 있겠다.", "A desk! With a chair I could sit down and study.", "a small wooden desk with a drawer, seen from the front at a slight angle, warm wood colour", "table", "탁자"));
-        list.Add(Thing("chair", "Chair", "의자", 0, "A round-backed chair in soft rose.", "Bambi can sit down - and study, when there is a desk.",
+        list.Add(Thing("chair", "Chair", "의자", 0, "A round-backed chair in soft rose.", "Nilo can sit down - and study, when there is a desk.",
             "의자다! 이제 앉을 수 있어. 책상이 있으면 공부도 할 수 있겠다.", "A chair! Now I can sit down - and study, when there's a desk.", "a small rounded chair with a curved back, soft rose colour, seen at a three-quarter angle", "stool", "seat"));
-        list.Add(Thing("bed", "Bed", "침대", 30, "A snug bed with a sky-blue blanket.", "Bambi can take a nap, and sit on the edge of it.",
+        list.Add(Thing("bed", "Bed", "침대", 30, "A snug bed with a sky-blue blanket.", "Nilo can take a nap, and sit on the edge of it.",
             "침대다! 이제 낮잠 잘 수 있겠다.", "A bed! Now I can take a nap.", "a small cosy bed with a plump pillow and a sky-blue blanket, seen at a three-quarter angle", "nap", "잠"));
-        list.Add(Thing("sofa", "Sofa", "소파", 30, "A plump lavender sofa for two very small friends.", "Bambi can sit back and rest on it, or doze off.",
+        list.Add(Thing("sofa", "Sofa", "소파", 30, "A plump lavender sofa for two very small friends.", "Nilo can sit back and rest on it, or doze off.",
             "소파다! 푹 앉아서 쉬거나 한숨 잘 수 있겠다.", "A sofa! I can sink into it, or doze off.", "a small plump two-seat sofa with round arms, lavender colour, seen from the front", "couch", "쇼파"));
-        list.Add(Thing("book", "Book", "책", 10, "A storybook with a honey-yellow cover.", "Bambi can read - sitting down, if there is a chair.",
+        list.Add(Thing("book", "Book", "책", 10, "A storybook with a honey-yellow cover.", "Nilo can read - sitting down, if there is a chair.",
             "책이다! 이제 책 읽을 수 있어.", "A book! Now I can read.", "a closed storybook with a honey-yellow cover and a ribbon bookmark, slightly tilted", "read", "독서"));
-        list.Add(Thing("ball", "Ball", "공", 0, "A bouncy orange ball.", "Bambi can play with it.",
+        list.Add(Thing("ball", "Ball", "공", 0, "A bouncy orange ball.", "Nilo can play with it.",
             "공이다! 이걸로 놀 수 있겠다.", "A ball! I can play with this.", "a bouncy orange ball with one cream stripe", "play", "놀이"));
-        list.Add(Thing("lamp", "Lamp", "램프", 15, "A desk lamp with a warm yellow shade.", "A warm little light beside Bambi's things.",
+        list.Add(Thing("lamp", "Lamp", "램프", 15, "A desk lamp with a warm yellow shade.", "A warm little light beside Nilo's things.",
             "램프다! 책상이 따뜻해 보이겠다.", "A lamp! The desk will look so warm.", "a small desk lamp with a warm yellow shade, glowing softly", "light", "조명", "스탠드"));
         list.Add(Thing("plant", "Plant", "화분", 10, "A leafy plant in a round pot.", "Something green for the desk.",
             "화분이다! 책상이 초록초록해지겠다.", "A plant! Something green for my desk.", "a leafy green houseplant in a round cream pot", "식물", "나무", "green"));
-        list.Add(Thing("cup", "Mug", "머그잔", 10, "A white mug of something warm.", "A warm mug to keep Bambi company.",
+        list.Add(Thing("cup", "Mug", "머그잔", 10, "A white mug of something warm.", "A warm mug to keep Nilo company.",
             "머그잔이다! 옆에 두면 아늑하겠다.", "A mug! That will be cosy to have nearby.", "a white mug of hot cocoa with a little steam, seen from the side", "컵", "커피", "cup", "cocoa"));
         // (the record player comes with the partner, in the bag: every tune is one of its records)
-        var player = Thing("record", "Record player", "레코드 플레이어", 0, "A turntable with a wooden base and a tiny record. Press it to choose a record.", "Bambi can put a record on with it.",
+        var player = Thing("record", "Record player", "레코드 플레이어", 0, "A turntable with a wooden base and a tiny record. Press it to choose a record.", "Nilo can put a record on with it.",
             "레코드 플레이어다! 이걸로 노래 틀 수 있겠다.", "A record player! I can put a tune on with it.", "a small record player with a wooden base, a black vinyl record and a tone arm, seen from above at an angle", "턴테이블", "엘피", "turntable", "vinyl", "music");
         player.preinstalled = true;
         list.Add(player);
-        list.Add(Thing("speaker", "Speaker", "스피커", 20, "A chunky little speaker in slate blue.", "Bambi can put a tune on with it.",
+        list.Add(Thing("speaker", "Speaker", "스피커", 20, "A chunky little speaker in slate blue.", "Nilo can put a tune on with it.",
             "스피커다! 이걸로 노래 틀 수 있겠다.", "A speaker! I can put a tune on with it.", "a chunky little speaker with one round cone, slate blue, seen from the front", "라디오", "radio", "music"));
         list.Add(Thing("food", "Cake", "케이크", 15, "A slice of strawberry cake.", "A treat on the desk, just for the mood.",
             "케이크다! 보기만 해도 기분 좋다.", "Cake! Just looking at it makes me happy.", "a slice of strawberry shortcake on a small plate, pink and cream", "간식", "snack", "dessert"));
-        list.Add(Thing("toy", "Toy robot", "장난감 로봇", 20, "A wind-up robot with a round head.", "Bambi can play with it.",
+        list.Add(Thing("toy", "Toy robot", "장난감 로봇", 20, "A wind-up robot with a round head.", "Nilo can play with it.",
             "장난감 로봇이다! 같이 놀 수 있겠다.", "A toy robot! We can play together.", "a small wind-up toy robot with a round head and a key on its back, honey yellow", "로봇", "장난감", "robot", "play"));
 
         // ---- abilities: instructions that join the partner's own (no code). Each relaxes the "one short sentence" rule only as far as it needs.
-        list.Add(Ability("ability-calc", "Pocket calculator", "계산기", 0, true, "Sums, percentages, tips and splits - with the working shown in one line, so you can check it.", "Bambi can work numbers out and show how it got there.",
+        list.Add(Ability("ability-calc", "Pocket calculator", "계산기", 0, true, "Sums, percentages, tips and splits - with the working shown in one line, so you can check it.", "Nilo can work numbers out and show how it got there.",
             "When the user asks you to work something out - arithmetic, a percentage, a tip, splitting a bill, a unit conversion, how many days until a date - calculate it carefully and answer with the working AND the result in ONE short line, " +
             "for example \"128 × 37 = 128 × 30 + 128 × 7 = 3,840 + 896 = 4,736\". Break a multiplication into parts like that before you add them up, and check the last digit before you answer. Use digits and the signs × ÷ + −. " +
             "If the question can be read two ways (which order, which unit), say in a few words how you read it. If the numbers are too long for you to be sure of, say that they should check it with a real calculator rather than guess. " +
             "For this, your reply may be one line of working plus the answer, even when that is longer than usual.",
             new[] { "128 곱하기 37은?", "What is 15% of 240?", "3만 8천 원을 네 명이 나누면?", "How many days until Christmas?" }, "계산기", "계산", "calculator", "math"));
-        list.Add(Ability("ability-translate", "Translator", "번역기", 15, false, "Korean to English and back, keeping the tone: casual stays casual, polite stays polite.", "Bambi can translate between Korean and English without flattening your tone.",
+        list.Add(Ability("ability-translate", "Translator", "번역기", 15, false, "Korean to English and back, keeping the tone: casual stays casual, polite stays polite.", "Nilo can translate between Korean and English without flattening your tone.",
             "When the user asks you to translate (\"번역해 줘\", \"영어로 뭐야?\", \"how do you say this in Korean?\"), translate between Korean and English: Korean in, English out; English in, Korean out - unless they name the direction. " +
             "Keep the tone of the original: casual stays casual (반말 stays 반말), polite stays polite, a joke stays a joke; translate the meaning, not word by word. " +
             "Give the translation itself first, in quotation marks, in the target language, with nothing before it. Add a very short note in the user's language only when a word has no good equivalent or the sentence could mean two things. " +
             "For this, the translation may be as long as the original needs; only your own words round it stay short.",
             new[] { "\"오늘 회의 좀 미뤄도 될까요?\" 영어로 번역해 줘", "How do you say \"I'm running late\" in Korean?", "이 문장 영어로 뭐야?" }, "번역기", "번역", "translator", "english", "korean"));
-        list.Add(Ability("ability-ideas", "Idea buddy", "아이디어 친구", 20, false, "Three quick ideas, different in kind - then it asks which one to grow.", "Bambi can brainstorm with you: three ideas, then deeper on the one you pick.",
+        list.Add(Ability("ability-ideas", "Idea buddy", "아이디어 친구", 20, false, "Three quick ideas, different in kind - then it asks which one to grow.", "Nilo can brainstorm with you: three ideas, then deeper on the one you pick.",
             "When the user asks for ideas, wants to brainstorm or says they are stuck (\"아이디어 좀 줘\", \"뭐 하면 좋을까?\", \"help me think of a name\"), give exactly three quick ideas that differ in kind - one safe, one playful, one bold - each in a handful of words, numbered 1, 2, 3 on one line. " +
             "Then ask which one to grow. When they pick one, grow it: two or three concrete next steps, again short. Build on what they said earlier in this conversation, and never bring back an idea they turned down. " +
             "For this, the no-lists rule is relaxed to that one numbered line.",
             new[] { "발표 제목 아이디어 좀 줘", "Help me think of a name for my app", "주말에 뭐 하면 좋을까?" }, "아이디어 친구", "아이디어", "브레인스토밍", "ideas", "brainstorm"));
-        list.Add(Ability("ability-proofread", "Proofreader", "맞춤법 검사", 10, false, "Spelling, spacing and grammar fixed with as few changes as possible, in your own tone.", "Bambi can check a sentence for you and say what it changed.",
+        list.Add(Ability("ability-proofread", "Proofreader", "맞춤법 검사", 10, false, "Spelling, spacing and grammar fixed with as few changes as possible, in your own tone.", "Nilo can check a sentence for you and say what it changed.",
             "When the user asks you to check, fix or polish a sentence or a short text they say or type (\"이 문장 좀 봐 줘\", \"맞춤법 맞아?\", \"proofread this\"), give the corrected text first, in quotation marks, in the same language and the same tone as the original, changing as little as possible. " +
             "Then name the one or two changes that matter most in a few words (spelling, spacing, grammar, a clearer word). If it was already right, say so and change nothing. " +
             "Text on the screen that you have not looked at cannot be proofread from memory: for that, choose reviewScreen instead. " +
@@ -1309,7 +1309,7 @@ public static class MarketRules
             };
             if (what.Length > 0 && !can.Contains(what)) can.Add(what);
         }
-        return can.Count > 0 ? "Bambi can " + Join(can) + "." : "Something of your own making for Bambi's desk.";
+        return can.Count > 0 ? "Nilo can " + Join(can) + "." : "Something of your own making for Nilo's desk.";
     }
 
     /// <summary>What the partner gains from a skill, said from the acts it is made of.</summary>
@@ -1326,7 +1326,7 @@ public static class MarketRules
             };
             if (what.Length > 0 && !does.Contains(what)) does.Add(what);
         }
-        return does.Count > 0 ? "When asked, Bambi " + Join(does) + "." : "Something you taught Bambi to do.";
+        return does.Count > 0 ? "When asked, Nilo " + Join(does) + "." : "Something you taught Nilo to do.";
     }
 
     // ------------------------------------------------------------------ what the clients see

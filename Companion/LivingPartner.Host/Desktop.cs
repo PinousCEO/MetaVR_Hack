@@ -63,7 +63,7 @@ public sealed class Desktop
     }
 
     /// <summary>Resolves a requested point to a validated portal target (monitor, pixel, owning window, floor).</summary>
-    public TargetInfo Resolve(TargetQuery q)
+    public TargetInfo Resolve(TargetQuery q, bool enterWindow = false)
     {
         var t = new TargetInfo { queryId = q.queryId, resolvedAt = HostClock.Now };
         var mons = Monitors;
@@ -91,7 +91,7 @@ public sealed class Desktop
         RectI allowed; float floor;
         if (q.direction == 0)
         {
-            IntPtr hwnd = Win32.WorkspaceWindowAt((int)px, (int)py, _pid);
+            IntPtr hwnd = enterWindow ? Win32.WorkspaceWindowAt((int)px, (int)py, _pid) : IntPtr.Zero;
             RectI wr = default;
             bool win = hwnd != IntPtr.Zero && Win32.FrameBounds(hwnd, out wr);
             if (win)

@@ -452,7 +452,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 487884191}
-  m_Text: LPStory - drawn for Living AI Partner
+  m_Text: LPStory - drawn for Yonder
   m_OffsetZ: 0
   m_CharacterSize: 0.0019125001
   m_LineSpacing: 1
@@ -818,7 +818,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 778495294}
-  m_Text: Bambi climbed out of the screen and sat down on the desk.
+  m_Text: Nilo climbed out of the screen and sat down on the desk.
   m_OffsetZ: 0
   m_CharacterSize: 0.0015187501
   m_LineSpacing: 1

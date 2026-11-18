@@ -74,7 +74,7 @@ end
         // the same play twice is the same play
         Assert.Equal(seeker.Digest(), Play(GlassScriptExamples.Shooter, WorkshopPlay.Seeker, 60f).Digest());
         string text = seeker.Text();
-        Assert.Contains("PLAYTEST", text); Assert.Contains("timeline", text); Assert.Contains("DRAWN at t=", text); Assert.Contains("Bambi", text);
+        Assert.Contains("PLAYTEST", text); Assert.Contains("timeline", text); Assert.Contains("DRAWN at t=", text); Assert.Contains("Nilo", text);
     }
 
     [Fact]
@@ -136,11 +136,11 @@ end
         // ... but handed back for the same request with the examples in view, it is a copy
         Assert.Contains(WorkshopRules.AcceptGame(ShooterWords, GlassScriptExamples.Shooter, Check(GlassScriptExamples.Shooter), Play(GlassScriptExamples.Shooter, WorkshopPlay.Nobody), null, Play(GlassScriptExamples.Shooter, WorkshopPlay.Seeker), ScriptWriter.GameExamples()), o => o.Contains("handed back"));
         Assert.Null(WorkshopRules.CopyOf(Dots, ScriptWriter.GameExamples()));
-        // the user's "분신 사격": a flat picture of a shooting game - nothing leaves the field, nothing is shot, Bambi does nothing
+        // the user's "분신 사격": a flat picture of a shooting game - nothing leaves the field, nothing is shot, Nilo does nothing
         var flat = Accept(ShooterWords, Dots.Replace("pet_say('Touch the dots!', 2)", ""));
         Assert.Contains(flat, o => o.Contains("NOTHING left the field"));
         Assert.Contains(flat, o => o.Contains("shots() is never read"));
-        Assert.Contains(flat, o => o.Contains("Bambi does NOTHING"));
+        Assert.Contains(flat, o => o.Contains("Nilo does NOTHING"));
         // a tool without the kit
         Assert.Contains(Accept("계산기 만들어 줘", Dots), o => o.Contains("UI kit"));
         // it does not run

@@ -233,7 +233,7 @@ public class RecordsTests
             id = "skill-9f8e7d6c", name = "자장가 한 곡", note = "Plays a lullaby.", phrases = new[] { "자장가 한 곡" }, status = "ready", song = Tune("song-skill-9f8e7d6c", "Tune"),
             steps = new List<SkillStep> { new SkillStep { act = "music" }, new SkillStep { act = "emote", arg = "happy", seconds = 2 } },
         };
-        var m = new MarketModule { id = k.id, kind = ModuleKinds.Skill, name = "자장가 한 곡", summary = "A lullaby.", gives = "When asked, Bambi puts a tune on.", author = "minsu", price = 5, skill = k };
+        var m = new MarketModule { id = k.id, kind = ModuleKinds.Skill, name = "자장가 한 곡", summary = "A lullaby.", gives = "When asked, Nilo puts a tune on.", author = "minsu", price = 5, skill = k };
         Assert.Equal("", MarketRules.Problem(m));
         Assert.True(MarketRules.IsRecord(m));
         // in the shop it is a record, not a skill to learn

@@ -70,7 +70,7 @@
       }
       ctx.restore();
     }
-    const bambi=picture('/bambi.png'), petHeight=.20*u;
+    const bambi=picture('/nilo.png'), petHeight=.20*u;
     if (bambi) {
       const petWidth=petHeight*bambi.width/bambi.height;
       ctx.save(); ctx.translate(X(g.pet.x),Y(g.pet.y)); if (!g.pet.right) ctx.scale(-1,1);
@@ -82,7 +82,7 @@
     }
     ctx.fillStyle='rgba(5,13,26,.82)'; ctx.fillRect(0,0,width,height*.07);
     text(g.title,width*.23,height*.035,height*.028,'#fff',width*.43);
-    text('점수 '+g.score+'   ♥ '+g.lives+'   Lv. '+g.level,width*.77,height*.035,height*.025,'#ffebb6',width*.42);
+    text('Score '+g.score+'   ♥ '+g.lives+'   Lv. '+g.level,width*.77,height*.035,height*.025,'#ffebb6',width*.42);
     text(g.result||g.banner,width*.5,height*.11,height*.027,'#fff',width*.9);
   };
 })();

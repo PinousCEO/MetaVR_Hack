@@ -259,7 +259,9 @@ public sealed class Hub
     {
         lock (_gate)
         {
-            if (!_byNick.TryGetValue(HubRules.NickKey(nickname), out var u)) return HubAnswer<HubProfile>.No(404, "not-found");
+            string key = HubRules.NickKey(nickname);
+            if (key == "bambi studio") key = HubRules.NickKey(HubRules.Official);
+            if (!_byNick.TryGetValue(key, out var u)) return HubAnswer<HubProfile>.No(404, "not-found");
             var theirs = _x.listings.Where(l => l.sellerId == u.id).ToList();
             return HubAnswer<HubProfile>.Of(new HubProfile
             {
@@ -516,7 +518,7 @@ public sealed class Hub
 
     // ------------------------------------------------------------------ the official shop
     /// <summary>
-    /// What the makers of the partner sell: every module that comes with it, listed under "Bambi Studio" at the price
+    /// What the makers of the partner sell: every module that comes with it, listed under "Nilo Studio" at the price
     /// it has there. Run at every start: a new module appears, a changed one is brought up to date (how often it was
     /// got and liked stays), one that no longer exists goes off sale. Returns how many listings changed.
     /// </summary>
@@ -531,6 +533,13 @@ public sealed class Hub
                 // no token: nobody signs in as the makers
                 studio = new HubUser { id = "u-official", nickname = HubRules.Official, official = true, joinedUnixMs = _now() };
                 _x.users.Add(studio); _byId[studio.id] = studio; _byNick[HubRules.NickKey(studio.nickname)] = studio;
+                changed++;
+            }
+            else if (studio.nickname != HubRules.Official && !_byNick.ContainsKey(HubRules.NickKey(HubRules.Official)))
+            {
+                _byNick.Remove(HubRules.NickKey(studio.nickname));
+                studio.nickname = HubRules.Official;
+                _byNick[HubRules.NickKey(studio.nickname)] = studio;
                 changed++;
             }
             var ids = new HashSet<string>();

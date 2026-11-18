@@ -366,7 +366,7 @@ namespace LivingPartner.EditorTools
 
             var design = ScriptableObject.CreateInstance<PartnerDesign>();
             design.name = "Design_momo";
-            design.id = Designs.Ids[0]; design.displayName = "Bambi"; design.bodyMesh = bodyMesh;
+            design.id = Designs.Ids[0]; design.displayName = "Nilo"; design.bodyMesh = bodyMesh;
             design.eyeL = model.eyeLPos; design.eyeR = model.eyeRPos; design.eyeScale = Vector3.one;
             _designAssets = new[] { SaveAsset(design, $"{ArtDir}/Characters/Design_momo.asset") };
             var first = _designAssets[0];
@@ -461,12 +461,12 @@ namespace LivingPartner.EditorTools
             paper.transform.localPosition = new Vector3(0, 0, 0.002f);
             string[] lines =
             {
-                "LPStory - drawn for Living AI Partner",
+                "LPStory - drawn for Yonder",
                 "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
                 "abcdefghijklmnopqrstuvwxyz",
                 "0123456789   .,:;!?'\"()[]{}",
                 "+-=/\\|*#%&@$^~<>_`  · • … – — ‘ ’ “ ” → × ° ✓",
-                "Bambi climbed out of the screen and sat down on the desk.",
+                "Nilo climbed out of the screen and sat down on the desk.",
                 "ABCDEFGHIJKLM abcdefghijklm 0123456789",
                 "Pair   Calibrate   Return   Quiet   04:59",
             };
@@ -580,7 +580,7 @@ namespace LivingPartner.EditorTools
         ///    (four columns by three rows; the numbers are MenuBoardView's), each with a soft glow behind it, its name on
         ///    a strip of paper under it, marks for "on the desk", "on" and "new", and a thin warm ray to it from one
         ///    point at the bottom - the open left palm it unfolds from. Header: a ribbon with the page's name, a round
-        ///    arrow at each side of it (the pages run Bag 1..n, Bambi, Tools), a dot per page, the user's stars, and a
+        ///    arrow at each side of it (the pages run Bag 1..n, Nilo, Tools), a dot per page, the user's stars, and a
         ///    round button that closes the fan (only shown while it stands in the room). Under the stickers one line
         ///    that says in words what a press did. It is at HAND scale: about 30 cm wide, the stickers 5 cm.
         ///  - PalmChip: the round "Stop" sticker the open palm carries during a game.
@@ -880,9 +880,9 @@ namespace LivingPartner.EditorTools
             v.detailIcon.transform.localPosition = new Vector3(dx, dy + 0.074f, -0.0045f);
             v.detailName = Label("DetailName", root, "Chair", 0.0190f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             v.detailName.transform.localPosition = new Vector3(dx, dy + 0.011f, -0.004f);
-            v.detailBy = Label("DetailBy", root, "Furniture  -  by Bambi Studio", 0.0112f, Ui.Pal.TextDim, TextAnchor.MiddleCenter);
+            v.detailBy = Label("DetailBy", root, "Furniture  -  by Nilo Studio", 0.0112f, Ui.Pal.TextDim, TextAnchor.MiddleCenter);
             v.detailBy.transform.localPosition = new Vector3(dx, dy - 0.006f, -0.004f);
-            v.detailText = Label("DetailText", root, "Bambi can sit down - and study,\nwhen there is a desk.", 0.0120f, Ui.Pal.Text, TextAnchor.UpperCenter);
+            v.detailText = Label("DetailText", root, "Nilo can sit down - and study,\nwhen there is a desk.", 0.0120f, Ui.Pal.Text, TextAnchor.UpperCenter);
             v.detailText.transform.localPosition = new Vector3(dx, dy - 0.019f, -0.004f);
             v.action = AddPill(p, "Btn Action", "Get  -  Free", new Vector3(dx, dy - dh * 0.5f + 0.024f, 0), 0.156f, 0.034f, 0.0150f, Green);
             // for the user's own things: the price, one step down / up, between the text and the button
@@ -910,14 +910,14 @@ namespace LivingPartner.EditorTools
             v.picture.transform.localPosition = new Vector3(0, 0.02f, -0.003f);
             v.captionBg = Panel("CaptionBg", root, 0.46f, 0.03f, 0.008f, new Color(1f, 0.975f, 0.90f, 0.98f), new Color(1f, 0.94f, 0.80f, 0.98f), 1, 0.0010f);
             v.captionBg.transform.localPosition = new Vector3(0, -0.14f, -0.002f);
-            v.caption = Label("Caption", root, "Bambi is looking ...", 0.0150f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
+            v.caption = Label("Caption", root, "Nilo is looking ...", 0.0150f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             v.caption.transform.localPosition = new Vector3(0, -0.14f, -0.004f);
             v.close = AddPill(p, "Btn Close", "Send back", new Vector3(0.20f, 0.16f, -0.006f), 0.096f, 0.032f, 0.0140f, Rust);
             return v;
         }
 
         /// <summary>
-        /// "Bambi made this!": the card that comes up when the partner has finished making something - a sheet of
+        /// "Nilo made this!": the card that comes up when the partner has finished making something - a sheet of
         /// paper like the shop's detail card with the thing's picture, its name, the question whether to put it up in
         /// the marketplace, a price to step down / up, and two buttons. The app fills and places it (MrCraft).
         /// </summary>
@@ -935,7 +935,7 @@ namespace LivingPartner.EditorTools
             var ribbon = Panel("TitleRibbon", root, 0.200f, 0.036f, 0.018f, new Color(1f, 0.90f, 0.62f, 0.98f), new Color(1f, 0.84f, 0.50f, 0.98f), 3, 0.0016f);
             ribbon.transform.localPosition = new Vector3(0, H * 0.5f - 0.004f, -0.003f);
             Object.DestroyImmediate(p.title.gameObject);
-            p.title = Label("Title", root, "Bambi made this!", 0.0180f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
+            p.title = Label("Title", root, "Nilo made this!", 0.0180f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             p.title.transform.localPosition = new Vector3(0, H * 0.5f - 0.004f, -0.005f);
             // the thing: its picture (on a pastel disc when it is a picture of its own), its name, what kind of thing it is
             v.disc = Panel("Disc", root, 0.098f, 0.098f, 0.049f, new Color(1f, 0.89f, 0.72f), new Color(1f, 0.89f, 0.72f), 3, 0.0015f);
@@ -1109,7 +1109,7 @@ namespace LivingPartner.EditorTools
             }
             var tnScoreBg = Panel("ScoreBoard", tennis.transform, 0.24f, 0.05f, 0.014f, Ui.Pal.PanelTop, Ui.Pal.PanelBottom, 5, 0.0014f);
             tnScoreBg.transform.localPosition = new Vector3(0, 0.30f, 0.30f);
-            var tnScore = Label("Score", tennis.transform, "You  0 : 0  Bambi", 0.019f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
+            var tnScore = Label("Score", tennis.transform, "You  0 : 0  Nilo", 0.019f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             tnScore.transform.localPosition = new Vector3(0, 0.30f, 0.298f);
             var tnRipple = Hidden(Fx("GlassRipple", tennis.transform, 1, new Color(1f, 0.90f, 0.55f, 1f), new Vector4(0.88f, 0.09f, 0, 0), 7, new Color(1f, 0.98f, 0.9f, 1f)));
             var tnMat = Hidden(Panel("CourtMat", tennis.transform, 0.40f, 0.30f, 0.02f, new Color(0.71f, 0.86f, 0.72f, 0.80f), new Color(0.62f, 0.80f, 0.66f, 0.80f), 0, 0.004f));
@@ -1123,12 +1123,12 @@ namespace LivingPartner.EditorTools
             var games = Node("Games", t);
             games.transform.localPosition = new Vector3(0.3f, 1.0f, 0.3f);         // authoring pose only
             var gameBg = Panel("Board", games.transform, 0.22f, 0.06f, 0.014f, Ui.Pal.PanelTop, Ui.Pal.PanelBottom, 5, 0.0014f);
-            var gameLabel = Label("Line", games.transform, "You  0 : 0  Bambi\nRock, paper, scissors!", 0.0145f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
+            var gameLabel = Label("Line", games.transform, "You  0 : 0  Nilo\nRock, paper, scissors!", 0.0145f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             gameLabel.transform.localPosition = new Vector3(0, 0, -0.002f);
             var gameSign = Label("Sign", games.transform, "ROCK", 0.030f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             gameSign.transform.localPosition = new Vector3(0, -0.06f, -0.002f);
             var rpsYou = Sprite("Rps You", games.transform, "rps-rock", 0.074f, 0.074f, 9);
-            var rpsIt = Sprite("Rps Bambi", games.transform, "rps-rock", 0.074f, 0.074f, 9);
+            var rpsIt = Sprite("Rps Nilo", games.transform, "rps-rock", 0.074f, 0.074f, 9);
             rpsYou.enabled = false; rpsYou.Renderer.enabled = false; rpsIt.enabled = false; rpsIt.Renderer.enabled = false;
             var rpsTex = new[] { Art("rps-rock"), Art("rps-paper"), Art("rps-scissors") };
             var popStars = new UiSprite[8];
@@ -1192,7 +1192,7 @@ namespace LivingPartner.EditorTools
             introRoot.localPosition = new Vector3(0, 1.3f, 0.6f);
             var introRing = Hidden(Fx("Ring", introRoot, 7, new Color(1f, 0.84f, 0.42f, 0.9f), new Vector4(0.90f, 0.035f, 18f, 0.5f), 38, new Color(1f, 0.96f, 0.86f, 0.9f)));
             introRing.transform.localScale = Vector3.one * 0.34f;
-            var introLogo = Sprite("Logo", introRoot, "logo", 0.76f, 0.76f * 144f / 1724f, 40);
+            var introLogo = Sprite("Logo", introRoot, "logo", 0.43f, 0.146f, 40);
             introLogo.enabled = false; introLogo.Renderer.enabled = false;
             var introBg = Hidden(Panel("LineBg", introRoot, 0.2f, 0.03f, 0.012f, Ui.Pal.PanelTop, Ui.Pal.PanelBottom, 39, 0.0014f));
             introBg.transform.localPosition = new Vector3(0, -0.075f, 0.002f);
@@ -1270,7 +1270,7 @@ namespace LivingPartner.EditorTools
             AuthorGlass(app, t);                       // the stage of a glass game on the desk (LPSceneGlass.cs)
             AuthorCraftBench(app, t);                  // the bench the partner hammers at while it makes something, its card with the percentage (LPSceneU1Craft.cs)
             AuthorU1Ball(app, t);                      // what a glass game sends out of the screen: real balls, their shadows and trails (LPSceneU1Ball.cs)
-            AuthorEyes(app, t);                        // the sign "Bambi is looking" while it looks at what the user holds up (LPSceneEyes.cs)
+            AuthorEyes(app, t);                        // the sign "Nilo is looking" while it looks at what the user holds up (LPSceneEyes.cs)
             AuthorTvRally(app, t);
             return SavePrefab(root, "MrCore");
         }
@@ -1413,7 +1413,7 @@ namespace LivingPartner.EditorTools
             tnBall.transform.localPosition = new Vector3(0.05f, -0.05f, 0.2f);
             var tnScoreBg = Panel("ScoreBoard", tennis.transform, 0.27f, 0.070f, 0.014f, Ui.Pal.PanelTop, Ui.Pal.PanelBottom, -26, 0.0016f);
             tnScoreBg.transform.localPosition = new Vector3(0, chh * 0.5f - 0.050f, cd - 0.003f);
-            var tnScore = Label("Score", tennis.transform, "You  0 : 0  Bambi", 0.024f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
+            var tnScore = Label("Score", tennis.transform, "You  0 : 0  Nilo", 0.024f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             tnScore.transform.localPosition = new Vector3(0, chh * 0.5f - 0.041f, cd - 0.006f);
             var tnNote = Label("Note", tennis.transform, "First to 5", 0.0125f, Ui.Pal.TextDim);
             tnNote.transform.localPosition = new Vector3(0, chh * 0.5f - 0.067f, cd - 0.006f);

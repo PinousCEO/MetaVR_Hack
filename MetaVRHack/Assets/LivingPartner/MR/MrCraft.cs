@@ -25,7 +25,7 @@ namespace LivingPartner.MR
     ///    when a hand is near) and stays where it is put down for the rest of the making; the partner walks over.
     ///  - DONE: the light bursts and the real thing stands on the bench - its sticker, for a good second - then it
     ///    flies in an arc to the user's left hand (when that is in view; otherwise to a spot in front of them): into
-    ///    the bag. Then the card comes up: "Bambi made this!" - the picture, the name, a price to step up and down,
+    ///    the bag. Then the card comes up: "Nilo made this!" - the picture, the name, a price to step up and down,
     ///    "Sell it" / "Keep it". The bench sinks back into the desk.
     /// What was made is NOT left on the desk: it is in the bag, and comes out when its sticker is pressed.
     /// </summary>
@@ -552,7 +552,7 @@ namespace LivingPartner.MR
             Sfx("ta-da", _madeAnchor, 0.8f);
         }
 
-        // ------------------------------------------------------------------ the card: "Bambi made this!"
+        // ------------------------------------------------------------------ the card: "Nilo made this!"
         string _madeId = "", _madeOfferId = "", _madeShown = ""; int _madeSeq, _madePrice; bool _madeDebug; Vector3 _madeAnchor; float _madeTouchedAt;
 
         void InitCraft()

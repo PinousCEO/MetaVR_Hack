@@ -267,15 +267,15 @@ namespace LivingPartner.Shared
         public static readonly string Doc = DocRoom.Replace("\r", "") + "\n" + DocMotions() + "\n" + DocRules.Replace("\r", "");
 
         const string DocRoom =
-@"ROOM SCRIPT - what a thing on the desk (or a skill of Bambi's) DOES, as a small Lua program. It lives as long as the
+@"ROOM SCRIPT - what a thing on the desk (or a skill of Nilo's) DOES, as a small Lua program. It lives as long as the
 thing is in the room. Write the hooks you need and nothing else: 5 to 60 lines is normal.
 
 THE ROOM
  Metres and seconds. x = to the user's right, z = AWAY from the user, y = up from the desk top (y = 0 is ON the desk).
- (0, 0, 0) is Bambi's home spot. The user sits at about z = -0.5; their screens stand at about z = +0.3.
- Bambi (the partner) is 0.10 m tall: its hands are at y = 0.04, the top of its head at y = 0.10. For scale: a bat is
- about 0.08 m long, a ball 0.02 m across, a drum 0.06 m. Bambi walks slowly: 0.12 m in a second.
- Bambi can be sent anywhere in x -0.40 .. 0.40, z -0.22 .. 0.25 (its part of the desk). Everything else has to stay
+ (0, 0, 0) is Nilo's home spot. The user sits at about z = -0.5; their screens stand at about z = +0.3.
+ Nilo (the partner) is 0.10 m tall: its hands are at y = 0.04, the top of its head at y = 0.10. For scale: a bat is
+ about 0.08 m long, a ball 0.02 m across, a drum 0.06 m. Nilo walks slowly: 0.12 m in a second.
+ Nilo can be sent anywhere in x -0.40 .. 0.40, z -0.22 .. 0.25 (its part of the desk). Everything else has to stay
  within 1.2 m of the home spot. What is outside is moved to the nearest allowed place.
  Angles are degrees: yaw 0 looks away from the user (+z), 90 to the user's right, 180 at the user.
  Colours: ""#RRGGBB"" or cream ink brown pink honey mint sky lilac white black red orange yellow green blue grey.
@@ -283,11 +283,11 @@ THE ROOM
 
 HOOKS - global functions that the room calls. All are optional.
  on_make()        once, when the thing appears in the room
- on_use()         the user pressed the thing, or asked Bambi to use it (a skill: the user asked for it)
- on_stop()        the user said stop, or Bambi is needed elsewhere: end what is going on (the room then ends all timers
-                  and frees Bambi by itself). Define it for anything that goes on until it is stopped.
- on_wear()        Bambi has just put the thing on / taken it in its hand (a thing that is wearable)
- on_unwear()      Bambi has just taken it off
+ on_use()         the user pressed the thing, or asked Nilo to use it (a skill: the user asked for it)
+ on_stop()        the user said stop, or Nilo is needed elsewhere: end what is going on (the room then ends all timers
+                  and frees Nilo by itself). Define it for anything that goes on until it is stopped.
+ on_wear()        Nilo has just put the thing on / taken it in its hand (a thing that is wearable)
+ on_unwear()      Nilo has just taken it off
  on_act(name)     the user asked for one of the acts the thing offers
  update(dt)       every frame WHILE the thing is doing something: from any hook above until you call done().
                   (An update that does nothing for 10 s is stopped as well.) A thing that only reacts needs no update.
@@ -296,8 +296,8 @@ FUNCTIONS
  What the thing offers - call these at the top of the script, outside any function:
   offer(name, label)          an act the user can ask for: a button with that label (English, 18 letters at most) appears
                               when the thing is pressed, and the user can ask for it by voice. on_act(name) is called. 4 at most.
-  wearable(slot)              Bambi can wear / hold the thing. slot = ""handR"" | ""handL"" | ""head"" | ""back"". A ""Wear"" button appears.
- Bambi:
+  wearable(slot)              Nilo can wear / hold the thing. slot = ""handR"" | ""handL"" | ""head"" | ""back"". A ""Wear"" button appears.
+ Nilo:
   pet_goto(x, z [, fn])       walks there; fn (optional) is called when it has arrived
   pet_face(x, z)              turns towards that point
   pet_face_user()             turns towards the user
@@ -305,17 +305,17 @@ FUNCTIONS
                               idle walk run cheer wave think dance sit sleep study read work pick kick point bow listen talk
                               startle hurt cower shiver down peek hide offer crouch ready wipe
   pet_play(name [, fn])       plays a motion you defined with motion(...) (see MOTIONS); fn (optional) is called when it is over
-  pet_sit([pose] [, seconds] [, thing])   Bambi sits ON the thing, at its seat (pose: sit | study | read ..., ""sit"" when not
+  pet_sit([pose] [, seconds] [, thing])   Nilo sits ON the thing, at its seat (pose: sit | study | read ..., ""sit"" when not
                               given; 20 s when not given). thing: another thing to sit on, as things() / near() gave it.
-  pet_lie([seconds] [, thing])   Bambi lies down on top of the thing and sleeps (a bed)
-                              (pet_pose / pet_play / pet_sit / pet_lie: what was asked LAST is what Bambi does.)
-  pet_free()                  Bambi stops what the script asked of it, at once, and is its own again
+  pet_lie([seconds] [, thing])   Nilo lies down on top of the thing and sleeps (a bed)
+                              (pet_pose / pet_play / pet_sit / pet_lie: what was asked LAST is what Nilo does.)
+  pet_free()                  Nilo stops what the script asked of it, at once, and is its own again
   pet_say(text [, seconds])   a short line in a speech bubble (English)
-  pet_hold([slot])            Bambi takes the thing: in its hand, on its head, on its back (where wearable() said, when not given)
-  pet_drop()                  Bambi puts it down beside itself
-  worn()                      -> the slot Bambi wears the thing on, or nil
-  pet_at()                    -> x, z   where Bambi stands
-  pet_busy()                  -> true while Bambi is still doing what the script asked (walking there, a pose, a motion)
+  pet_hold([slot])            Nilo takes the thing: in its hand, on its head, on its back (where wearable() said, when not given)
+  pet_drop()                  Nilo puts it down beside itself
+  worn()                      -> the slot Nilo wears the thing on, or nil
+  pet_at()                    -> x, z   where Nilo stands
+  pet_busy()                  -> true while Nilo is still doing what the script asked (walking there, a pose, a motion)
  The thing itself:
   me()                        -> x, y, z, yaw
   me_move(x, z [, y])         it stands there now
@@ -342,7 +342,7 @@ FUNCTIONS
   near(use [, r])             -> the nearest other thing that is for that use within r metres of this thing (0.3 when not given), or nil
  Effects:
   sparks(x, y, z [, n [, color]])     a burst of n sparks (8 when not given, 24 at most)
-  sound(name)                 tap pop open close page hammer sparkle ta-da coin error whoosh land squeak step hit bounce win lose drop tick
+  sound(name)                 tap pop open close page hammer sparkle ta-da coin error portal-in portal-out kick glove spell whoosh land squeak step hit bounce win lose drop tick
   label(text, x, y, z [, seconds])    a small paper label floating there (2 s when not given; 4 at a time)
   music(name)                 puts a record on: club | lofi | lullaby, or the id / name of a tune the user owns
   music_stop()
@@ -355,12 +355,12 @@ FUNCTIONS
   cancel(id)                  stops a timer
   time()                      -> seconds since the script began
   done()                      the thing has finished what it was doing: update() is not called any more, every() timers end,
-                              and when what is still running (after() timers, a pose, a motion, flying objects) is over, Bambi is free again.
+                              and when what is still running (after() timers, a pose, a motion, flying objects) is over, Nilo is free again.
  Helpers:";
 
         const string DocRules =
 @"RULES
- - on_use / on_act / on_wear must do something that is SEEN or HEARD at once (Bambi moves or speaks, a sound, sparks ...).
+ - on_use / on_act / on_wear must do something that is SEEN or HEARD at once (Nilo moves or speaks, a sound, sparks ...).
  - Nothing may go on for ever by itself: call done() when an act is over and cancel() what you started with every().
    What is MEANT to go on until the user stops it (sitting, dancing, a tune) needs on_stop().
  - Remove the objects you made when they are no longer needed.

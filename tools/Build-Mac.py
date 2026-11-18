@@ -50,7 +50,7 @@ def include_asset(relative, arch):
 
 
 def add_file(archive, path, name, executable=False):
-    item = ZipInfo("Bambi TV/" + name)
+    item = ZipInfo("Yonder TV/" + name)
     item.create_system = 3
     item.external_attr = (0o100755 if executable else 0o100644) << 16
     item.compress_type = ZIP_STORED if path.name == MODEL else ZIP_DEFLATED
@@ -162,7 +162,7 @@ def publish(arch, model, out, quest_apk):
             verify_code_pages(binary)
         dest = out / f"LivingPartner-Mac-{arch}.zip"
         with ZipFile(dest.with_suffix(".building"), "w") as archive:
-            add_file(archive, PROJECT / "Start-Bambi.command", "Start-Bambi.command", True)
+            add_file(archive, PROJECT / "Start-Yonder.command", "Start-Yonder.command", True)
             add_file(archive, PROJECT / "Install-Quest.command", "Install-Quest.command", True)
             if quest_apk:
                 add_file(archive, quest_apk, "Quest/LivingAIPartner.apk")

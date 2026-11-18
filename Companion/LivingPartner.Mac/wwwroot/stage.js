@@ -4,7 +4,7 @@ let state, previousGame = false, registered = false, nextPoll, lastScreen;
 const full = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 const post = async (path, value) => {
   const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:value === undefined ? undefined : JSON.stringify(value)});
-  if (!r.ok) { const message = await r.text(); throw new Error(message.replace(/^"|"$/g, "") || "Mac 연결을 확인해 주세요."); }
+  if (!r.ok) { const message = await r.text(); throw new Error(message.replace(/^"|"$/g, "") || "Check the Mac connection."); }
 };
 async function act(cmd) {
   try { await post("/action/"+encodeURIComponent(cmd)); el("error").textContent=""; }
@@ -39,23 +39,23 @@ async function workAction(cmd,id) {
 function drawWork(jobs=[]) {
   el("queue").hidden=!jobs.length;
   const active=jobs.filter(j=>j.status==="working"||j.status==="queued");
-  el("queue-toggle").textContent="작업 "+(active.length?active.length+"개 진행 중":"결과 "+jobs.length+"개");
+  el("queue-toggle").textContent="Jobs: "+(active.length?active.length+" active":"Results: "+jobs.length+"");
   const key=JSON.stringify(jobs); if(key===jobsKey) return; jobsKey=key;
   const list=el("jobs"); list.replaceChildren();
   const addButton=(parent,label,action,id)=>{const b=document.createElement("button"); b.textContent=label;b.onclick=()=>workAction(action,id);parent.append(b);};
-  const status={working:"진행 중",queued:"대기 중",done:"완료",failed:"실패",cancelled:"취소됨"};
+  const status={working:"In progress",queued:"Queued",done:"Done",failed:"Failed",cancelled:"Cancelled"};
   for(const j of jobs){
     const row=document.createElement("article"),title=document.createElement("strong"),step=document.createElement("p");
     title.textContent=j.title; step.textContent=[...new Set([status[j.status],j.step,j.note].filter(Boolean))].join(" · ");row.append(title,step);
     if(j.status==="working"||j.status==="queued"){
-      const bar=document.createElement("progress");bar.max=1;bar.value=j.progress;row.append(bar);addButton(row,"취소","cancel",j.id);
+      const bar=document.createElement("progress");bar.max=1;bar.value=j.progress;row.append(bar);addButton(row,"Cancel","cancel",j.id);
     } else if(j.status==="done"){
-      addButton(row,"열기","open",j.id);
+      addButton(row,"Open","open",j.id);
       for(const f of j.files||[]){if(!f.url?.startsWith("/work-file/"))continue;const a=document.createElement("a");a.textContent=f.name;a.href=f.url;a.download=f.name;row.append(a);}
     }
     list.append(row);
   }
-  if(jobs.length>active.length)addButton(list,"완료된 작업 지우기","clear","all");
+  if(jobs.length>active.length)addButton(list,"Clear finished jobs","clear","all");
 }
 el("fold").onclick = () => fold(true); el("unfold").onclick = () => fold(false);
 function screenInfo() {
@@ -73,7 +73,7 @@ el("fullscreen").onclick = async () => {
   try {
     const page=document.documentElement;
     if (page.requestFullscreen) await page.requestFullscreen(); else if(page.webkitRequestFullscreen) page.webkitRequestFullscreen();
-    else throw new Error("이 브라우저에서 전체 화면을 열 수 없어요. Safari 또는 Chrome에서 열어 주세요.");
+    else throw new Error("Open this page in Safari or Chrome for fullscreen.");
     await updateScreen();
   } catch (error) { el("error").textContent=error.message; }
 };
@@ -89,13 +89,13 @@ function draw(s) {
   table.hidden=!showTable;
   document.body.classList.toggle("table-open",showTable);
   document.body.classList.toggle("connected",s.connected);
-  el("connection").textContent=s.connected ? (s.device || "Quest")+" 연결됨" : "같은 Wi-Fi에서 Quest를 연결하세요";
+  el("connection").textContent=s.connected ? (s.device || "Quest")+" connected" : "Connect your Quest on the same Wi-Fi";
   el("pair").hidden=s.connected; el("code").textContent=s.pairCode;
   el("setup").hidden=s.active; el("controls").hidden=!s.connected || !s.active;
   el("fold").hidden=!s.active || !s.connected;
-  el("travel").textContent=s.owner === "pc" ? "밤비를 방으로 부르기" : "밤비를 TV로 보내기";
+  el("travel").textContent=s.owner === "pc" ? "Bring Nilo into the room" : "Send Nilo into the TV";
   el("travel").disabled=!s.calibrated || s.portal;
-  el("instruction").textContent=s.calibrated ? "TV 위치가 맞춰졌어요." : "헤드셋으로 TV를 보고 위치를 확인해 주세요.";
+  el("instruction").textContent=s.calibrated ? "TV calibrated." : "Look at the TV from your headset to calibrate it.";
   const game=!!s.game||showTable;
   el("speak").checked=s.speak;
   if (s.active && (game && !previousGame || s.portal && !el("panel").hidden)) fold(true);
@@ -117,7 +117,7 @@ async function poll() {
     const s=await response.json();
     if (full() && !s.active) { lastScreen=null; await updateScreen(); }
     draw(s);
-  } catch { el("connection").textContent="Mac 호스트에 다시 연결하는 중"; }
+  } catch { el("connection").textContent="Reconnecting to your Mac"; }
   nextPoll=setTimeout(poll,document.hidden?750:state?.game?40:state?.portal?60:150);
 }
 async function loadDisplays() {
@@ -126,7 +126,7 @@ async function loadDisplays() {
   const displays=await fetch("/displays").then(r=>r.json());
   while(select.options.length>1) select.remove(1);
   for(const d of displays) { const opt=new Option(d.name+" · "+d.width+" × "+d.height,d.id); el("display").add(opt); }
-  const external=displays.filter(d=>d.name==="외부 디스플레이");
+  const external=displays.filter(d=>d.name==="External display");
   if(displays.some(d=>d.id===old)) select.value=old;
   else if(external.length===1) select.value=external[0].id;
  } catch {}

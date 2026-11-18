@@ -232,13 +232,13 @@ end
 
         static readonly string[] SignArts = { GlassArt.Rock, GlassArt.PaperSign, GlassArt.Scissors };
         static readonly int[] SignFingers = { Rock, Paper, Scissors };
-        static readonly string[] RoundLines = { "A draw!", "You win this one!", "Bambi wins this one!", "Show me your hand!" };
+        static readonly string[] RoundLines = { "A draw!", "You win this one!", "Nilo wins this one!", "Show me your hand!" };
 
         sealed class RpsRound { public int bambi, you; public string line = ""; public float at; }
 
         /// <summary>
         /// Plays a match. show(k): the finger bits of the hand in the round with the number k (from 0; int.MinValue = no hand
-        /// at all). The hand is held up AWAY from the field. Returns every round: Bambi's sign, the one read (-1 = none), the line.
+        /// at all). The hand is held up AWAY from the field. Returns every round: Nilo's sign, the one read (-1 = none), the line.
         /// </summary>
         static List<RpsRound> PlayRps(GlassScript g, Func<int, int> show, float seconds, bool near = false)
         {
@@ -260,7 +260,7 @@ end
                     if (k < 0) continue;
                     if (s.x > g.W * 0.5f) { Assert.Equal(-1, r.bambi); r.bambi = k; Assert.Equal(1, s.frame); } else { Assert.Equal(-1, r.you); r.you = k; }
                 }
-                Assert.InRange(r.bambi, 0, 2);                                  // Bambi's sign is shown, big
+                Assert.InRange(r.bambi, 0, 2);                                  // Nilo's sign is shown, big
                 rounds.Add(r);
             }
             return rounds;
@@ -293,15 +293,15 @@ end
                     }
                     Assert.True(you == 3 || bambi == 3); Assert.False(you == 3 && bambi == 3);
                     Assert.Equal(you, g.score); Assert.Equal(3 - bambi, g.lives);
-                    Assert.Equal((you == 3 ? "You win the match! " : "Bambi wins the match! ") + you + " : " + bambi, g.result);
+                    Assert.Equal((you == 3 ? "You win the match! " : "Nilo wins the match! ") + you + " : " + bambi, g.result);
                     Assert.True(rounds[0].at >= 5f, "the first round was decided after " + rounds[0].at + " s");      // (nothing is lost in the first five seconds)
                 }
-                // NO CHEATING: round for round Bambi showed the same sign, whatever the player showed
+                // NO CHEATING: round for round Nilo showed the same sign, whatever the player showed
                 int n = all.Min(r => r.Count);
                 Assert.True(n >= 3);
                 for (int k = 0; k < n; k++) { Assert.Equal(all[0][k].bambi, all[1][k].bambi); Assert.Equal(all[0][k].bambi, all[2][k].bambi); }
                 // ... and over many rounds it shows all three
-                o.WriteLine("seed " + seed + ": Bambi showed " + string.Join(" ", all[0].Select(r => SignArts[r.bambi])));
+                o.WriteLine("seed " + seed + ": Nilo showed " + string.Join(" ", all[0].Select(r => SignArts[r.bambi])));
             }
             var shown = new HashSet<int>();
             for (int seed = 1; seed <= 12; seed++) foreach (var r in PlayRps(Start("rps", seed), k => Rock, 200f)) shown.Add(r.bambi);
@@ -313,7 +313,7 @@ end
         {
             foreach (int seed in new[] { 1, 7 })
             {
-                // what Bambi will show, round by round (it does not depend on the hand: the test above)
+                // what Nilo will show, round by round (it does not depend on the hand: the test above)
                 var bambi = new List<int>();
                 for (int s = seed; bambi.Count < 12; ) { foreach (var r in PlayRps(Start("rps", seed), k => SignFingers[(k + bambi.Count) % 3], 300f)) bambi.Add(r.bambi); if (bambi.Count >= 3) break; }
                 var again = PlayRps(Start("rps", seed), k => Paper, 300f).Select(r => r.bambi).ToList();
@@ -329,8 +329,8 @@ end
                 // the shape that loses to it: 0 : 3, and the hearts are gone
                 g = Start("rps", seed);
                 rounds = PlayRps(g, k => SignFingers[(known[Math.Min(k, known.Count - 1)] + 2) % 3], 100f, near: true);
-                Assert.Equal(3, rounds.Count); Assert.All(rounds, r => Assert.Equal("Bambi wins this one!", r.line));
-                Assert.Equal("Bambi wins the match! 0 : 3", g.result); Assert.Equal((0, 0), (g.score, g.lives));
+                Assert.Equal(3, rounds.Count); Assert.All(rounds, r => Assert.Equal("Nilo wins this one!", r.line));
+                Assert.Equal("Nilo wins the match! 0 : 3", g.result); Assert.Equal((0, 0), (g.score, g.lives));
 
                 // the same shape: draws, for as long as it is kept up - nobody scores
                 g = Start("rps", seed);
@@ -366,7 +366,7 @@ end
             int frame = 0;
             rounds = PlayRps(g, k => frame++ % 7 == 0 ? Rock : Paper, 200f);
             Assert.All(rounds, r => Assert.Equal(1, r.you));
-            // the count: its words, one after the other, and Bambi's arm shakes with it (a motion of the script's own)
+            // the count: its words, one after the other, and Nilo's arm shakes with it (a motion of the script's own)
             g = Start("rps", 3);
             var said = new List<string>(); bool shook = false, held = false;
             for (int f = 0; f < 330; f++)
@@ -490,7 +490,7 @@ end
                     float star = StarX(g);
                     if (light == "red" && was == "red") Assert.Equal(lastStar, star, 4);     // on red the star does not move
                     if (light != was) { if (light == "green") greens++; if (light == "red") reds++; was = light; }
-                    if (light == "green" && g.petCustom && Math.Abs(g.petCustomPose.Euler[(int)Bone.Hips].Y) > 170f) backTurned = true;      // Bambi's back is to the player while it counts
+                    if (light == "green" && g.petCustom && Math.Abs(g.petCustomPose.Euler[(int)Bone.Hips].Y) > 170f) backTurned = true;      // Nilo's back is to the player while it counts
                     if (light == "red" && g.petCustom && Math.Abs(g.petCustomPose.Euler[(int)Bone.Hips].Y) < 5f) faced = true;              // and it has turned round on red
                     lastStar = star;
                     // the hand leads the star, a little ahead of it: creeping on green, still on red
@@ -531,7 +531,7 @@ end
             }
             Assert.Equal(3, caughtAt.Count);
             Assert.True(caughtAt[0] >= 5f, "the first catch came after " + caughtAt[0] + " s");
-            Assert.Equal(("over", 0, "Caught three times - Bambi wins!"), (g.phase, g.lives, g.result));
+            Assert.Equal(("over", 0, "Caught three times - Nilo wins!"), (g.phase, g.lives, g.result));
             Assert.True(best > RedStart + 0.2f && best < g.W - 0.48f);                       // (it had got somewhere, and never arrived)
         }
 
@@ -554,7 +554,7 @@ end
             Assert.Equal(("over", 3, "You got me!"), (g.phase, g.lives, g.result));
             Assert.True(reds >= 1);
 
-            // a hand that runs ahead to Bambi does not take the star along: the star only creeps, and only under a hand
+            // a hand that runs ahead to Nilo does not take the star along: the star only creeps, and only under a hand
             g = Start("redlight", 1);
             float most = RedStart;
             for (int f = 0; f < 30 * 30 && g.phase == "play"; f++)
@@ -575,7 +575,7 @@ end
             }
             Assert.True(lastX > RedStart + 0.3f);
 
-            // nobody plays: Bambi waits for a hand - no light turns, nothing is lost, it does not end
+            // nobody plays: Nilo waits for a hand - no light turns, nothing is lost, it does not end
             g = Start("redlight", 1);
             for (int f = 0; f < 30 * 40; f++) { Step(g, null); Assert.Equal("ready", Light(g)); }
             Assert.Equal(("play", 3), (g.phase, g.lives));

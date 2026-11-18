@@ -28,7 +28,7 @@ namespace LivingPartner.MR
     ///    2 cm (CarouselInput): the ring goes with the finger, runs on when it is let go, and settles on a sticker with
     ///    a little overshoot, a soft tick for every sticker that passes. A hand that is merely near turns nothing.
     ///  - RINGS: the bag itself holds a folder for each kind of thing the user owns (Things, Games, Skills, Places),
-    ///    Bambi, Tools, and the Market. Pressing a folder brings its ring up; the round button beside the ribbon leads
+    ///    Nilo, Tools, and the Market. Pressing a folder brings its ring up; the round button beside the ribbon leads
     ///    back. A list longer than the ring (nine stickers) runs through it like a belt. Pressing a sticker does its
     ///    thing at once: a thing comes out onto the desk, pressed again it goes back; the sticker dips and pops, and
     ///    the line over the ring says in words what happened.
@@ -37,7 +37,7 @@ namespace LivingPartner.MR
     ///    the cameras) - until the finger has been FzFar away for FzAfter seconds. The left hand's own fingers never
     ///    press or turn it. Touch as on every board (MrUiRay: one poke through the face, one press).
     ///  - DURING A GAME the open palm carries only a "Stop" chip.
-    ///  - BY VOICE ("밤비야, 가방 열어 줘", intent openMenu / closeMenu) the same carousel comes up standing in the room
+    ///  - BY VOICE ("Hey, Nilo, open my bag", intent openMenu / closeMenu) the same carousel comes up standing in the room
     ///    in front of the user and stays until it is closed (its round button, the voice): the one case in which it is
     ///    not on the hand.
     /// </summary>
@@ -224,14 +224,14 @@ namespace LivingPartner.MR
         float _mbNameSize;
         // the rings: the bag itself (its folders, and the Market), and what each folder holds
         const int RgHome = 0, RgThings = 1, RgGames = 2, RgSkills = 3, RgPlaces = 4, RgBambi = 5, RgTools = 6;
-        static readonly string[] MbRingNames = { "Bag", "Things", "Games", "Skills", "Places", "Bambi", "Tools" };
+        static readonly string[] MbRingNames = { "Bag", "Things", "Games", "Skills", "Places", "Nilo", "Tools" };
         // every sticker a little tilted, each its own way (degrees)
         static readonly float[] MbTilt = { -2.4f, 1.7f, -1.2f, 2.8f, 2.2f, -2.7f, 1.0f, -1.9f, -1.5f, 2.6f, -2.9f, 1.3f };
 
         enum MbKind { None, Item, Game, Skill, Place, Act, Folder }
         struct MbEntry { public MbKind kind; public ItemDef item; public GamePackDef game; public SkillDef skill; public AmbienceDef place; public int act; }
-        // what a sticker of Bambi / Tools does
-        const int ActGoIn = 0, ActComeOut = 1, ActHere = 2, ActWave = 3, ActLook = 4, ActCheer = 5, ActMarket = 10, ActScreen = 11, ActFind = 12, ActQuiet = 13, ActStop = 14, ActRain = 15;
+        // what a sticker of Nilo / Tools does
+        const int ActGoIn = 0, ActComeOut = 1, ActHere = 2, ActWave = 3, ActLook = 4, ActCheer = 5, ActMarket = 10, ActScreen = 11, ActFind = 12, ActQuiet = 13, ActStop = 14, ActRain = 15, ActGarden = 16;
         /// <summary>How the menu was opened: by the open palm (it is on the hand), by voice or by a check from the PC (it stands in the room).</summary>
         enum MbFrom { Palm, Voice, Pc }
 
@@ -310,7 +310,7 @@ namespace LivingPartner.MR
             Debug.Log($"[MR] menu: the ring '{MbRingNames[ring]}' is up ({_caN} stickers)");
         }
 
-        /// <summary>The ring of a section (0 the bag itself, 1 Things, 2 Games, 3 Skills, 4 Places, 5 Bambi, 6 Tools).</summary>
+        /// <summary>The ring of a section (0 the bag itself, 1 Things, 2 Games, 3 Skills, 4 Places, 5 Nilo, 6 Tools).</summary>
         void MenuSection(int ring) => MenuGo(ring);
 
         void OpenBoard(MbFrom from)
@@ -359,7 +359,7 @@ namespace LivingPartner.MR
             Debug.Log("[MR] menu: the fan is closed (" + why + ")");
         }
 
-        /// <summary>"밤비야, 가방 열어 줘" / "... 닫아 줘": the PC heard it (intent openMenu / closeMenu). The fan it opens stands in the room.</summary>
+        /// <summary>"Hey, Nilo, open my bag" / "... 닫아 줘": the PC heard it (intent openMenu / closeMenu). The fan it opens stands in the room.</summary>
         void MenuByVoice(bool open)
         {
             if (!open) { if (_mbOpen) CloseBoard("being asked"); return; }
@@ -394,7 +394,7 @@ namespace LivingPartner.MR
 
         static string MbName(in MbEntry e) => e.kind == MbKind.Folder ? MbRingNames[e.act] : e.kind == MbKind.Item ? e.item.name : e.kind == MbKind.Game ? e.game.title ?? "" : e.kind == MbKind.Skill ? e.skill.name : e.kind == MbKind.Place ? e.place.name
             : e.act == ActGoIn ? "Go in" : e.act == ActComeOut ? "Come out" : e.act == ActHere ? "Come here" : e.act == ActWave ? "Wave" : e.act == ActLook ? "Look" : e.act == ActCheer ? "Cheer"
-            : e.act == ActMarket ? "Market" : e.act == ActScreen ? "Bring screen" : e.act == ActFind ? "Find screens" : e.act == ActQuiet ? "Quiet" : e.act == ActStop ? "Stop" : "Rain";
+            : e.act == ActMarket ? "Market" : e.act == ActScreen ? "Bring screen" : e.act == ActFind ? "Find screens" : e.act == ActQuiet ? "Quiet" : e.act == ActStop ? "Stop" : e.act == ActGarden ? "Star Garden" : "Rain";
 
         /// <summary>Everything that is in the bag now has been seen: none of it is "new" the next time the menu is opened.</summary>
         void MenuRemember()
@@ -405,7 +405,7 @@ namespace LivingPartner.MR
         }
 
         /// <summary>
-        /// What a ring holds, in order. The bag itself: a folder for each kind of thing the user owns, Bambi, Tools, and the
+        /// What a ring holds, in order. The bag itself: a folder for each kind of thing the user owns, Nilo, Tools, and the
         /// Market. Things: the newest first. Skills: the ones it came with, then what it was taught. (ring -1: everything
         /// the user owns in one list - for remembering what has been seen.)
         /// </summary>
@@ -428,6 +428,7 @@ namespace LivingPartner.MR
                 foreach (var sk in w.skills) if (sk.builtin && !PassingSkill(sk)) _mbList.Add(new MbEntry { kind = MbKind.Skill, skill = sk });
                 for (int i = w.skills.Count - 1; i >= 0; i--) if (!w.skills[i].builtin && !PassingSkill(w.skills[i])) _mbList.Add(new MbEntry { kind = MbKind.Skill, skill = w.skills[i] });
             }
+            if (ring == RgPlaces) _mbList.Add(new MbEntry { kind = MbKind.Act, act = ActGarden });
             if (ring == RgPlaces || ring < 0)
                 foreach (var a in MenuPlaces()) _mbList.Add(new MbEntry { kind = MbKind.Place, place = a });
             if (ring == RgBambi)
@@ -467,7 +468,7 @@ namespace LivingPartner.MR
             _mbRev = w.revision; _mbFilledAt = Time.time; _mbDirty = false;
             if (!_mbSeenInit) MenuRemember();
             MenuList(_mbRing);
-            _mbTab = _mbRing == RgBambi ? 1 : _mbRing == RgTools ? 2 : 0;      // (0 the bag and its folders, 1 Bambi, 2 Tools)
+            _mbTab = _mbRing == RgBambi ? 1 : _mbRing == RgTools ? 2 : 0;      // (0 the bag and its folders, 1 Nilo, 2 Tools)
             int n = _mbList.Count, onPage = Mathf.Min(n, V.RingShown);
             _caN = n; _mbOnPage = onPage;
             bool owned = _mbRing >= RgThings && _mbRing <= RgPlaces;
@@ -523,6 +524,7 @@ namespace LivingPartner.MR
                     case MbKind.Act:
                         switch (e.act)
                         {
+                            case ActGarden: tex = v.texPlaces; title = MbName(e); on = GardenOpen; break;
                             case ActGoIn: tex = v.texGoIn; title = "Go in"; break;
                             case ActComeOut: tex = v.texComeOut; title = "Come out"; break;
                             case ActHere: tex = v.texHere; title = "Come here"; break;
@@ -558,7 +560,7 @@ namespace LivingPartner.MR
                 b.color = b.color2 = on ? new Color(1f, 0.84f, 0.44f, 0.85f) : new Color(1f, 0.94f, 0.76f, 0.55f);
                 _mbOn[i] = on; _mbDesk[i] = desk;
                 if (v.tileRing[i].enabled != on) v.tileRing[i].enabled = on;
-                bool fresh = owned && _mbSeenInit && !_mbSeen.Contains(MbId(e));
+                bool fresh = owned && e.kind != MbKind.Act && _mbSeenInit && !_mbSeen.Contains(MbId(e));
                 _mbFresh[i] = fresh;
                 string flag = fresh ? "new" : "";
                 if (v.tileNew[i].text != flag) v.tileNew[i].text = flag;
@@ -576,12 +578,12 @@ namespace LivingPartner.MR
             // the line over the ring: what the last press did, for a few seconds; otherwise what can be done here
             string line = Time.time - _mbStatusAt < 5f && _mbStatus.Length > 0 ? _mbStatus
                         : _mbRing == RgHome ? "Swipe or use the arrows - press the big one"
-                        : n == 0 ? (_mbRing == RgThings ? "No things yet - ask Bambi to make one" : _mbRing == RgGames ? "No games yet - the Market has some" : _mbRing == RgSkills ? "No skills yet" : "No places yet")
+                        : n == 0 ? (_mbRing == RgThings ? "No things yet - ask Nilo to make one" : _mbRing == RgGames ? "No games yet - the Market has some" : _mbRing == RgSkills ? "No skills yet" : "No places yet")
                         : _mbRing == RgThings ? "Press: out on the desk - again: back in"
                         : _mbRing == RgGames ? "Press the big one to play"
-                        : _mbRing == RgSkills ? "Press: Bambi does it - again: stop"
+                        : _mbRing == RgSkills ? "Press: Nilo does it - again: stop"
                         : _mbRing == RgPlaces ? "Press: go there - again: back home"
-                        : _mbRing == RgBambi ? (LocalMode ? "Press what Bambi should do" : "Or simply say it: “Bambi, come here”")
+                        : _mbRing == RgBambi ? (LocalMode ? "Press what Nilo should do" : "Or simply say it: “Hey, Nilo, come here”")
                         : _mbOnPalm ? "Close your hand to put the menu away" : "Pinch the ribbon to move this";
             bool said = line == _mbStatus && line.Length > 0;
             if (line != _mbStatusShown)
@@ -621,7 +623,7 @@ namespace LivingPartner.MR
                 case MbKind.Skill:
                 {
                     var sk = e.skill;
-                    if (sk.status == "making") { MenuSay("Bambi is still learning " + sk.name); break; }
+                    if (sk.status == "making") { MenuSay("Nilo is still learning " + sk.name); break; }
                     if (w.doingSkill == sk.id) { SendWorld("stop"); MenuSay(sk.name + " stopped"); }
                     else { SendWorld("useSkill", sk.id); MenuSay(sk.name + " - press again to stop"); MenuComet(at); }
                     break;
@@ -656,7 +658,7 @@ namespace LivingPartner.MR
             bool asked = (g.template == "tennis" || g.template == "keeper") && TransitionIdle && !(_ch.owner == Env.Pc && _mons.Count == 0) && !(_ch.owner == Env.Mr && _mode != Mode.Free);
             if (g.template == "tennis") ToggleTennis("the bag"); else StartPack(g, "the menu");
             if (GameOn || asked) { MenuSay(title + " started"); _mbCloseAt = Time.time + 0.9f; }
-            else MenuSay("Bambi can't play " + title + " right now");
+            else MenuSay("Nilo can't play " + title + " right now");
         }
 
         void MenuPressAct(int act, Vector3 at)
@@ -666,26 +668,26 @@ namespace LivingPartner.MR
             switch (act)
             {
                 case ActGoIn:
-                    if (!out_) { MenuSay("Bambi is already inside the screen"); break; }
+                    if (!out_) { MenuSay("Nilo is already inside the screen"); break; }
                     OnIntent(new IntentView { kind = "enterPortal", text = "" }); MenuComet(at);
-                    MenuSay(_mons.Count == 0 ? "Bambi does not know your screens yet - Tools, Find screens" : "Bambi goes into the screen you are looking at");
+                    MenuSay(_mons.Count == 0 ? "Nilo does not know your screens yet - Tools, Find screens" : "Nilo goes into the screen you are looking at");
                     break;
                 case ActComeOut:
-                    if (out_) { MenuSay("Bambi is already out here"); break; }
-                    RequestReturnDefault(); MenuComet(at); MenuSay("Bambi comes out of the screen");
+                    if (out_) { MenuSay("Nilo is already out here"); break; }
+                    RequestReturnDefault(); MenuComet(at); MenuSay("Nilo comes out of the screen");
                     break;
-                case ActHere: OnIntent(new IntentView { kind = "comeHere", text = "" }); MenuComet(at); MenuSay("Bambi comes over to you"); break;
+                case ActHere: OnIntent(new IntentView { kind = "comeHere", text = "" }); MenuComet(at); MenuSay("Nilo comes over to you"); break;
                 case ActWave:
-                    if (!out_) { MenuSay("Bambi is inside the screen - call it out first"); break; }
-                    PlayEmote(Emote.Wave, 2.6f); MenuComet(at); MenuSay("Bambi waves");
+                    if (!out_) { MenuSay("Nilo is inside the screen - call it out first"); break; }
+                    PlayEmote(Emote.Wave, 2.6f); MenuComet(at); MenuSay("Nilo waves");
                     break;
                 case ActLook:
-                    OnIntent(new IntentView { kind = "lookScreen", text = "이 화면이 어떤 화면이야?" }); MenuComet(at);
-                    MenuSay("Bambi reads the screen you are looking at and tells you");
+                    OnIntent(new IntentView { kind = "lookScreen", text = "What’s on this screen?" }); MenuComet(at);
+                    MenuSay("Nilo reads the screen you are looking at and tells you");
                     break;
                 case ActCheer:
-                    if (!out_) { MenuSay("Bambi is inside the screen - call it out first"); break; }
-                    PlayEmote(Emote.Happy, 3.2f); MenuComet(at); MenuSay("Bambi cheers");
+                    if (!out_) { MenuSay("Nilo is inside the screen - call it out first"); break; }
+                    PlayEmote(Emote.Happy, 3.2f); MenuComet(at); MenuSay("Nilo cheers");
                     break;
                 case ActMarket:
                     if (_shopOpen) { CloseShop(); MenuSay("The Market is closed"); } else { OpenShop(true); MenuSay("The Market is open"); }
@@ -694,13 +696,14 @@ namespace LivingPartner.MR
                     MenuSay(_scrMon.Length > 0 ? "The screen goes back" : "Bringing the screen you are looking at over");
                     SendMarket("screen", "", _scrMon.Length > 0 ? "close" : "this");
                     break;
+                case ActGarden: ToggleGarden(); break;
                 case ActFind: MenuSay("Looking for your screens ..."); BeginCalibration(); break;
                 case ActQuiet:
                     _settings.quietMode = !_settings.quietMode; _link.Send(Msg.Settings, _settings);
                     MenuSay(_settings.quietMode ? "Quiet is on: no sounds, the tune turned down" : "Quiet is off");
                     break;
                 case ActStop: StopEverything("the menu"); MenuSay("Stopped everything"); break;
-                case ActRain: SetRain(!_settings.rain); MenuSay(_settings.rain ? "It rains on the desk - hold a hand over Bambi" : "The rain stops"); break;
+                case ActRain: SetRain(!_settings.rain); MenuSay(_settings.rain ? "It rains on the desk - hold a hand over Nilo" : "The rain stops"); break;
             }
         }
 
@@ -1104,7 +1107,7 @@ namespace LivingPartner.MR
         bool OnDebugMenu(DebugCommand d)
         {
             // lpctl debug menu 1|0 (the carousel standing in the room, as when asked for by voice), menuTab 0-6 (the ring: 0 the
-            // bag itself, 1 Things, 2 Games, 3 Skills, 4 Places, 5 Bambi, 6 Tools), menuNext, menuPrev (the arrows), menuTurn n
+            // bag itself, 1 Things, 2 Games, 3 Skills, 4 Places, 5 Nilo, 6 Tools), menuNext, menuPrev (the arrows), menuTurn n
             // (the ring turns n stickers on), menuSwipe dx (a made-up fingertip swipes dx metres to the right across the ring
             // in 0.45 s - negative: to the left), menuPress i (sticker i of the pool; 99 = the one at the front; or by name: it is
             // brought to the front first, whichever ring it is on), menuRay i (the same through ray and pinch), menuIntent 1|0

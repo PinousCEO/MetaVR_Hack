@@ -6,7 +6,7 @@ using Xunit;
 namespace LivingPartner.Tests;
 
 /// <summary>
-/// "When I SHOW a real object, Bambi makes it and brings it into the PC" (Sight.cs), as far as it is plain rules:
+/// "When I SHOW a real object, Nilo makes it and brings it into the PC" (Sight.cs), as far as it is plain rules:
 /// the one tessellation of a sculpted thing that the headset draws and the host writes out (Shared/PartMesh), the
 /// .glb the host writes from it (GlbWriter: read back by the rules of glTF and by the project's own GlbReader), the
 /// picture of it (ModelRender), the cut round the hands (Shared/EyeMath), the plain wordings and the lines
@@ -416,7 +416,7 @@ public class SightTests
     public void The_files_are_named_after_the_thing()
     {
         Assert.Equal("Red ceramic mug", SightRules.Title(" red ceramic mug. "));
-        Assert.Equal("Bambi model", SightRules.Title(""));
+        Assert.Equal("Nilo model", SightRules.Title(""));
         Assert.True(SightRules.Title(new string('a', 90)).Length <= 40);
         var now = new DateTime(2026, 11, 18, 14, 5, 0);
         Assert.Equal("2026-11-18 1405 Red ceramic mug", SightRules.FolderName(now, "Red ceramic mug", _ => false));
@@ -435,9 +435,9 @@ public class SightTests
         book.Begin("mod-0a1b2c3d", DocsRules.Model, "Red mug", "이거 만들어 줘", 1, "", out _);
         Assert.True(book.Ready("mod-0a1b2c3d", "Red mug", 1, null, new[]
         {
-            new DocFile { name = "Red mug.glb", kind = "glb", path = @"C:\Docs\Bambi\Models\x\Red mug.glb" },
-            new DocFile { name = "Red mug.png", kind = "png", path = @"C:\Docs\Bambi\Models\x\Red mug.png" },
-        }, @"C:\Docs\Bambi\Models\x"));
+            new DocFile { name = "Red mug.glb", kind = "glb", path = @"C:\Docs\Nilo\Models\x\Red mug.glb" },
+            new DocFile { name = "Red mug.png", kind = "png", path = @"C:\Docs\Nilo\Models\x\Red mug.png" },
+        }, @"C:\Docs\Nilo\Models\x"));
         var d = book.Find("mod-0a1b2c3d");
         Assert.True(DocsRules.SafeId(d.id));
         Assert.True(DocsRules.SafeServed(d.id, "page-1-s.png"));
@@ -445,9 +445,9 @@ public class SightTests
         Assert.Equal("Red mug.glb", file.name); Assert.Equal("glb", file.kind);
         Assert.Equal("/docs/mod-0a1b2c3d/page-1-s.png", icon);
         // a click on it: the folder is shown with the file selected (the copy on the Desktop when it is there)
-        Assert.Equal((DocsRules.RevealSelect, @"C:\Docs\Bambi\Models\x\Red mug.glb"), DocsRules.Reveal(d, p => p.EndsWith(".glb"), _ => true));
+        Assert.Equal((DocsRules.RevealSelect, @"C:\Docs\Nilo\Models\x\Red mug.glb"), DocsRules.Reveal(d, p => p.EndsWith(".glb"), _ => true));
         Assert.Equal((DocsRules.RevealSelect, @"C:\Desktop\Red mug.glb"), DocsRules.Reveal(d, p => p.EndsWith(".glb"), _ => true, @"C:\Desktop\Red mug.glb"));
-        Assert.Equal((DocsRules.RevealFolder, @"C:\Docs\Bambi\Models\x"), DocsRules.Reveal(d, _ => false, _ => true));
+        Assert.Equal((DocsRules.RevealFolder, @"C:\Docs\Nilo\Models\x"), DocsRules.Reveal(d, _ => false, _ => true));
         // a report beside it is still its PDF, opened
         book.Begin("rep-0a1b2c3d", DocsRules.Report, "Notes", "", 2, "", out _);
         book.Ready("rep-0a1b2c3d", "Notes", 2, null, new[] { new DocFile { name = "Notes.pdf", kind = "pdf", path = @"C:\n.pdf" } }, @"C:\");

@@ -57,7 +57,7 @@ app.Map("/ws", async ctx =>
 });
 app.MapGet("/state", () => { lock (stage.Sync) return Results.Json(stage.View()); });
 LivingPartner.Demon.SoloDemonWeb.Map(app, Path.Combine(root, "wwwroot", "art"));
-app.MapGet("/health", () => Results.Text("Bambi Mac Companion"));
+app.MapGet("/health", () => Results.Text("Yonder Mac Companion"));
 app.MapGet("/game-sfx/{name}", GameAudio.Get);
 app.MapPost("/swarm/visible", () => { lock (stage.Sync) stage.SwarmVisible(); return Results.NoContent(); });
 app.MapGet("/displays", Displays.Active);
@@ -94,8 +94,16 @@ app.MapPost("/action/{cmd}", (string cmd) =>
     lock (stage.Sync) { var error = stage.Command(cmd); return error.Length == 0 ? Results.NoContent() : Results.BadRequest(error); }
 });
 var stopping = app.Lifetime.ApplicationStopping;
+if (OperatingSystem.IsMacOS())
+{
+    string apk = Path.GetFullPath(Path.Combine(root, "..", "Quest", "LivingAIPartner.apk"));
+    app.Lifetime.ApplicationStarted.Register(() =>
+    {
+        _ = LivingPartner.Host.QuestUsbUpdates.Watch(apk, port, null, Console.WriteLine, stopping);
+    });
+}
 await app.StartAsync();
-Console.WriteLine($"Bambi Mac Companion  {localOrigin}");
+Console.WriteLine($"Yonder Mac Companion  {localOrigin}");
 if (OperatingSystem.IsMacOS() && !args.Contains("--no-browser"))
     Process.Start(new ProcessStartInfo("/usr/bin/open") { ArgumentList = { localOrigin }, UseShellExecute = false });
 var beacons = args.Contains("--no-beacon") ? Task.CompletedTask : Advertise();

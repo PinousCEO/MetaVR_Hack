@@ -79,7 +79,7 @@ try {
     await take("state.snapshot",a=>a.transition.transitionId===tr.transitionId&&a.transition.state==="Complete"&&a.character.owner===owner);
     if(owner==="pc") {
       for(const mode of ["keeper","tennis"]) {
-        if(mode==="tennis") assert.equal((await put("/utter",{text:"밤비야, 테니스 하자"})).status,204);
+        if(mode==="tennis") assert.equal((await put("/utter",{text:"Hey, Nilo, play tennis"})).status,204);
         await take("intent.result",a=>a.kind==="playGame" && a.text===mode);
         written("game.command",{cmd:"start",room:false,mode:mode==="keeper"?"keeper":"",monitorId:"mac-tv",up:v(0,1,0),deskHeight:-.30,eye:v(0,.08,-.57)});
         await take("game.state",g=>g.active&&g.phase==="ready");
@@ -91,10 +91,14 @@ try {
         written("ping",{c:777});
         const {h}=await take("pong",g=>g.c===777);
         written("game.command",{cmd:"hit",seq:serve.shot.seq,t:h,pos:v(0,0,-.02),swing:v(0,.3,1.5),normal:v(0,.25,1),eye:v(0,.08,-.57)});
-        const hit=await take("game.state",g=>g.shot?.by==="user"&&g.rally===1);
-        assert(hit.shot.seq>serve.shot.seq);
-        await wait(async()=> (await state()).game?.ball?.z>0);
-        if(mode==="keeper") await take("game.state",g=>g.phase==="point"&&g.lastPoint==="user"&&g.scoreUser===1);
+        if(mode==="keeper") {
+          const saved=await take("game.state",g=>g.phase==="point"&&g.lastPoint==="user"&&g.scoreUser===1);
+          assert.equal(saved.shot ?? null,null);
+        } else {
+          const hit=await take("game.state",g=>g.shot?.by==="user"&&g.rally===1);
+          assert(hit.shot.seq>serve.shot.seq);
+          await wait(async()=> (await state()).game?.ball?.z>0);
+        }
         written("settings.update",{quietMode:true});
         await wait(async()=>{const g=(await state()).game;return g?.quiet&&g.sounds.length===0;});
         written("settings.update",{quietMode:false}); await wait(async()=> (await state()).game?.quiet===false);
@@ -113,7 +117,7 @@ try {
   for(const removed of ["game-tv-rally","game-shooter","game-vampire","game-umbrella"])
     assert.equal((await put("/action/game:"+removed)).status,400);
   assert.equal((await fetch(origin+"/rally-screen/123456/state")).status,404);
-  assert((await put("/utter",{text:"밤비야, 악마의 문 하자"})).ok);
+  assert((await put("/utter",{text:"Hey, Nilo, play Demon Gate"})).ok);
   await take("intent.result",g=>g.kind==="playGame"&&g.text==="game-swarm");
   const demons={on:true,monitorId:"mac-tv",count:2,phase:3,halfW:.55,halfH:.3,level:2,hearts:4,maxHearts:5,score:17,xp:1,need:4,choices:[2,4,8],
     id:[110,112],kind:[1,5],u:[-.3,.25],v:[.2,.4],press:[.25,.75]};
@@ -123,9 +127,11 @@ try {
   assert(!messages.some(m=>m.type==="swarm.state"&&m.body.count===-1));
   assert((await put("/swarm/visible")).ok);await take("swarm.state",b=>b.count===-1&&b.monitorId==="mac-tv");
   written("swarm.state",{on:false,monitorId:"mac-tv"});await wait(async()=>!(await state()).game);
-  console.log("PASS four-game catalog, Korean game commands and authenticated demon geometry/HUD, WebGL acknowledgement and stop");
-  written("utterance",{text:"밤비야"}); await take("character.say",a=>a.text==="응, 여기 있어!");
+  console.log("PASS four-game catalog, English game commands and authenticated demon geometry/HUD, WebGL acknowledgement and stop");
+  written("utterance",{text:"Hey, Nilo"}); await take("character.say",a=>a.text==="I’m here!");
   assert.equal((await state()).speak,false);
+  written("utterance",{text:"Hey, Nilo, open the star garden."}); await take("intent.result",a=>a.kind==="gardenOpen");
+  written("utterance",{text:"Hey, Nilo, close the garden."}); await take("intent.result",a=>a.kind==="gardenClose");
   if(process.argv[4]) {
     await put("/action/speech-on");
     const r=await readFile(process.argv[4]);
@@ -133,9 +139,9 @@ try {
     assert.equal(r.readUInt16LE(format+10),1);assert.equal(r.readUInt16LE(format+22),16);
     written("voice.clip",{clipId:"audio-1",pcm16:r.subarray(offset+8,offset+8+r.readUInt32LE(offset+4)).toString("base64"),
       sampleRate:r.readUInt32LE(format+12),source:"microphone-open"});
-    const wake=await take("voice.reply",a=>a.text==="응, 여기 있어!",90000);
+    const wake=await take("voice.reply",a=>a.text==="I’m here!",90000);
     assert(wake.pcm16.length>1000 && wake.playOn==="mr");
-    console.log("PASS offline Korean speech recognition and optional Quest PCM reply");
+    console.log("PASS offline English speech recognition and optional Quest PCM reply");
   }
   ws.close(); await wait(async()=> !(await state()).connected);
   assert.equal((await fetch(origin+"/rally-screen/123456/state")).status,404);

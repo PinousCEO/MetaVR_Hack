@@ -21,7 +21,7 @@ sealed partial class Stage
         lock (Sync)
         {
             ct.ThrowIfCancellationRequested();
-            if (headset == null) throw new InvalidOperationException("헤드셋이 연결되지 않았어.");
+            if (headset == null) throw new InvalidOperationException("The headset is disconnected.");
             photoPeer = headset; pendingPhoto = pending; photoId = id;
             Send(headset, Msg.EyeRequest, new EyeRequest { id = id, maxSide = 1280 });
         }
@@ -29,15 +29,15 @@ sealed partial class Stage
         {
             EyeFrame frame;
             try { frame = await pending.Task.WaitAsync(TimeSpan.FromSeconds(SightRules.FrameSeconds), ct); }
-            catch (TimeoutException) { throw new InvalidOperationException("헤드셋에서 카메라 사진을 받지 못했어. 카메라 권한을 확인해 줘."); }
-            if (!frame.ok) throw new InvalidOperationException(frame.why == "denied" ? "카메라 권한이 꺼져 있어 물건을 볼 수 없어." : "헤드셋 카메라가 물건 사진을 보내지 못했어.");
+            catch (TimeoutException) { throw new InvalidOperationException("No picture arrived. Check headset camera access."); }
+            if (!frame.ok) throw new InvalidOperationException(frame.why == "denied" ? "Enable the headset camera to show me an object." : "The headset could not send a photo.");
             if (string.IsNullOrEmpty(frame.jpeg) || frame.jpeg.Length > (SightRules.MaxPictureBytes + 2) / 3 * 4 ||
-                frame.width is < 1 or > 1280 || frame.height is < 1 or > 1280) throw new InvalidOperationException("사진의 크기를 읽을 수 없어.");
+                frame.width is < 1 or > 1280 || frame.height is < 1 or > 1280) throw new InvalidOperationException("Unable to read the image dimensions.");
             byte[] bytes;
             try { bytes = Convert.FromBase64String(frame.jpeg); }
-            catch (FormatException) { throw new InvalidOperationException("카메라 사진을 읽을 수 없어."); }
+            catch (FormatException) { throw new InvalidOperationException("Unable to read the camera image."); }
             if (bytes.Length is < 200 or > SightRules.MaxPictureBytes || bytes[0] != 0xff || bytes[1] != 0xd8 ||
-                bytes[^2] != 0xff || bytes[^1] != 0xd9) throw new InvalidOperationException("카메라의 JPEG 사진을 읽을 수 없어.");
+                bytes[^2] != 0xff || bytes[^1] != 0xd9) throw new InvalidOperationException("Unable to read the JPEG.");
             return bytes;
         }
         finally
@@ -53,7 +53,7 @@ sealed partial class Stage
 
     void CameraDisconnected(Peer peer)
     {
-        if (peer == photoPeer) pendingPhoto?.TrySetException(new InvalidOperationException("촬영 중에 헤드셋 연결이 끊겼어."));
+        if (peer == photoPeer) pendingPhoto?.TrySetException(new InvalidOperationException("The headset disconnected during capture."));
     }
 
     bool TryExportModel(string words, out string reply)
@@ -67,16 +67,16 @@ sealed partial class Stage
         var named = made.FirstOrDefault(i => words.Contains(i.name, StringComparison.OrdinalIgnoreCase));
         if (!file && named == null && !Matches(words, @"방금\s*만든\s*(물건|모델|오브젝트)|(?:this|that|last) (object|shape|model)")) return false;
         var item = named ?? made.FirstOrDefault();
-        if (item == null || GeneratedModelFile(item.id) is not {} src) { reply = "먼저 가방에 3D 오브젝트를 만들어 줘."; return true; }
-        reply = QueueWork("task", item.name + " GLB 내보내기", words, (job, ct) =>
+        if (item == null || GeneratedModelFile(item.id) is not {} src) { reply = "Make a 3D object first."; return true; }
+        reply = QueueWork("task", item.name + " GLB export", words, (job, ct) =>
         {
-            WorkStep(job, "검증한 GLB를 Mac 문서 폴더로 복사", .5f);
+            WorkStep(job, "Copying the verified GLB to Documents", .5f);
             return Task.FromResult<Action>(() =>
             {
                 ct.ThrowIfCancellationRequested();
                 string target = ExportToDocuments(item, src);
                 job.resultKind = "file"; job.resultId = target; job.note = Path.GetRelativePath(DocumentRoot, target);
-                Say(item.name + " 3D 파일을 Mac 문서의 Bambi/Models에 저장했어.");
+                Say(item.name + " saved to Documents/Yonder/Models.");
             });
         });
         return true;

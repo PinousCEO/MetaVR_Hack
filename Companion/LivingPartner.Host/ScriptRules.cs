@@ -155,7 +155,7 @@ public static class ScriptRules
                 else if (r.drew && !r.reacts) v.serious.Add("nothing changes when the hands play");
                 if (r.finishedAlone && r.finishedAloneAt >= 0f && r.finishedAloneAt < 2f) v.serious.Add("it ends within 2 seconds without anyone playing");
             }
-            // Everything a game SHOWS is English, whatever the user speaks (what Bambi SAYS may be theirs)
+            // Everything a game SHOWS is English, whatever the user speaks (what Nilo SAYS may be theirs)
             if (r.ok && ShownKorean(lua) is { Length: > 0 } korean)
                 v.serious.Add($"the program shows text that is not English ({korean}): everything on the screen - text, banner, finish, the labels of buttons, cards and displays - is ENGLISH, whatever language the user speaks");
             // A tool whose keys cannot be pressed one at a time is not a tool ("I asked for a calculator ... I cannot use it")
@@ -173,7 +173,7 @@ public static class ScriptRules
 
     /// <summary>
     /// The first piece of Korean text a game would put on the screen: a string of the program with Hangul in it, on
-    /// a line that is not something Bambi says (pet_say: its bubble is speech, and speech may be the user's
+    /// a line that is not something Nilo says (pet_say: its bubble is speech, and speech may be the user's
     /// language). "" = none. Comments are not looked at.
     /// </summary>
     public static string ShownKorean(string lua)
@@ -215,7 +215,7 @@ public static class ScriptRules
     /// its rectangle. A key that lies partly outside the field, two keys that overlap, a key on top of a display: each
     /// is something the player cannot use, and is said with its numbers so that the writer can repair it. (The checker
     /// in Shared plays the game; this looks at what a hand would find. Only the screen a tool opens with is seen.)
-    /// And Bambi: at the end of those seconds it must not stand in front of the middle of a key (an upright tool
+    /// And Nilo: at the end of those seconds it must not stand in front of the middle of a key (an upright tool
     /// sends it to a side where no key is).
     /// </summary>
     public static List<string> Layout(string lua, IEnumerable<string> art = null, int seed = 1, float seconds = 2f)
@@ -252,7 +252,7 @@ public static class ScriptRules
             }
             // (by now it has walked to where start() sent it; on a flat board it walks among the pieces, and that is the game)
             if (game.Error.Length == 0 && !game.flat && problems.Count < MaxLayoutProblems && Hidden(frame, game.petX, game.petY) is { } key)
-                problems.Add($"Bambi stands in front of {key.Name} (Bambi is at x = {N(game.petX)}, 0.2 tall and about 0.12 wide; the key's middle is at ({N(key.x)}, {N(key.y)})): send Bambi with pet_goto to a side where no key is, or move the key");
+                problems.Add($"Nilo stands in front of {key.Name} (Nilo is at x = {N(game.petX)}, 0.2 tall and about 0.12 wide; the key's middle is at ({N(key.x)}, {N(key.y)})): send Nilo with pet_goto to a side where no key is, or move the key");
         }
         catch (Exception) { }       // (what breaks in a script is the checker's to say, not this look at its keys)
         return problems;
@@ -277,7 +277,7 @@ public static class ScriptRules
         return new KitRect(kind, WorldRules.Short(label, 20), n[0], n[1], n[2], n[3]);
     }
 
-    /// <summary>The key whose MIDDLE Bambi covers when it stands at (petX, petY) on an upright field - its label cannot be read; null when there is none.</summary>
+    /// <summary>The key whose MIDDLE Nilo covers when it stands at (petX, petY) on an upright field - its label cannot be read; null when there is none.</summary>
     public static KitRect? Hidden(IReadOnlyList<KitRect> frame, float petX, float petY)
     {
         foreach (var r in frame)

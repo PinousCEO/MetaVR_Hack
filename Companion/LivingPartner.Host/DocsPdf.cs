@@ -49,7 +49,7 @@ public static class DocsPdf
         Obj(); W($"<< /Type /Pages /Count {n} /Kids [{string.Join(" ", Enumerable.Range(0, n).Select(i => $"{4 + i * 3} 0 R"))}] >>\nendobj\n");
         // (the title as UTF-16BE with its byte order mark, in hex: any language)
         string hex = "FEFF" + string.Concat(Encoding.BigEndianUnicode.GetBytes(title ?? "").Select(b => b.ToString("X2")));
-        Obj(); W($"<< /Title <{hex}> /Producer (Bambi - Living AI Partner) /CreationDate (D:{DateTime.Now:yyyyMMddHHmmss}) >>\nendobj\n");
+        Obj(); W($"<< /Title <{hex}> /Producer (Nilo - Yonder) /CreationDate (D:{DateTime.Now:yyyyMMddHHmmss}) >>\nendobj\n");
         for (int i = 0; i < n; i++)
         {
             int page = 4 + i * 3, image = page + 1, content = page + 2;

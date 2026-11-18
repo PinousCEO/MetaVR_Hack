@@ -383,7 +383,7 @@ public sealed class DocsPages : IDisposable
     public void Report(ReportData r)
     {
         bool ko = r.korean;
-        Band("Bambi's report", r.title, r.made.ToString("yyyy-MM-dd"),
+        Band("Nilo's report", r.title, r.made.ToString("yyyy-MM-dd"),
             r.web ? (ko ? "웹에서 찾아본 내용" : "Researched on the web") : (ko ? "기억으로 작성 · 웹에서 확인하지 않음" : "Written from memory, not checked on the web"), !r.web);
         if (r.summary.Length > 0) Summary(r.summary);
         Facts(ko ? "핵심 날짜 · 숫자" : "Key dates and numbers", r.facts);
@@ -417,7 +417,7 @@ public sealed class DocsPages : IDisposable
         else if (!r.web)
         {
             _y += 14;
-            var note = Wrap(ko ? "이 문서는 웹 검색 없이 Bambi가 알고 있는 내용으로 쓴 것입니다. 날짜와 숫자는 공식 페이지에서 꼭 다시 확인하세요." : "This report was written from what Bambi knows, without a web search. Check dates and numbers on the official pages.", _small, TextW - 60);
+            var note = Wrap(ko ? "이 문서는 웹 검색 없이 Bambi가 알고 있는 내용으로 쓴 것입니다. 날짜와 숫자는 공식 페이지에서 꼭 다시 확인하세요." : "This report was written from what Nilo knows, without a web search. Check dates and numbers on the official pages.", _small, TextW - 60);
             float h = note.Count * 27 + 30;
             Ensure(h + 8);
             Box(new RectangleF(M, _y, TextW, h), 16, Pink);
@@ -512,7 +512,7 @@ public sealed class DocsPages : IDisposable
             g.SmoothingMode = SmoothingMode.AntiAlias; g.TextRenderingHint = TextRenderingHint.AntiAlias;
             using var pen = new Pen(Line, 2f);
             g.DrawLine(pen, M, H - 96, W - M, H - 96);
-            g.DrawString("Made by Bambi", _foot, _dim, M, H - 78, _fmt);
+            g.DrawString("Made by Nilo", _foot, _dim, M, H - 78, _fmt);
             string num = $"{i + 1} / {_pages.Count}";
             g.DrawString(num, _foot, _dim, W - M - g.MeasureString(num, _foot, 1000, _fmt).Width, H - 78, _fmt);
         }

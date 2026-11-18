@@ -31,9 +31,9 @@ public class H7Tests
     }
 
     [Theory]
-    [InlineData("A tiny Bambi clone, cream and brown, smiling", "a tiny friendly storybook companion figure clone, cream and brown, smiling")]
-    [InlineData("a mini-Bambi with a toy blaster", "a mini friendly storybook companion figure with a toy blaster")]
-    [InlineData("Bambi's little shadow copy", "a small friendly storybook companion figure's little shadow copy")]
+    [InlineData("A tiny Nilo clone, cream and brown, smiling", "a tiny friendly storybook companion figure clone, cream and brown, smiling")]
+    [InlineData("a mini-Nilo with a toy blaster", "a mini friendly storybook companion figure with a toy blaster")]
+    [InlineData("Nilo's little shadow copy", "a small friendly storybook companion figure's little shadow copy")]
     [InlineData("밤비의 작은 분신", "a small friendly storybook companion figure의 작은 분신")]
     [InlineData("a round orange ball with one cream stripe", "a round orange ball with one cream stripe")]
     public void No_drawing_for_the_painter_carries_the_partners_name(string drawing, string given)
@@ -44,7 +44,7 @@ public class H7Tests
         Assert.DoesNotContain("bambi", art[0].drawing.ToLowerInvariant()); Assert.DoesNotContain("밤비", art[0].drawing);
         // ... and the writer is told so, and that what the request names must be recognisable
         string p = ScriptWriter.Prompt(new ScriptRequest { kind = ScriptRequest.Game, words = "x" }, new List<ScriptExample>());
-        Assert.Contains("The painter does not know Bambi and is never given a name", p);
+        Assert.Contains("The painter does not know Nilo and is never given a name", p);
         Assert.Contains("not the built-in monsters", p);
     }
 
@@ -127,10 +127,10 @@ public class H7Tests
     [Fact]
     public void Bambi_must_not_stand_in_front_of_the_middle_of_a_key()
     {
-        // nobody sent Bambi anywhere: it stands in the middle of the floor, where this tool has its bottom key
+        // nobody sent Nilo anywhere: it stands in the middle of the floor, where this tool has its bottom key
         string lua = "function update(dt)\n  panel(W / 2, 0.5, W - 0.06, 0.94, 'Keys')\n  if button('0', W / 2, 0.10, 0.2, 0.12) then sound('tap') end\n  if button('1', 0.4, 0.5, 0.2, 0.12) then sound('tap') end\n" + Tail;
-        Assert.Contains(ScriptRules.Layout(lua), x => x.StartsWith("Bambi stands in front of the button '0'"));
-        // sent to the side, nothing is said; a key whose edge it only brushes is left alone; a flat board is Bambi's to walk on
+        Assert.Contains(ScriptRules.Layout(lua), x => x.StartsWith("Nilo stands in front of the button '0'"));
+        // sent to the side, nothing is said; a key whose edge it only brushes is left alone; a flat board is Nilo's to walk on
         Assert.Empty(ScriptRules.Layout("function start() pet_goto(0.14) end\n" + lua));
         Assert.Null(ScriptRules.Hidden(new[] { new ScriptRules.KitRect("button", "row", 0.36f, 0.18f, 0.54f, 0.12f) }, 0.14f, 0f));
         Assert.NotNull(ScriptRules.Hidden(new[] { new ScriptRules.KitRect("button", "k", 0.15f, 0.10f, 0.2f, 0.12f) }, 0.14f, 0f));
@@ -148,10 +148,10 @@ public class H7Tests
     [Fact]
     public void The_partners_own_name_names_no_game()
     {
-        var own = new[] { new GamePackDef { id = "game-1", title = "밤비 슈팅", template = "script" }, new GamePackDef { id = "game-2", title = "틱택토", template = "script" }, new GamePackDef { id = "game-3", title = "Bambi", template = "script" } };
+        var own = new[] { new GamePackDef { id = "game-1", title = "밤비 슈팅", template = "script" }, new GamePackDef { id = "game-2", title = "틱택토", template = "script" }, new GamePackDef { id = "game-3", title = "Nilo", template = "script" } };
         // (the sentence that was turned away on 2026-11-18 with "밤비 슈팅은 이미 있어. 새로 만들까, 그걸 틀까?")
         Assert.Null(PlayRules.OwnGameNamed(own, "밤비랑 캐치볼 하는 게임 만들어 줘. 화면 밖으로 공을 던져 줘"));
-        Assert.Null(PlayRules.OwnGameNamed(own, "밤비야 낚시 게임 만들어 줘")); Assert.Null(PlayRules.OwnGameNamed(own, "make a racing game with Bambi"));
+        Assert.Null(PlayRules.OwnGameNamed(own, "밤비야 낚시 게임 만들어 줘")); Assert.Null(PlayRules.OwnGameNamed(own, "make a racing game with Nilo"));
         // what IS named is still found - by the rest of its title
         Assert.Equal("game-1", PlayRules.OwnGameNamed(own, "슈팅 게임 만들어 줘")?.id);
         Assert.Equal("game-1", PlayRules.OwnGameNamed(own, "밤비 슈팅 만들어 줘")?.id);
@@ -237,7 +237,7 @@ public class H7Tests
         var v = ScriptRules.CheckGame(body.Replace("LINE", "\"점수\""));
         Assert.True(v.ok); Assert.Contains(v.serious, x => x.StartsWith("the program shows text that is not English (\"점수\")"));
         Assert.DoesNotContain(ScriptRules.CheckGame(body.Replace("LINE", "'Score'")).serious, x => x.Contains("not English"));
-        // what Bambi SAYS may be the user's language, and a comment is nobody's business
+        // what Nilo SAYS may be the user's language, and a comment is nobody's business
         Assert.Equal("", ScriptRules.ShownKorean("function start() pet_say('같이 하자!', 2) end\n-- '점수'를 올린다\nlocal a = 1 -- \"한글\"\n" + body.Replace("LINE", "'Go'")));
         Assert.Equal("'끝'", ScriptRules.ShownKorean("finish('끝') -- over"));
         // everything that ships is English already

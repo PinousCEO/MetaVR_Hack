@@ -9,8 +9,8 @@
     connectTab();addEventListener("pageshow",connectTab);
     addEventListener("pagehide",()=>{presence?.close();presence=null;});
   }
-  const ids=["속사","쌍발","관통","꽃 폭발","연쇄 번개","별 고리","감속 안개","거대 탄환","꿀차","보석 자석","유성탄"];
-  const notes=["발사 간격이 줄어요","한 발을 더 쏴요","탄환이 다음 적까지 뚫어요","명중한 곳에서 꽃불이 터져요","근처 악마에게 번개가 옮겨가요","조준점 주변을 별이 지켜요","가까운 악마의 발이 느려져요","탄환이 더 커지고 강해져요","생명을 두 칸 회복해요","경험치 보석이 빠르게 모여요","조준 중 가까운 적에게 유성탄을 발사해요"];
+  const ids=["Rapid Fire","Twin Shot","Piercing Shot","Bloom Burst","Chain Lightning","Star Ring","Frost Mist","Giant Bolt","Honey Tea","Gem Magnet","Comet Shot"];
+  const notes=["Fire more often","Launch an extra shot","Shoot through another enemy","Flowers burst on impact","Lightning arcs between enemies","Stars circle your aim point","Slow nearby demons","Fire larger, stronger shots","Recover two hearts","Attract experience gems","Fire comets at nearby enemies"];
   let mesh,ws,awaiting=false,restart=false,paused=false,pick=null,frame,previous,received=0,choiceKey="",saved=false,serial=0;
   let startBest=0,cueUntil=0,lastSound=0,ac,fx=[],held=new Set(),left=false,x=0,y=0;
   const wand=new Image();
@@ -18,7 +18,7 @@
   const ground=$("ground"),shade=ground.getContext("2d");
   let firedAt=-1000,fireX=0,fireY=0;
   try {startBest=Number(localStorage.getItem("demon-gate.best.v1"))||0;}catch{}
-  if(startBest)$("record").textContent="최고 기록 "+startBest.toLocaleString()+"점";
+  if(startBest)$("record").textContent="Best score "+startBest.toLocaleString()+" points";
   function view(){
     const w=canvas.width,h=canvas.height,unit=h/(2*.4),cx=frame?.playerX||0;
     return {x:cx,aspect:w/h,project:(px,py,pz)=>{const scale=unit/Math.max(.06,pz+.39);return [w/2+(px-cx)*scale,h/2-(py-1.06)*scale,scale];}};
@@ -56,7 +56,7 @@
     for(const [slot,id] of f.choices.entries()){
       const b=document.createElement("button"),img=new Image(),title=document.createElement("b"),desc=document.createElement("small"),key=document.createElement("kbd");
       img.src="/demon-gate/art/demon-charm-"+String(id===10?3:id+1).padStart(2,"0")+".png";img.alt="";
-      title.textContent=ids[id];desc.textContent=notes[id];key.textContent="숫자 "+(slot+1);b.append(img,title,desc,key);b.onclick=()=>choose(slot);cards.append(b);
+      title.textContent=ids[id];desc.textContent=notes[id];key.textContent="Key "+(slot+1);b.append(img,title,desc,key);b.onclick=()=>choose(slot);cards.append(b);
     }
     cards.firstElementChild?.focus();sound(600,.3,"sine",.06,1.6);
   }
@@ -68,15 +68,15 @@
     $("over").hidden=f.phase!==4;if(f.phase!==4)saved=false;
     $("hud").hidden=false;$("welcome").hidden=true;
     $("hearts").textContent="♥".repeat(f.hp)+"♡".repeat(Math.max(0,f.maxHp-f.hp));
-    $("hearts").setAttribute("aria-label","생명 "+f.hp);$("level").textContent="Lv. "+f.level;$("xp").max=f.need;$("xp").value=f.xp;
-    const t=Math.ceil(Math.max(0,f.bossAt-f.time));$("timer-label").textContent=f.boss?"생존 시간":"보스까지";
+    $("hearts").setAttribute("aria-label","Health "+f.hp);$("level").textContent="Lv. "+f.level;$("xp").max=f.need;$("xp").value=f.xp;
+    const t=Math.ceil(Math.max(0,f.bossAt-f.time));$("timer-label").textContent=f.boss?"Survival time":"Boss in";
     const clock=f.boss?Math.floor(f.time):t;$("clock").textContent=Math.floor(clock/60)+":"+String(clock%60).padStart(2,"0");
     const boss=f.monsters.find(m=>m[1]===5);$("boss").hidden=!boss||f.phase===4;if(boss)$("boss-hp").value=boss[10];
-    if(!old||old.phase===4&&f.phase!==4)word("악마가 문을 열고 있어요",2100);
+    if(!old||old.phase===4&&f.phase!==4)word("The gate is opening",2100);
     for(const e of f.effects){
-      const k=e[0];if(k===11)word("가시 왕이 나타났어요!",2000);if(k===18)word("악마 무리가 다가옵니다");
+      const k=e[0];if(k===11)word("The Thorn King is here!",2000);if(k===18)word("Demons approaching");
       if(k===4){firedAt=now;fireX=x;fireY=y;sound(530,.075,"triangle",.032,.48);}
-      if(k===6){word("생명 −1",650);sound(155,.22,"triangle",.065,.46);}
+      if(k===6){word("Health −1",650);sound(155,.22,"triangle",.065,.46);}
       if(k===15)sound(330,.17,"sine",.06,2.2);
       if(k===5&&now-lastSound>80){sound(750,.12,"sine",.025,1.4);lastSound=now;}
       if([2,3,6,15,16,17,19].includes(k))fx.push({e,at:now,seed:++serial});
@@ -85,7 +85,7 @@
     if(f.phase===4){
       resetInputs();$("break").hidden=true;$("choice").hidden=true;$("over").hidden=false;
       if(!saved){saved=true;const best=Math.max(startBest,f.score);try{localStorage.setItem("demon-gate.best.v1",String(best));}catch{}startBest=best;
-        $("ending").textContent=f.won?"문을 봉인했어요":"문이 무너졌어요";$("summary").textContent="처치 "+f.kills+" · 레벨 "+f.level+" · "+f.score.toLocaleString()+"점";
+        $("ending").textContent=f.won?"Gate sealed":"The gate fell";$("summary").textContent="Defeated "+f.kills+" · Level "+f.level+" · "+f.score.toLocaleString()+" points";
         $("again").focus();sound(f.won?450:210,.5,"triangle",.045,f.won?1.8:.6);}
     }
     stage.classList.toggle("fighting",!paused&&(f.phase===1||f.phase===2));
@@ -100,7 +100,7 @@
     ws.onmessage=e=>{if(ws!==current)return;awaiting=false;receive(JSON.parse(e.data));};
     ws.onclose=()=>{if(ws!==current)return;ws=null;awaiting=false;resetInputs();frame=previous=null;
       $("welcome").hidden=false;$("over").hidden=$("break").hidden=$("choice").hidden=$("hud").hidden=true;
-      $("error").textContent="연결이 끊겼어요. Companion이 실행 중이면 다시 시작할 수 있어요.";$("start").disabled=false;stage.classList.remove("fighting");};
+      $("error").textContent="Disconnected. Reopen the game when the companion is available.";$("start").disabled=false;stage.classList.remove("fighting");};
   }
   $("start").onclick=$("again").onclick=play;$("pause").onclick=()=>pause(true);$("resume").onclick=()=>pause(false);
   function aim(e){x=Math.max(-1,Math.min(1,2*e.clientX/innerWidth-1));y=Math.max(-1,Math.min(1,1-2*e.clientY/innerHeight));}
@@ -117,8 +117,8 @@
   });
   addEventListener("keyup",e=>held.delete(e.code));addEventListener("blur",()=>{resetInputs();pause(true);});
   document.addEventListener("visibilitychange",()=>{if(document.hidden){resetInputs();pause(true);}});
-  actors.addEventListener("webglcontextlost",e=>{e.preventDefault();pause(true);word("그래픽 장치를 다시 연결하는 중",4000);});
-  actors.addEventListener("webglcontextrestored",async()=>{try{mesh=await demonModels(actors);word("그래픽을 복구했어요");}catch{location.reload();}});
+  actors.addEventListener("webglcontextlost",e=>{e.preventDefault();pause(true);word("Reconnecting graphics",4000);});
+  actors.addEventListener("webglcontextrestored",async()=>{try{mesh=await demonModels(actors);word("Graphics restored");}catch{location.reload();}});
   function line(a,b,color,width){
     brush.beginPath();brush.strokeStyle=color;brush.lineWidth=width;brush.moveTo(a[0],a[1]);brush.lineTo(b[0],b[1]);brush.stroke();
   }
@@ -142,6 +142,22 @@
     for(let i=0;i<8;i++){const angle=i*Math.PI/4,rad=i%2?r*.30:r;brush.lineTo(tip[0]+Math.cos(angle)*rad,tip[1]+Math.sin(angle)*rad);}
     brush.closePath();brush.fill();brush.restore();
   }
+  function drawBolt(b, project, d, t){
+    const tip=project(b[0],b[1],b[2]),prev=project(b[3],b[4],b[5]);
+    const dx=tip[0]-prev[0],dy=tip[1]-prev[1],comet=b[7]===1;
+    const r=Math.max(3*d,Math.min(15*d,b[6]*tip[2])),tail=[tip[0]-dx*4,tip[1]-dy*4];
+    brush.save();brush.lineCap="round";brush.globalCompositeOperation="lighter";
+    const ribbon=brush.createLinearGradient(tail[0],tail[1],tip[0]+.01,tip[1]);
+    ribbon.addColorStop(0,"transparent");ribbon.addColorStop(1,comet?"#e35eaa":"#f58c37");
+    line(tail,tip,ribbon,r*1.8);line([tip[0]-dx*1.6,tip[1]-dy*1.6],tip,"#fff3ca",r*.48);
+    brush.translate(tip[0],tip[1]);brush.rotate(t*.003);
+    const glow=brush.createRadialGradient(0,0,0,0,0,3*r);
+    glow.addColorStop(0,"#fff9df");glow.addColorStop(.28,comet?"#ffb5cb":"#ffd779");
+    glow.addColorStop(1,"transparent");brush.fillStyle=glow;brush.fillRect(-3*r,-3*r,6*r,6*r);
+    brush.fillStyle="#fff3ce";brush.beginPath();
+    for(let i=0;i<8;i++){const a=i*Math.PI/4,size=r*(i%2?.36:2.7);brush.lineTo(Math.cos(a)*size,Math.sin(a)*size);}
+    brush.fill();brush.restore();
+  }
   function draw(t){
     requestAnimationFrame(draw);size();if(!frame||!mesh)return;
     const w=canvas.width,h=canvas.height,v=view(),p=v.project,d=h/820;
@@ -159,7 +175,7 @@
     }
     mesh.draw(monsters,v);brush.clearRect(0,0,w,h);
     $("backdrop").style.transform="scale(1.08) translateX("+(-v.x*8)+"%)";
-    for(const b of frame.bolts){const end=p(b[0],b[1],b[2]),start=p(b[3],b[4],b[5]);line(start,end,"#fff0a4",Math.max(2*d,b[6]*end[2]));ring(end,2.2*d,"#ffe29c",1.4*d);}
+    for(const bolt of frame.bolts)drawBolt(bolt,p,d,t);
     for(const gems of [frame.gems,frame.orbit])for(const gem of gems){
       const g=p(...gem),r=Math.min(12*d,Math.max(3*d,g[2]*.008));brush.fillStyle=gems===frame.gems?"#94eed1":"#ffe09f";brush.beginPath();brush.moveTo(g[0],g[1]-r);brush.lineTo(g[0]+r*.72,g[1]);brush.lineTo(g[0],g[1]+r);brush.lineTo(g[0]-r*.72,g[1]);brush.closePath();brush.fill();
     }
@@ -187,7 +203,7 @@
     const image=new Image();image.src="/demon-gate/art/demon-charm-"+String(id===10?3:id+1).padStart(2,"0")+".png";
     return image.decode?image.decode():Promise.resolve();
   });
-  size();Promise.all([demonModels(actors),...charmArt]).then(([renderer])=>{mesh=renderer;$("start").disabled=false;$("start").textContent="혼자 시작";}).catch(error=>{$("error").textContent=error.message;});
+  size();Promise.all([demonModels(actors),...charmArt]).then(([renderer])=>{mesh=renderer;$("start").disabled=false;$("start").textContent="Play solo";}).catch(error=>{$("error").textContent=error.message;});
   setInterval(transmit,1000/36);requestAnimationFrame(draw);
 })();
 

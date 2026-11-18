@@ -39,9 +39,9 @@ sealed partial class Stage
     {
         if (!s.Active) { ClearScreen(); return; }
         if (s.Width is < 240 or > 16384 || s.Height is < 180 or > 16384 || !double.IsFinite(s.Inches) || s.Inches is < 0 or > 400)
-            throw new ArgumentException("올바른 화면 크기를 선택해 주세요.");
+            throw new ArgumentException("Choose a valid screen size.");
         var display = Displays.Active().FirstOrDefault(d => d.Id == s.Id);
-        if (display == null && s.Id != "mac-tv") throw new ArgumentException("디스플레이를 다시 선택해 주세요.");
+        if (display == null && s.Id != "mac-tv") throw new ArgumentException("Select your display again.");
         double w = 0, h = 0;
         if (s.Inches >= 5)
         {
@@ -102,13 +102,13 @@ sealed partial class Stage
             if (enabled) File.WriteAllText(file, "1"); else File.Delete(file);
             snap.settings.voiceReplies = enabled; return "";
         }
-        if (headset == null) return "헤드셋을 먼저 연결해 주세요.";
+        if (headset == null) return "Connect your headset first.";
         if (cmd.StartsWith("game:")) return GameButton(cmd[5..]);
         if (cmd == "scan") { Send(headset, Msg.IntentResult, new { kind = "calibrate", text = "" }); return ""; }
-        if (cmd != "enter" && cmd != "return") return "알 수 없는 요청입니다.";
-        if (screen == null || snap.calibrations.Count == 0) return "TV에서 전체 화면을 켜고 헤드셋으로 TV 위치를 확인해 주세요.";
-        if (machine.IsActive) return "밤비가 화면을 통과하고 있어요.";
-        if ((cmd == "enter") != (T.owner == Env.Mr)) return "밤비가 이미 그쪽에 있어요.";
+        if (cmd != "enter" && cmd != "return") return "Unknown command.";
+        if (screen == null || snap.calibrations.Count == 0) return "Set the TV to fullscreen, then calibrate it from your headset.";
+        if (machine.IsActive) return "Nilo is crossing the screen.";
+        if ((cmd == "enter") != (T.owner == Env.Mr)) return "Nilo is already there.";
         Send(headset, Msg.IntentResult, new { kind = cmd == "enter" ? "enterPortal" : "returnToMr", text = "", alsoStart = false,
             pointer = new PointerSample { valid = true, monitorId = screen.id, u = .5f, v = .55f } });
         return "";
@@ -250,7 +250,7 @@ sealed partial class Stage
         else if (e.kind == "resume") machine.Apply(TEvent.Resume, T.transitionId, Now);
         else return;
         if (machine.State == TState.ReceiverReady)
-        { T.clock = new CrossClock { transitionId = T.transitionId, anchorHost = Now + .3, rate = 1, revision = 1 }; machine.Apply(TEvent.StartCrossing, T.transitionId, Now); }
+        { T.clock = new CrossClock { transitionId = T.transitionId, anchorHost = Now + .12, rate = 1, revision = 1 }; machine.Apply(TEvent.StartCrossing, T.transitionId, Now); }
         Send(headset, Msg.TransitionUpdate, T); Snapshot();
     }
 }

@@ -17,8 +17,8 @@ namespace LivingPartner.Host;
 ///   GET  /market/api/state          the user's account on the hub, what is on sale, what is theirs, what is being made
 ///   POST /market/api/command        a MarketCommand (buy, install, remove, publish, setPrice, unpublish, like, nickname, make ...)
 ///   POST /market/api/say            {text}: something typed to the partner in the page's box - it enters the conversation as a sentence said to it by name
-///   POST /market/api/import         the bytes of a .bambi file: it becomes a thing of the user's own
-///   GET  /market/export/{id}.bambi  one of the user's own things as a file to hand to somebody
+///   POST /market/api/import         the bytes of a .yonder file: it becomes a thing of the user's own
+///   GET  /market/export/{id}.yonder  one of the user's own things as a file to hand to somebody
 ///   GET  /market/song/{id}.wav      the tune of a module, rendered by the same synth the headset plays it with
 /// Module icons are the world's files and come from /world/{file}. The page never talks to the hub itself: the host
 /// does, in the user's name (their token never reaches a browser).
@@ -143,7 +143,7 @@ public static class MarketWeb
             return Results.Text("{\"ok\":true}", "application/json");
         });
 
-        // a .bambi file the user picked or dropped on the page: its bytes, as they are
+        // a .yonder file the user picked or dropped on the page: its bytes, as they are
         app.MapPost("/market/api/import", async (HttpContext ctx) =>
         {
             if (!Local(ctx) || !OwnPage(ctx, "application/octet-stream")) return Results.StatusCode(403);
@@ -168,8 +168,9 @@ public static class MarketWeb
         app.MapGet("/market/export/{file}", async (HttpContext ctx, string file) =>
         {
             if (!Local(ctx)) return Results.StatusCode(403);
-            if (!file.EndsWith(MarketPack.Extension, StringComparison.OrdinalIgnoreCase)) return Results.NotFound();
-            string id = file[..^MarketPack.Extension.Length];
+            var ext = Path.GetExtension(file);
+            if (!ext.Equals(MarketPack.Extension, StringComparison.OrdinalIgnoreCase) && !ext.Equals(".bambi", StringComparison.OrdinalIgnoreCase)) return Results.NotFound();
+            string id = file[..^ext.Length];
             // what goes into the file is decided on the core thread; reading the model and packing it is done here, off it
             var plan = await OnCore(core, () => core.Shop.PlanExport(id, out _, true));
             if (plan == null) return Results.NotFound();

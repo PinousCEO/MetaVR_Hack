@@ -73,7 +73,7 @@ namespace LivingPartner.EditorTools
                     var g = Panel("Grip " + side + " " + i, v.top, 0.0026f, 0.0120f, 0.0013f, grip, grip, 3);
                     g.transform.localPosition = new Vector3(side * (RW * 0.5f - 0.016f - i * 0.0052f), 0f, -0.0025f);
                 }
-            v.title = Label("Title", v.top, "Bambi's work", 0.0135f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
+            v.title = Label("Title", v.top, "Nilo's work", 0.0135f, Ui.Pal.Ink, TextAnchor.MiddleCenter, true);
             v.title.transform.localPosition = new Vector3(0f, 0.0004f, -0.003f);
             v.more = Label("More", v.top, "", 0.0098f, Ui.Pal.TextDim, TextAnchor.MiddleRight);
             v.more.transform.localPosition = new Vector3(RW * 0.5f - 0.036f, 0f, -0.003f);

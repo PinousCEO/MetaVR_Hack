@@ -10,7 +10,7 @@ using UnityEngine.Networking;
 namespace LivingPartner.Windows
 {
     /// <summary>
-    /// THE FILE IN THE PARTNER'S HANDS. "Bambi goes into the PC holding the PDF, and when I click it there the real PDF
+    /// THE FILE IN THE PARTNER'S HANDS. "Nilo goes into the PC holding the PDF, and when I click it there the real PDF
     /// opens" (the user, 2026-11-18). When the partner has carried a document into this PC (show "file", stage "shown",
     /// or a DocItem that has just become delivered - then for a minute), it holds the file up while it roams the
     /// desktop: a paper sheet with a folded corner (a picture sheet for designs), about 96 pixels, bobbing in its hands,

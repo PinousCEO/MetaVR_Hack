@@ -29,7 +29,7 @@ namespace LivingPartner.Shared
         }
 
         public const string Bat =
-@"-- Baseball bat. Bambi holds it in its right hand; ""Swing!"" pitches a ball at it and Bambi hits it away.
+@"-- Baseball bat. Nilo holds it in its right hand; ""Swing!"" pitches a ball at it and Nilo hits it away.
 wearable(""handR"")
 offer(""swing"", ""Swing!"")
 
@@ -70,7 +70,7 @@ function on_act(name)
   if ball then remove(ball) end
   ball = make(""ball"", 0.02, ""white"")
   put(ball, px + 0.02, 0.07, pz - 0.45)               -- the pitch comes from the user's side
-  throw_to(ball, px + 0.02, 0.045, pz - 0.05, 0.9)    -- to just in front of Bambi, in 0.9 s
+  throw_to(ball, px + 0.02, 0.045, pz - 0.05, 0.9)    -- to just in front of Nilo, in 0.9 s
   sound(""whoosh"")
   swinging = false
   after(0.55, function() pet_play(""swing""); swinging = true end)   -- so that the bat is there when the ball is
@@ -95,7 +95,7 @@ end
 ";
 
         public const string Wand =
-@"-- Magic wand. Bambi holds it; ""Wave it"" swishes it: stars come out of its tip and one big star floats up and pops.
+@"-- Magic wand. Nilo holds it; ""Wave it"" swishes it: stars come out of its tip and one big star floats up and pops.
 wearable(""handR"")
 offer(""wave"", ""Wave it"")
 
@@ -152,7 +152,7 @@ end
 ";
 
         public const string Drum =
-@"-- Drum. Press it: Bambi walks over and plays a little rhythm on it.
+@"-- Drum. Press it: Nilo walks over and plays a little rhythm on it.
 motion(""drumming"", 0.6, function(u, p)       -- the hands in turn: the right one is down at u = 0, the left one at u = 0.5
   local r, l = pulse(u), pulse(u + 0.5)      -- 1 = that hand is up
   p.armR  = {x = -55 - 40 * r, z = 5}
@@ -194,11 +194,11 @@ end
 ";
 
         public const string Football =
-@"-- Football. Press it: Bambi and you pass it to and fro - touch the ball with a fingertip to send it back.
+@"-- Football. Press it: Nilo and you pass it to and fro - touch the ball with a fingertip to send it back.
 local playing, to_user, kicks = false, false, 0
 local home_x, home_z = 0, 0
 
-local function pass()                          -- Bambi kicks it over to the user's hand
+local function pass()                          -- Nilo kicks it over to the user's hand
   local hx, hz = 0.10, -0.30
   local h = hands()[1]
   if h then hx, hz = clamp(h.x, -0.4, 0.4), clamp(h.z, -0.45, -0.15) end
@@ -221,7 +221,7 @@ function update(dt)
   local px, pz = pet_at()
   if to_user then
     for _, h in ipairs(hands()) do
-      if hit(0, h.x, h.y, h.z, 0.02) then      -- a fingertip touched it: back to Bambi
+      if hit(0, h.x, h.y, h.z, 0.02) then      -- a fingertip touched it: back to Nilo
         to_user = false
         kicks = kicks + 1
         roll_to(0, px, pz - 0.06)
@@ -265,7 +265,7 @@ end
 
         /// <summary>The built-in kind "chair".</summary>
         public const string Chair =
-@"-- Chair. Bambi sits on it - with a table beside it, it sits down to study. Press again and it gets up.
+@"-- Chair. Nilo sits on it - with a table beside it, it sits down to study. Press again and it gets up.
 function on_use()
   if pet_busy() then on_stop() return end
   local x, y, z = me()
@@ -290,7 +290,7 @@ end
 
         /// <summary>The built-in kind "desk".</summary>
         public const string Desk =
-@"-- Desk. Bambi works at it: on the chair beside it when there is one, otherwise standing at it.
+@"-- Desk. Nilo works at it: on the chair beside it when there is one, otherwise standing at it.
 function on_use()
   if pet_busy() then on_stop() return end
   local x, y, z = me()
@@ -316,7 +316,7 @@ end
 
         /// <summary>The built-in kind "bed".</summary>
         public const string Bed =
-@"-- Bed. Bambi lies down on it and sleeps. Press again to wake it.
+@"-- Bed. Nilo lies down on it and sleeps. Press again to wake it.
 function on_use()
   if pet_busy() then on_stop() return end
   local x, y, z = me()
@@ -335,7 +335,7 @@ end
 
         /// <summary>The built-in kind "sofa".</summary>
         public const string Sofa =
-@"-- Sofa. Bambi sits down on it and looks at you. Press again and it gets up.
+@"-- Sofa. Nilo sits down on it and looks at you. Press again and it gets up.
 function on_use()
   if pet_busy() then on_stop() return end
   local x, y, z = me()
@@ -354,7 +354,7 @@ end
 
         /// <summary>The built-in kind "book".</summary>
         public const string Book =
-@"-- Book. Bambi picks it up and reads - on a seat when one is near. Press again and it puts the book back.
+@"-- Book. Nilo picks it up and reads - on a seat when one is near. Press again and it puts the book back.
 local home_x, home_z = 0, 0
 local reading = false
 
@@ -389,7 +389,7 @@ end
 
         /// <summary>The built-in kind "ball".</summary>
         public const string Ball =
-@"-- Ball. Bambi kicks it along the desk and runs after it, four times.
+@"-- Ball. Nilo kicks it along the desk and runs after it, four times.
 local n = 0
 
 local function kick()
@@ -441,7 +441,7 @@ end
 
         /// <summary>The built-in kind "plant".</summary>
         public const string Plant =
-@"-- Plant. Bambi waters it: it shakes its leaves and grows a little.
+@"-- Plant. Nilo waters it: it shakes its leaves and grows a little.
 local size = 1
 
 function on_use()
@@ -463,7 +463,7 @@ end
 
         /// <summary>The built-in kind "cup".</summary>
         public const string Cup =
-@"-- Cup. Bambi takes a sip and puts it back.
+@"-- Cup. Nilo takes a sip and puts it back.
 function on_use()
   if pet_busy() then return end
   local x, y, z = me()
@@ -539,7 +539,7 @@ end
 
         /// <summary>The built-in kind "food".</summary>
         public const string Food =
-@"-- Cake. Bambi eats a piece: the cake gets smaller - and when it is nearly gone, a new one appears.
+@"-- Cake. Nilo eats a piece: the cake gets smaller - and when it is nearly gone, a new one appears.
 local left = 1
 
 function on_use()
@@ -568,7 +568,7 @@ end
 
         /// <summary>The built-in kind "toy".</summary>
         public const string Toy =
-@"-- Toy. Bambi winds it up: it spins and hops five times.
+@"-- Toy. Nilo winds it up: it spins and hops five times.
 function on_use()
   if pet_busy() then return end
   local x, y, z, yaw = me()
@@ -600,7 +600,7 @@ end
 
         /// <summary>The built-in kind "box".</summary>
         public const string Box =
-@"-- Box. Bambi peeks inside - something in there squeaks.
+@"-- Box. Nilo peeks inside - something in there squeaks.
 function on_use()
   if pet_busy() then return end
   local x, y, z = me()
@@ -619,7 +619,7 @@ end
 
         /// <summary>The skill "Dance" (WorldDefaults.Dance) as a script.</summary>
         public const string SkillDance =
-@"-- Dance (a skill). Club lights round the desk, the club tune, and Bambi dances until it is told to stop.
+@"-- Dance (a skill). Club lights round the desk, the club tune, and Nilo dances until it is told to stop.
 function on_use()
   ambience(""club"")
   music(""club"")
@@ -640,10 +640,10 @@ end
         /// <summary>What the user asked for, and the script that was written for it.</summary>
         public static readonly Example[] Made =
         {
-            new Example { id = "bat", request = "야구배트 - 착용하면 야구 스윙 모션이 추가돼", requestEn = "A baseball bat - when Bambi holds it, a baseball swing is added", name = "Baseball bat", kind = "toy", uses = new[] { "play" }, sizeM = 0.08f, script = Bat },
+            new Example { id = "bat", request = "야구배트 - 착용하면 야구 스윙 모션이 추가돼", requestEn = "A baseball bat - when Nilo holds it, a baseball swing is added", name = "Baseball bat", kind = "toy", uses = new[] { "play" }, sizeM = 0.08f, script = Bat },
             new Example { id = "wand", request = "마법 지팡이 - 흔들면 별이 나와", requestEn = "A magic wand - stars come out when it is waved", name = "Magic wand", kind = "toy", uses = new[] { "play" }, sizeM = 0.07f, script = Wand },
-            new Example { id = "drum", request = "북 - 누르면 밤비가 둥둥 쳐", requestEn = "A drum - press it and Bambi drums on it", name = "Drum", kind = "toy", uses = new[] { "play", "music" }, sizeM = 0.06f, script = Drum },
-            new Example { id = "football", request = "축구공 - 밤비랑 패스", requestEn = "A football - pass it to and fro with Bambi", name = "Football", kind = "ball", uses = new[] { "play" }, sizeM = 0.05f, script = Football },
+            new Example { id = "drum", request = "북 - 누르면 밤비가 둥둥 쳐", requestEn = "A drum - press it and Nilo drums on it", name = "Drum", kind = "toy", uses = new[] { "play", "music" }, sizeM = 0.06f, script = Drum },
+            new Example { id = "football", request = "축구공 - 밤비랑 패스", requestEn = "A football - pass it to and fro with Nilo", name = "Football", kind = "ball", uses = new[] { "play" }, sizeM = 0.05f, script = Football },
             new Example { id = "lamp", request = "스탠드 조명 - 누르면 켜지고 꺼져", requestEn = "A desk lamp - press it and it goes on and off", name = "Desk lamp", kind = "lamp", uses = new[] { "light", "decor" }, sizeM = 0.11f, script = Lamp },
         };
 

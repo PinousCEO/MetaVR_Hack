@@ -14,14 +14,22 @@ namespace LivingPartner.Host;
 /// Is the partner's name said? The speech recogniser writes "밤비야" in many ways - 밤미야, 반비야, 밤비아, 뱀비야,
 /// 밤삐야, Bamby, Banbi ... The known spellings are a pattern (anywhere in the sentence); on top of that the FIRST
 /// word of a sentence counts when it is one sound away from the call "밤비야" (one jamo: 밤미야 yes, 밤에야 no) or one
-/// letter away from Bambi / Bamby / Bambie.
+/// letter away from Nilo / Bamby / Bambie.
 /// </summary>
 public static class NameRules
 {
-    // "밤비야" as the transcription writes it: 밤비야, 밤 비야, 방비야, 반비야, 뱀비, 밤삐 ... and Bambi / Bamby.
+    // "밤비야" as the transcription writes it: 밤비야, 밤 비야, 방비야, 반비야, 뱀비, 밤삐 ... and Nilo / Bamby.
     // The partner used to be called 밤별 (Bambyeol) and its owner still says both, so that name is the partner as well:
     // 밤별, 밤별아, 밤별이, 밤벌아, 밤볕아, 밤벼리 - and, only with the calling ending on it (they are words of their own
     // otherwise: 방별 = per room, 밤 별 = the stars at night), 방별아, 반별이, 박별아, 발별아, 밤 별아.
+    static readonly Regex WakePhrase = new(@"^\s*hey[\s,!.:;–—-]+(?:nilo|nee[\s-]?lo)\b[\s,!.:;–—-]*", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+    public static bool Wake(string text, out bool only)
+    {
+        string input = text ?? "";
+        var match = WakePhrase.Match(input);
+        only = match.Success && string.IsNullOrWhiteSpace(input.Substring(match.Length).Trim('?', '!', '.'));
+        return match.Success;
+    }
     public static readonly Regex NameRx = new(
         @"((밤|방|반|뱀|범|빰|밥)\s?(비|삐|피)|밤(별|뼐|볕|벌)(아|이|야)?|밤벼리|밤\s(별|벌)(아|야)|(방|반|빰|박|발)\s?(별|뼐|볕|벌)(아|이|야)|bam\s?-?\s?b(i|y|ie|ee)\b|bambi|bam\s?-?\s?[bp]?y(eo|u|o)l\b)\s*(야|아|얌|양)?",
         RegexOptions.IgnoreCase);
@@ -95,6 +103,7 @@ public static class NameRules
     /// <summary>Where the name stands in the sentence (punctuation taken out first): start and length, or (-1, 0).</summary>
     static (int at, int length) Find(string t)
     {
+        if (Regex.IsMatch(t, @"^Nilo\b", RegexOptions.IgnoreCase)) return (0, 4);
         var m = NameRx.Match(t);
         // (the pattern's "밥비" / "방비" inside a longer word - 밥비용, 방비를 - is not looked at more closely here: it never was)
         int space = t.IndexOf(' ');
@@ -106,6 +115,7 @@ public static class NameRules
     /// <summary>Does this name the partner? only: nothing but the name (a call, "밤비야!").</summary>
     public static bool Named(string text, out bool only)
     {
+        if (Wake(text, out only)) return true;
         string t = Letters(text);
         only = false;
         var (at, length) = Find(t);
@@ -121,10 +131,10 @@ public static class NameRules
     /// <summary>The sentence without the partner's name (for the plain parsers, which must not trip over it).</summary>
     public static string Strip(string text)
     {
-        string t = (text ?? "").TrimStart();
+        string t = WakePhrase.Replace(text ?? "", "").TrimStart();
         var first = Regex.Match(t, @"^[\p{L}\p{Nd}]+");
         if (first.Success && NearCall(first.Value)) t = " " + t[first.Length..];
-        return NameRx.Replace(t, " ");
+        return Regex.Replace(NameRx.Replace(t, " "), @"^Nilo\b[, ]*", "", RegexOptions.IgnoreCase);
     }
 }
 
@@ -275,7 +285,7 @@ public static class PlayRules
         return (own ?? Enumerable.Empty<GamePackDef>()).FirstOrDefault(g => g != null && g.id == id);
     }
 
-    static readonly Regex PartnerRx = new(@"밤비|밤별|\bbambi\b", RegexOptions.IgnoreCase);
+    static readonly Regex PartnerRx = new(@"밤비|밤별|\b(?:nilo|bambi)\b", RegexOptions.IgnoreCase);
 }
 
 public static class ScreenReading

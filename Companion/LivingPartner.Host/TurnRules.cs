@@ -23,7 +23,7 @@ public static class HearRules
     /// 10:57:08 and 11:04:28 on 2026-11-18) and the partner did what the user never said. Worded so that an echo of it
     /// is told from a real call of the name (Drop).
     /// </summary>
-    public const string Prompt = "등장하는 이름: 밤비 (Bambi).";
+    public const string Prompt = "The companion is called Nilo.";
 
     // the sentences the prompt carried until 2026-11-18 (a headset build may still be answered by an older host's echo in a log; the tests use the real strings)
     static readonly string[] OldExamples =
@@ -56,7 +56,7 @@ public static class HearRules
         string flat = Flat(t);
         if (flat.Length == 0) return "nothing was said";
         string prompt = Flat(Prompt);
-        if (flat.Contains(Flat("등장하는 이름")) || (flat.Length >= 6 && prompt.Contains(flat))) return "the recogniser gave its own hint back";
+        if (flat == Flat("밤비 (Bambi)") || flat.Contains(Flat("등장하는 이름")) || (flat.Length >= 6 && prompt.Contains(flat))) return "the recogniser gave its own hint back";
         int old = OldExamples.Count(e => flat.Contains(Flat(e)));
         if (old >= 2) return $"the recogniser gave the old hint's example sentences back ({old} of them)";
         // "밤비야, A. 밤비야, B. 밤비야, C.": nobody talks like that - a list of sentences that each call the name
@@ -84,7 +84,7 @@ public static class HearRules
 /// <summary>What the language model is told about the moment: where the partner is, what is open, what the user points at.</summary>
 public sealed class TurnContext
 {
-    public string name = "Bambi", personality = "";
+    public string name = "Nilo", personality = "";
     /// <summary>Where the partner is, in one clause: "on the desk in the room" | "inside the PC, walking freely on the desktop of display 2" | "inside the PC on display 1, bound to the window 'Cat videos - Browser'".</summary>
     public string where = "on the desk in the room";
     public bool insidePc;
@@ -192,6 +192,7 @@ public static class TurnRules
         string t = Regex.Replace(NameRules.Strip(text ?? ""), @"[\p{P}\p{S}]+", " ");
         t = Regex.Replace(t, @"\s+", " ").Trim();
         if (t.Length == 0 || t.Length > 16) return null;
+        if (t is "화면에 들어가" or "화면에 들어가 줘" or "화면으로 들어가" or "모니터로 들어가" or "모니터에 들어가" or "TV로 들어가" or "티비로 들어가" or "화면 안으로 들어가") return "enterPortal";
         if (OutRx.IsMatch(t)) return "returnToMr";
         if (QuietRx.IsMatch(t)) return "quietOn";
         if (CancelRx.IsMatch(t)) return "cancel";
@@ -306,7 +307,7 @@ public static class TurnRules
         }
         sb.Append($"The user's message is in {x.language}: answer in {x.language}.");
         if (x.mode == "afterOffer") sb.Append(" NOTE: this was picked up by your always-open ears a moment after you asked the user a question (see RIGHT NOW above: whether to put what you made up in the marketplace, or whether to get a game). If it answers that question choose the action named there; if it is plainly a request to you, carry it out; if it is talk with somebody else or to themselves, return reply \"\" and action \"none\".");
-        else if (x.mode == "overheard") sb.Append(" IMPORTANT: this message was picked up by your always-open ears. It may not be meant for you at all. Answer ONLY if it names you (Bambi / 밤비), or is a request or a question you can act on or answer as their desk companion. If it sounds like talk with someone else, a call, a video, thinking aloud about other things, or a fragment that makes no sense, return reply \"\" and action \"none\" - staying silent is right far more often than answering.");
+        else if (x.mode == "overheard") sb.Append(" IMPORTANT: this message was picked up by your always-open ears. It may not be meant for you at all. Answer ONLY if it names you (Nilo / 밤비), or is a request or a question you can act on or answer as their desk companion. If it sounds like talk with someone else, a call, a video, thinking aloud about other things, or a fragment that makes no sense, return reply \"\" and action \"none\" - staying silent is right far more often than answering.");
         return sb.ToString();
     }
 
@@ -334,6 +335,11 @@ public static class TurnRules
 /// </summary>
 public static class EnterRules
 {
+    // Pointing at a monitor picks where to cross. Attaching to an app requires asking to enter its window.
+    public static bool IntoWindow(string words) => Regex.IsMatch(words ?? "",
+        @"창\s*(?:안(?:으로|에)?|으로|에)\s*(?:들어|가|붙)|\b(?:into|inside|attach to)\s+(?:(?:this|that|the|my|a)\s+)?(?:[\w-]+\s+){0,3}window\b",
+        RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
+
     /// <summary>"Now": samples no older than this.</summary>
     public const double Fresh = 1.2;
     /// <summary>A sentence older than this is not gone by any more (its pointing is history).</summary>

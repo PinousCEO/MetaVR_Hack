@@ -17,7 +17,7 @@ namespace LivingPartner.Shared
         public static readonly string[] Names =
         {
             "tap", "pop", "open", "close", "page", "hammer", "sparkle", "ta-da", "coin", "error",
-            "whoosh", "land", "squeak", "step", "hit", "bounce", "win", "lose", "drop", "tick",
+            "portal-in", "portal-out", "kick", "glove", "spell", "whoosh", "land", "squeak", "step", "hit", "bounce", "win", "lose", "drop", "tick",
         };
 
         // notes (Hz)
@@ -30,6 +30,31 @@ namespace LivingPartner.Shared
             float[] b;
             switch (name)
             {
+                case "portal-in":
+                    // Air draws tight before the surface seals. Leave only a low, damped resonance.
+                    b = New(0.32f);
+                    Hiss(b, 0f, .17f, 480f, 3200f, 1350f, 6100f, .075f, .23f, .80f, 211u);
+                    Tone(b, .115f, 495f, 132f, .09f, .006f, .052f, .75f);
+                    Tone(b, .151f, 180f, 105f, .07f, .002f, .039f, .53f);
+                    return Finish(b, .81f);
+                case "portal-out":
+                    b = New(.29f);
+                    Tone(b, 0f, 150f, 320f, .08f, .003f, .047f, .62f);
+                    Hiss(b, .022f, .22f, 510f, 7200f, 180f, 1800f, .008f, .076f, 1f, 223u);
+                    return Finish(b, .79f);
+                case "kick":
+                case "glove":
+                    bool save = name == "glove";
+                    b = New(.23f);
+                    Tone(b, 0f, save ? 235f : 175f, 82f, .06f, .001f, .047f, .94f);
+                    Hiss(b, 0f, .095f, 450f, save ? 5100f : 2700f, 180f, 1100f, .001f, .027f, .88f, 229u);
+                    if (save) Tone(b, .024f, 540f, 270f, .045f, .002f, .029f, .27f);
+                    return Finish(b, .87f);
+                case "spell":
+                    b = New(.19f);
+                    Tone(b, 0f, 900f, 380f, .085f, .002f, .048f, .59f);
+                    Hiss(b, .006f, .13f, 1400f, 6500f, 480f, 1800f, .004f, .045f, .73f, 241u);
+                    return Finish(b, .68f);
                 case "tap":      // a soft wooden tick: a button was pressed
                     b = New(0.07f);
                     Tone(b, 0f, 620f, 480f, 0.03f, 0.001f, 0.014f, 1f);

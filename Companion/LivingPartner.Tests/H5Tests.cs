@@ -24,7 +24,7 @@ public class NameTests
     [InlineData("밤비, 노래 틀어 줘")]
     [InlineData("밤비야, 여기 유튜브 화면에 들어가가지고 새로 고침을 한 번 해줘")]
     [InlineData("밤이야 이쪽으로 들어가 봐")]
-    [InlineData("Bambi, open notepad")]
+    [InlineData("Nilo, open notepad")]
     [InlineData("bamby come here")]
     [InlineData("Bambie, play tennis")]
     [InlineData("Banbi, refresh the page")]
@@ -522,7 +522,7 @@ public class WriterQualityTests
         }
     }
 
-    static JObject Answer(string script, string design = "1. The player moves a hand under the stars.\n2. Bambi runs along.\n3. Nothing crosses the glass.\n4. Three misses end it.\n5. Upright: things fall.") => new JObject
+    static JObject Answer(string script, string design = "1. The player moves a hand under the stars.\n2. Nilo runs along.\n3. Nothing crosses the glass.\n4. Three misses end it.\n5. Upright: things fall.") => new JObject
     {
         ["design"] = design, ["title"] = "Test", ["howTo"] = "Tap it.", ["script"] = script, ["phrases"] = new JArray(), ["art"] = new JArray(),
     };
@@ -564,11 +564,11 @@ public class WriterQualityTests
     public void The_critic_reads_what_passed_the_check_and_its_defects_go_into_one_repair()
     {
         // it runs - but it is a flat picture of a goalkeeper: the critic says so, and ONE repair is asked for at the repair's effort
-        var model = new Model(new[] { Answer(Good), Answer(Other, "1. Bambi kicks the ball out of the screen.") },
-            Verdict("The ball is only drawn inside the field: Bambi must kick it OUT with shoot_out.", "The save must come from out_events."));
+        var model = new Model(new[] { Answer(Good), Answer(Other, "1. Nilo kicks the ball out of the screen.") },
+            Verdict("The ball is only drawn inside the field: Nilo must kick it OUT with shoot_out.", "The save must come from out_events."));
         var (res, stages, log) = Write(model, Football());
         Assert.True(res.ok); Assert.True(res.judged); Assert.True(res.judgedRepairTaken);
-        Assert.Equal(Other.Trim(), res.script.Trim()); Assert.Equal("1. Bambi kicks the ball out of the screen.", res.design);
+        Assert.Equal(Other.Trim(), res.script.Trim()); Assert.Equal("1. Nilo kicks the ball out of the screen.", res.design);
         Assert.Equal(3, res.calls); Assert.Equal(1, res.repairs); Assert.Equal(2, res.defects.Count);
         // (H7: the writing for the critic is asked at the effort of a first writing - the program runs, the user is waiting; at the repair's effort it took 111 s and 187 s)
         Assert.Equal(new[] { false, false }, model.repairs);
@@ -589,7 +589,7 @@ public class WriterQualityTests
     {
         Assert.Equal(2, ScriptWriter.Repairs(new ScriptRequest { kind = ScriptRequest.Game })); Assert.Equal(3, ScriptWriter.Repairs(new ScriptRequest { kind = ScriptRequest.Thing }));
         // broken, mended, and then the critic finds something: first + repair + critic + repair = 4 calls, and no more
-        var model = new Model(new[] { Answer(Broken), Answer(Good), Answer(Other), Answer(Good) }, Verdict("Bambi has no part in it."), Verdict("Still not it."));
+        var model = new Model(new[] { Answer(Broken), Answer(Good), Answer(Other), Answer(Good) }, Verdict("Nilo has no part in it."), Verdict("Still not it."));
         var (res, _, _) = Write(model, Football());
         Assert.True(res.ok); Assert.Equal(4, res.calls); Assert.Equal(2, res.repairs); Assert.Equal(Other.Trim(), res.script.Trim()); Assert.Single(model.judged);
         // both repairs went on making it run: the critic is still asked, but nothing is left to repair with - the program is kept

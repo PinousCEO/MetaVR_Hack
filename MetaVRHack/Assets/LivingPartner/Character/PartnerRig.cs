@@ -16,7 +16,7 @@ namespace LivingPartner.Character
     }
 
     /// <summary>
-    /// The one partner character ("Bambi"): the owner's own model (Art/Characters/Tripo) - a small figure in a yellow
+    /// The one partner character ("Nilo"): the owner's own model (Art/Characters/Tripo) - a small figure in a yellow
     /// bonnet and romper with nothing on the face but two eyes - skinned to the shared Skeleton, with its own texture
     /// under flat two-tone shading and an ink outline.
     /// It is a PREFAB (Assets/LivingPartner/Prefabs/Partner.prefab): bones, skinned body, eyes and contact shadow are real

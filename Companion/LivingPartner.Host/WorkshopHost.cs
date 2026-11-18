@@ -218,7 +218,7 @@ public sealed class WorkshopHost
         IWorkshopModel model;
         if (game)
         {
-            model = GameModel ?? throw new InvalidOperationException("게임을 만들려면 ANTHROPIC_API_KEY가 필요해.");
+            model = GameModel ?? throw new InvalidOperationException("Set ANTHROPIC_API_KEY on the companion to create a game.");
             o.model = model.Name;
             o.store = false;
         }

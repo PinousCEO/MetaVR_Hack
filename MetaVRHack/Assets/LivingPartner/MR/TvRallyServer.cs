@@ -95,7 +95,7 @@ namespace LivingPartner.MR
             bool page = parts[0] == "GET" && (path == _path || path == _path + "/");
             bool state = parts[0] == "GET" && path == _path + "/state";
             bool ready = parts[0] == "POST" && path == _path + "/ready";
-            bool picture = parts[0] == "GET" && path == _path + "/bambi.png";
+            bool picture = parts[0] == "GET" && path == _path + "/nilo.png";
             if (state || ready) Interlocked.Exchange(ref _lastSeen, DateTime.UtcNow.Ticks);
             if (ready) Interlocked.Exchange(ref _ready, 1);
             byte[] body = page ? _page : picture ? _portrait : state || ready ? _state : Array.Empty<byte>();

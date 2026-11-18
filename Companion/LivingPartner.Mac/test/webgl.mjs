@@ -93,7 +93,7 @@ try{
   await picture("demon-gate");
   demons.phase=3;demons.choices=[0,6,8];
   await until(()=>js('document.querySelectorAll("#swarm-choices img").length===3&&[...document.querySelectorAll("#swarm-choices img")].every(i=>i.complete&&i.naturalWidth>0)'),"three augment icons");
-  assert.match(await js('document.getElementById("game-score").textContent'),/31점/);await picture("demon-choices");
+  assert.match(await js('document.getElementById("game-score").textContent'),/31 points/);await picture("demon-choices");
   await js('document.getElementById("unfold").click()');assert.equal(await js('document.getElementById("panel").hidden'),false);
   await js('document.getElementById("fold").click()');assert.equal(await js('document.getElementById("panel").hidden'),true);
   await js('window.loss=document.getElementById("native-actors").getContext("webgl").getExtension("WEBGL_lose_context");window.loss.loseContext()');
@@ -124,7 +124,7 @@ try{
     await picture("gomoku-candidate");
     const accepted=await take("gomoku.state",s=>s.active&&s.turn===1&&s.revision>white.revision);
     clearInterval(heartbeat);assert.equal((await board()).stones.filter(n=>n===2).length,1);
-    await until(()=>js(tableDoc+'.getElementById("count").textContent==="2수"'),"both stones drawn on the TV");
+    await until(()=>js(tableDoc+'.querySelector("canvas").getAttribute("aria-label")==="Gomoku board, 2 stones"'),"both stones drawn on the TV");
     send("gomoku.frame",{...camera,seq:++seq});
     await sleep(300);assert.equal((await board()).revision,accepted.revision);
     await picture("gomoku-two-players");

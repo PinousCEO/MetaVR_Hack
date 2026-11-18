@@ -21,6 +21,7 @@ public sealed class Client
     /// </summary>
     public volatile string NewestSnapshot;
     public double ConnectedAt, LastSeen;
+    public double WindowEntryUntil;
     public long MsgIn;
 }
 
@@ -160,7 +161,7 @@ public sealed class Core
         State.character ??= new CharacterInfo(); State.settings ??= new SettingsMsg();
         State.calibrations ??= new(); State.modules ??= new(); State.tasks ??= new();
         // the partner was renamed twice (Momo, then Bambyeol): a state file from before still carries the old name
-        if (State.character.name is "Momo" or "Bambyeol" or "밤별" or "모모" or "" or null) State.character.name = "Bambi";
+        if (State.character.name is "Bambi" or "밤비" or "Momo" or "Bambyeol" or "밤별" or "모모" or "" or null) State.character.name = "Nilo";
         // tasks that were running when the host stopped did not finish: mark them honestly instead of resuming blindly
         foreach (var t in State.tasks)
             if (t.status is "AnalysisStarted" or "ChangeStarted" or "TestStarted" or "TaskQueued")
@@ -476,7 +477,15 @@ public sealed class Core
                 break;
             case Msg.MrStatus: if (IsMr(c)) { Mr = env.Body<MrStatus>(); MrSeenAt = HostClock.Now; } break;
             case Msg.HeadPose: Broadcast(Msg.HeadPose, env.Body<HeadPose>(), o => o.Role == Roles.Pc); break;
-            case Msg.TargetQuery: { var q = env.Body<TargetQuery>(); if (q != null) Send(c, Msg.TargetResult, Desktop.Resolve(q)); break; }
+            case Msg.TargetQuery:
+            {
+                var q = env.Body<TargetQuery>();
+                if (q == null) break;
+                bool enterWindow = q.direction == 0 && c.WindowEntryUntil > HostClock.Now;
+                Send(c, Msg.TargetResult, Desktop.Resolve(q, enterWindow));
+                if (!q.preview) c.WindowEntryUntil = 0;
+                break;
+            }
             case Msg.TransitionRequest: { var r = env.Body<TransitionRequest>(); if (r != null) { Tennis.Stop("the partner is asked to go somewhere"); Coord.OnRequest(c, r); } break; }
             case Msg.GameCommand: { var g = env.Body<GameCommand>(); if (g != null) Tennis.OnCommand(c, g); break; }
             case Msg.World: { var w = env.Body<WorldCommand>(); if (w != null) World.OnCommand(c, w); break; }
@@ -630,6 +639,7 @@ public sealed class Core
                     // a display, never an old sample (EnterRules). With nothing: no spot is sent, and the headset
                     // takes the display it looks at now, else the middle of the one nearest to the partner.
                     var spot = EnterRules.Target(PointerHistoryFor(c), u.t0, u.t1, HostClock.Now, out string why);
+                    c.WindowEntryUntil = EnterRules.IntoWindow(u.text) ? HostClock.Now + 10 : 0;
                     if (spot != null && ScreenMath.FindMonitor(Desktop.Monitors, spot.monitorId) == null) { why = "the display of that spot is not there (any more)"; spot = null; }
                     res.pointer = spot == null ? null : new PointerSample { t = HostClock.Now, monitorId = spot.monitorId, u = spot.u, v = spot.v, valid = true };
                     res.needsPointer = false;

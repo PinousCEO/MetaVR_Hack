@@ -7,7 +7,7 @@ namespace LivingPartner.Tests
     /// <summary>
     /// The example scripts: each passes the check without a warning, survives five minutes of random hands, and is
     /// PLAYED here by a bot that means it (the omok player makes legal moves until somebody wins, and a referee
-    /// watches whether Bambi blocks; the memory player remembers; the tag player chases).
+    /// watches whether Nilo blocks; the memory player remembers; the tag player chases).
     /// Everything is driven the way a renderer drives a game - hands in, sprites out. Nothing is exposed for tests.
     /// </summary>
     public class GlassScriptExampleTests
@@ -142,7 +142,7 @@ namespace LivingPartner.Tests
         static float CellX(GlassGame g, int c) { return BoardX0(g) + (c + 0.5f) * Cell; }
         static float CellY(int r) { return BoardY0 + (r + 0.5f) * Cell; }
 
-        /// <summary>The board as the picture shows it: 0 empty, 1 the player's stone, 2 Bambi's. Index = row * 9 + col (0-based).</summary>
+        /// <summary>The board as the picture shows it: 0 empty, 1 the player's stone, 2 Nilo's. Index = row * 9 + col (0-based).</summary>
         static int[] ReadBoard(GlassScript g)
         {
             var b = new int[N * N];
@@ -192,7 +192,7 @@ namespace LivingPartner.Tests
             return false;
         }
 
-        /// <summary>The player's stone goes to cell i (a tap), then the game runs until Bambi has answered or it is over.</summary>
+        /// <summary>The player's stone goes to cell i (a tap), then the game runs until Nilo has answered or it is over.</summary>
         static int[] Move(GlassScript g, int i, out int bambi)
         {
             int[] before = ReadBoard(g);
@@ -231,14 +231,14 @@ namespace LivingPartner.Tests
                     moves++;
                     int mine = b.Count(v => v == 1), its = b.Count(v => v == 2);
                     Assert.Equal(moves, mine);
-                    Assert.True(its == mine || (its == mine - 1 && g.phase == "over"), "Bambi answers every stone with exactly one");
+                    Assert.True(its == mine || (its == mine - 1 && g.phase == "over"), "Nilo answers every stone with exactly one");
                     Assert.True(moves <= 41);
                 }
-                Step(g, null, 120);                                  // (Bambi finishes its walk)
+                Step(g, null, 120);                                  // (Nilo finishes its walk)
                 b = ReadBoard(g);
                 bool p = HasFive(b, 1), q = HasFive(b, 2);
                 Assert.False(p && q);
-                if (q) { bambiWins++; Assert.Contains("Bambi wins", g.result); Assert.Equal(0, g.score); Assert.Equal("cheer", g.petPose); }
+                if (q) { bambiWins++; Assert.Contains("Nilo wins", g.result); Assert.Equal(0, g.score); Assert.Equal("cheer", g.petPose); }
                 else if (p) { playerWins++; Assert.Contains("You win", g.result); Assert.Equal(1, g.score); Assert.Equal("down", g.petPose); }
                 else { draws++; Assert.Contains("draw", g.result); }
                 if (p || q)
@@ -258,7 +258,7 @@ namespace LivingPartner.Tests
                 if (freeCell >= 0) Tap(g, CellX(g, freeCell % N), CellY(freeCell / N));
                 Assert.Equal(stones, ReadBoard(g).Count(v => v != 0));
             }
-            o.WriteLine($"against random legal moves: Bambi won {bambiWins}, the player {playerWins}, draws {draws}");
+            o.WriteLine($"against random legal moves: Nilo won {bambiWins}, the player {playerWins}, draws {draws}");
             Assert.Equal(6, bambiWins);                                  // somebody who plays at random loses every time
         }
 
@@ -296,14 +296,14 @@ namespace LivingPartner.Tests
                             }
                             if (score > best) { best = score; pick = i; }
                         }
-                    var bambiCould = WinningCells(b, 2);              // what Bambi could finish on its coming move (after the player's stone, if that does not take the cell)
+                    var bambiCould = WinningCells(b, 2);              // what Nilo could finish on its coming move (after the player's stone, if that does not take the cell)
                     int[] after = Move(g, pick, out int reply);
                     var threat = WinningCells(Place(b, pick, 1), 1);  // where the player would win next
                     bool playerHasFive = HasFive(Place(b, pick, 1), 1);
                     bambiCould.Remove(pick);
                     if (!playerHasFive)
                     {
-                        Assert.True(reply >= 0, "Bambi did not answer");
+                        Assert.True(reply >= 0, "Nilo did not answer");
                         if (bambiCould.Count > 0)
                         {
                             couldWin++;
@@ -328,8 +328,8 @@ namespace LivingPartner.Tests
                 }
                 if (HasFive(b, 1)) playerWins++;
             }
-            o.WriteLine($"{games} games against an attacker: a four had to be blocked {mustBlock} times and was {blocked} times; Bambi could win {couldWin} times and did {tookWin} times; open threes {openThrees}, answered at an end {blockedThrees}; the attacker won {playerWins} games");
-            // (Bambi kills most lines at two or three stones, so fours are rare here: the constructed positions below are the real test of that)
+            o.WriteLine($"{games} games against an attacker: a four had to be blocked {mustBlock} times and was {blocked} times; Nilo could win {couldWin} times and did {tookWin} times; open threes {openThrees}, answered at an end {blockedThrees}; the attacker won {playerWins} games");
+            // (Nilo kills most lines at two or three stones, so fours are rare here: the constructed positions below are the real test of that)
             Assert.Equal(mustBlock, blocked);
             Assert.True(couldWin >= 10); Assert.Equal(couldWin, tookWin);
             Assert.True(blockedThrees >= openThrees * 0.8, "open threes are blocked");
@@ -369,7 +369,7 @@ namespace LivingPartner.Tests
         {
             for (int seed = 1; seed <= 8; seed++)
             {
-                // an OPEN FOUR: the player has 3,5 4,5 5,5 with both ends free and plays 6,5. Bambi has to take one of the two ends.
+                // an OPEN FOUR: the player has 3,5 4,5 5,5 with both ends free and plays 6,5. Nilo has to take one of the two ends.
                 var g = OmokWith(seed, new[] { "3,5", "4,5", "5,5" }, new[] { "1,1", "9,9", "1,9" });
                 int[] b = Move(g, At(6, 5), out int reply);
                 Assert.Contains(reply, new[] { At(2, 5), At(7, 5) });
@@ -379,7 +379,7 @@ namespace LivingPartner.Tests
                 Move(g, other, out _);
                 Assert.Equal("over", g.phase); Assert.Contains("You win", g.result); Assert.Equal(1, g.score);
 
-                // A FOUR WITH ONE END SHUT (Bambi's stone at 2,5): there is exactly one cell to block, on the far side
+                // A FOUR WITH ONE END SHUT (Nilo's stone at 2,5): there is exactly one cell to block, on the far side
                 g = OmokWith(seed, new[] { "3,5", "4,5", "5,5" }, new[] { "2,5", "9,9", "1,9" });
                 Move(g, At(6, 5), out reply);
                 Assert.Equal(At(7, 5), reply);
@@ -399,11 +399,11 @@ namespace LivingPartner.Tests
                 Move(g, At(6, 5), out reply);
                 Assert.Contains(reply, new[] { At(3, 5), At(7, 5), At(2, 5), At(8, 5) });
 
-                // WIN BEFORE BLOCK: the player makes a four, but Bambi has four of its own with a free end - it wins instead of blocking
+                // WIN BEFORE BLOCK: the player makes a four, but Nilo has four of its own with a free end - it wins instead of blocking
                 g = OmokWith(seed, new[] { "3,5", "4,5", "5,5", "9,1" }, new[] { "2,8", "3,8", "4,8", "5,8" });
                 Move(g, At(6, 5), out reply);
                 Assert.Contains(reply, new[] { At(1, 8), At(6, 8) });
-                Assert.Equal("over", g.phase); Assert.Contains("Bambi wins", g.result); Assert.Equal(0, g.score);
+                Assert.Equal("over", g.phase); Assert.Contains("Nilo wins", g.result); Assert.Equal(0, g.score);
                 Step(g, null, 5);
                 Assert.Equal(5, g.sprites.Count(s => s.art == GlassArt.RingShape && s.color == 0xE2574C));
 
@@ -457,8 +457,8 @@ namespace LivingPartner.Tests
             }
             Assert.Equal(1, ReadBoard(g)[cell]);
             Assert.True(tapSound);
-            // Bambi thinks: it walks to the side of the board nearest its move, then its stone lands
-            Assert.Equal("Bambi is thinking...", g.banner);
+            // Nilo thinks: it walks to the side of the board nearest its move, then its stone lands
+            Assert.Equal("Nilo is thinking...", g.banner);
             for (int f = 0; f < 60 && reply < 0; f++)
             {
                 Step(g, GlassScriptTests.Hand(x, y));
@@ -483,7 +483,7 @@ namespace LivingPartner.Tests
         [Fact]
         public void Omok_stays_cheap()
         {
-            // a board that is nearly full: the most stones to draw, and Bambi still has to think
+            // a board that is nearly full: the most stones to draw, and Nilo still has to think
             var g = new GlassScript { touch = true, Precise = true };
             g.Start(GlassScriptExamples.Pack(GlassScriptExamples.Find("omok")), 3);
             GlassScriptTests.SkipIntro(g);
@@ -491,7 +491,7 @@ namespace LivingPartner.Tests
             var rng = new GlassRng(); rng.Seed(5);
             while (g.phase != "over")
             {
-                // a careful player: it blocks what Bambi could finish, and Bambi's threes; otherwise it plays far from everything
+                // a careful player: it blocks what Nilo could finish, and Nilo's threes; otherwise it plays far from everything
                 int[] b = ReadBoard(g);
                 var free = Enumerable.Range(0, N * N).Where(i => b[i] == 0).ToList();
                 var danger = WinningCells(b, 2);
@@ -506,12 +506,12 @@ namespace LivingPartner.Tests
                         foreach (var (dc, dr) in Dirs) near = Math.Max(near, Run(b, i % N, i / N, dc, dr, 2) + Run(b, i % N, i / N, -dc, -dr, 2));
                         int own = 0;
                         foreach (var (dc, dr) in Dirs) own = Math.Max(own, Run(b, i % N, i / N, dc, dr, 1) + Run(b, i % N, i / N, -dc, -dr, 1));
-                        int score = (near >= 2 ? near * 100 : 0) - own * 10 + rng.Int(5);        // break Bambi's lines, never build one of its own
+                        int score = (near >= 2 ? near * 100 : 0) - own * 10 + rng.Int(5);        // break Nilo's lines, never build one of its own
                         if (score > best) { best = score; pick = i; }
                     }
                 }
                 Step(g, GlassScriptTests.Hand(CellX(g, pick % N), CellY(pick / N), 0.06f));
-                g.Step(Dt, GlassScriptTests.Hand(CellX(g, pick % N), CellY(pick / N), 0.004f));     // the tap: the stone, the test for five, and Bambi's thinking
+                g.Step(Dt, GlassScriptTests.Hand(CellX(g, pick % N), CellY(pick / N), 0.004f));     // the tap: the stone, the test for five, and Nilo's thinking
                 thinking = Math.Max(thinking, g.Box.LastInstructions);
                 int had = ReadBoard(g).Count(v => v == 2);
                 for (int f = 0; f < 60 && g.phase != "over"; f++)
@@ -526,7 +526,7 @@ namespace LivingPartner.Tests
                 stones = ReadBoard(g).Count(v => v != 0);
             }
             Assert.Equal("", g.Error);
-            o.WriteLine($"omok with {stones} stones: an ordinary frame at most {quiet} steps ({100.0 * quiet / budget:0.00} % of {budget}), the frame in which Bambi thinks {thinking} ({100.0 * thinking / budget:0.0} %)");
+            o.WriteLine($"omok with {stones} stones: an ordinary frame at most {quiet} steps ({100.0 * quiet / budget:0.00} % of {budget}), the frame in which Nilo thinks {thinking} ({100.0 * thinking / budget:0.0} %)");
             Assert.True(stones >= 20, "stones " + stones);
             int full = quiet + (N * N - stones) * 100;                  // (each stone more costs under a hundred steps to draw)
             o.WriteLine($"with all {N * N} cells taken an ordinary frame would be about {full} steps ({100.0 * full / budget:0.00} %)");
@@ -554,13 +554,13 @@ namespace LivingPartner.Tests
                 coins += g.sounds.Count(s => s == "coin");
                 if (g.petPose == "cheer") cheered = true;
                 if (g.banner.Contains("faster")) bannerSeen = true;
-                // the basket (the brown rectangle) follows the hand, and Bambi runs along under it
+                // the basket (the brown rectangle) follows the hand, and Nilo runs along under it
                 var basket = g.sprites.First(s => s.art == GlassArt.Rect && s.color == 0x9A6B4F);
                 Assert.InRange(basket.x, 0.11f, g.W - 0.11f);
                 if (f > 60) Assert.True(Math.Abs(basket.x - Math.Clamp(hand.x[0], 0.12f, g.W - 0.12f)) < 0.2f);
             }
             Step(g, hand, 45);
-            Assert.Equal(g.sprites.First(s => s.art == GlassArt.Rect && s.color == 0x9A6B4F).x, g.petX, 1);      // the hand rests: Bambi stands under the basket
+            Assert.Equal(g.sprites.First(s => s.art == GlassArt.Rect && s.color == 0x9A6B4F).x, g.petX, 1);      // the hand rests: Nilo stands under the basket
             o.WriteLine($"catch: after 40 s with a hand: score {g.score}, lives {g.lives}, level {g.level}, phase {g.phase}");
             Assert.Equal("play", g.phase);
             Assert.True(g.score >= 25, "score " + g.score);
@@ -652,10 +652,10 @@ namespace LivingPartner.Tests
             Step(g, null, 30);
             Assert.Equal("00:05", Clock());
             Assert.InRange(Lit(), 9, 13);                              // a sixth of the sixty dots
-            Assert.True(g.petCustom); Assert.Equal("study", g.PetMotion);     // Bambi sits and writes: the script's own motion
+            Assert.True(g.petCustom); Assert.Equal("study", g.PetMotion);     // Nilo sits and writes: the script's own motion
             Assert.True(g.petCustomPose.HipsOffset.Y < -0.05f, "sitting");
             Assert.True(g.petCustomPose[Bone.ArmUR].X < -40f, "the writing hand is up in front");
-            // a pause: the clock stands still, Bambi stops; again: it goes on
+            // a pause: the clock stands still, Nilo stops; again: it goes on
             Step(g, GlassScriptTests.Hand(cx, cy - 0.1f), 17);
             Assert.Contains(g.sprites, s => s.text == "tap to start");
             string paused = Clock();
@@ -700,7 +700,7 @@ namespace LivingPartner.Tests
             Assert.True(g.petX > px + 0.2f, "it ran from " + px + " to " + g.petX);
             Assert.True(ran && right);
             Assert.Equal(0, g.score);
-            // chase it: the hand is a little faster than Bambi
+            // chase it: the hand is a little faster than Nilo
             int squeaks = 0; float minX = 9, maxX = -9, minY = 9, maxY = -9;
             while (g.phase == "play")
             {
@@ -712,11 +712,11 @@ namespace LivingPartner.Tests
                 minX = Math.Min(minX, g.petX); maxX = Math.Max(maxX, g.petX); minY = Math.Min(minY, g.petY); maxY = Math.Max(maxY, g.petY);
                 Assert.True(g.seconds <= 30.1f);
             }
-            o.WriteLine($"tag: caught {g.score} times in 30 s; Bambi stayed within x {minX:0.00}..{maxX:0.00}, y {minY:0.00}..{maxY:0.00}");
+            o.WriteLine($"tag: caught {g.score} times in 30 s; Nilo stayed within x {minX:0.00}..{maxX:0.00}, y {minY:0.00}..{maxY:0.00}");
             Assert.InRange(g.score, 5, 25);
             Assert.Equal(g.score, squeaks);
             Assert.InRange(g.seconds, 29.9f, 30.1f);
-            Assert.Equal("You caught Bambi " + g.score + " times!", g.result);
+            Assert.Equal("You caught Nilo " + g.score + " times!", g.result);
             Assert.True(minX >= 0.13f && maxX <= g.W - 0.13f && minY >= 0.13f && maxY <= 0.87f, "it stays on the field");
             Assert.True(maxX - minX > 0.6f && maxY - minY > 0.3f, "it uses the field");
             // nobody there: it strolls about by itself and is never caught

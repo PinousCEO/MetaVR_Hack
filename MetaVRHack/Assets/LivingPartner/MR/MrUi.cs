@@ -137,7 +137,7 @@ namespace LivingPartner.MR
             UpdateRecords(dt);      // the record picker over the record player (MrRecords)
             UpdateDocs(dt);         // a report or design options on their board, the strip while one is made (MrDocs)
             UpdateWorkStrip(dt);    // the work queue: what the partner is working on, as cards that can be taken and put anywhere (MrWorkStrip)
-            UpdateEyes(dt);         // the one picture of what the user holds up, and the sign "Bambi is looking" (MrEyes)
+            UpdateEyes(dt);         // the one picture of what the user holds up, and the sign "Nilo is looking" (MrEyes)
             UpdateRoomStrip(dt);    // the buttons over a scripted thing that was pressed (MrRoomScript)
             // on a headset nothing can be pointed at until a screen has been calibrated: say how, until it is done
             // no screen is known and looking for them by itself did not work: a line now and then, never a stream of them
@@ -456,7 +456,7 @@ namespace LivingPartner.MR
             if (UpdateWelcome(dt) || !_link.Connected || !_link.NeedsPairing) { p.Hide(); return; }
             p.Show();
             FaceUser(p.transform, Input.HeadPos + Input.HeadRot * new Vector3(0, -0.08f, 0.48f));
-            p.title.text = "컴퓨터에 표시된 6자리 코드 입력";
+            p.title.text = "Enter the six-digit code on your computer";
             p.body.text = "Code: " + _pairEntry.PadRight(6, '·');
             UpdateButtons(p, dt);
         }

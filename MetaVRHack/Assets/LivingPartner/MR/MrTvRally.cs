@@ -49,11 +49,11 @@ namespace LivingPartner.MR
         {
             if (TvPlaying) { _tvAnnounced = false; return; }
             var page = Resources.Load<TextAsset>("TvRallyDisplay");
-            var portrait = Resources.Load<TextAsset>("TvRallyBambi");
+            var portrait = Resources.Load<TextAsset>("TvRallyNilo");
             if (_tvRoot == null || page == null || portrait == null) { Caption("TV Rally display assets are missing.", 5f); return; }
             TvRallyServer session;
             try { session = new TvRallyServer(page.text, portrait.bytes); }
-            catch (Exception e) { Caption("Quest와 컴퓨터를 같은 Wi-Fi에 연결하고 TV 랠리를 다시 열어 주세요.", 7f); Debug.LogWarning("[MR] TV Rally: " + e.Message); return; }
+            catch (Exception e) { Caption("Connect the Quest and TV computer to the same Wi-Fi, then reopen TV Rally.", 7f); Debug.LogWarning("[MR] TV Rally: " + e.Message); return; }
             StopGames("starting TV Rally");
             if (_tn.active || _tnPendingAt >= 0f) ToggleTennis("starting TV Rally");
             _tvServer = session;
@@ -157,22 +157,22 @@ namespace LivingPartner.MR
         int TvReadMotion()
         {
             _tvViewGood = false;
-            if (!_settings.cameraEnabled) { _tvNotice = "가방의 설정에서 카메라 사용을 켜 주세요."; return 0; }
+            if (!_settings.cameraEnabled) { _tvNotice = "Enable the camera in Bag settings."; return 0; }
             CameraShot shot;
             bool available = Input is IMrCameraPreview preview ? preview.CameraPreview(ref _tvPixels, out shot) : Input.CameraFrame(ref _tvPixels, out shot);
             if (!available)
             {
                 _tvFrames = 0;
-                _tvNotice = Input.Simulated ? "몸으로 플레이하려면 Quest 3 또는 3S가 필요해요."
-                    : Input is IMrCameraPreview device && !device.HasCameraPermission ? "Quest의 앱 권한에서 Living AI Partner의\n카메라 접근을 허용해 주세요."
-                    : "카메라 준비 중이에요.\n헤드셋을 착용하고 패스스루를 켜 주세요.";
+                _tvNotice = Input.Simulated ? "Body tracking requires Quest 3 or Quest 3S."
+                    : Input is IMrCameraPreview device && !device.HasCameraPermission ? "Allow camera access for Yonder in Quest app permissions."
+                    : "Put on your headset and enable passthrough.";
                 return 0;
             }
             bool rapid = Time.unscaledTime - _tvCameraAt < 0.4f && (Quaternion.Angle(shot.rotation, _tvPreviousRotation) > 6f || Vector3.Distance(shot.position, _tvPreviousCamera) > 0.06f);
             _tvCameraAt = Time.unscaledTime; _tvPreviousRotation = shot.rotation; _tvPreviousCamera = shot.position;
             _tvNotice = "";
             if (_tvMarks < 2) return 0;
-            if (rapid || !SampleTvRings(shot)) { _tvFrames = 0; _tvNotice = "상대방 양옆의 고리가 함께 보이게 바라봐 주세요."; return 0; }
+            if (rapid || !SampleTvRings(shot)) { _tvFrames = 0; _tvNotice = "Keep the rings on both sides of the other player in view."; return 0; }
             _tvViewGood = true;
             if (_tvGame.phase == TvRallyPhase.Align)
             {
@@ -219,19 +219,19 @@ namespace LivingPartner.MR
         {
             switch (_tvGame.phase)
             {
-                case TvRallyPhase.Join: return _tvServer.ViewerPresent ? "TV 연결 완료\n오른손 엄지와 검지를 맞대면 시작해요." :
-                    "TV 랠리  /  컴퓨터 또는 TV에서 열기\n" + _tvServer.Url + "\nQuest와 같은 Wi-Fi에 연결해 주세요.";
+                case TvRallyPhase.Join: return _tvServer.ViewerPresent ? "TV connected. Pinch to begin." :
+                    "TV Rally · Open on your TV or computer\n" + _tvServer.Url + "\nUse the same Wi-Fi as your Quest.";
                 case TvRallyPhase.Align:
                     if (_tvNotice.Length > 0) return _tvNotice;
-                    if (_tvMarks == 0) return "TV 가운데를 보고\n오른손 엄지와 검지를 맞대세요.";
-                    if (_tvMarks == 1) return "TV 옆에 선 상대방의 가슴을 보고 다시 핀치하세요.\n상대방은 잠시 팔을 내려 주세요.";
-                    return "상대방은 팔을 내리고 잠시 그대로 서 주세요.";
+                    if (_tvMarks == 0) return "Look at the center of the TV and pinch.";
+                    if (_tvMarks == 1) return "Look at the other player’s chest and pinch. Ask them to lower their arms.";
+                    return "Lower your arms and hold still.";
                 case TvRallyPhase.Serve:
-                case TvRallyPhase.Reach: return _tvNotice.Length > 0 ? _tvNotice : "TV 앞 사람 차례! 밝은 고리에 손을 뻗으세요.  " + _tvGame.score + " / 6";
-                case TvRallyPhase.Volley: return "헤드셋 차례! 날아오는 공을 손으로 받아치세요.";
-                case TvRallyPhase.Return: return "밤비에게 돌아갔어요!  " + _tvGame.score + " / 6";
-                case TvRallyPhase.Miss: return "팔을 내려 주세요. 밤비가 다시 서브해요.";
-                default: return "둘이서 랠리 6회 성공!\n오른손 엄지와 검지를 맞대면 다시 시작해요.";
+                case TvRallyPhase.Reach: return _tvNotice.Length > 0 ? _tvNotice : "TV player: reach for the bright ring.  " + _tvGame.score + " / 6";
+                case TvRallyPhase.Volley: return "Quest player: return the ball.";
+                case TvRallyPhase.Return: return "Back to Nilo!  " + _tvGame.score + " / 6";
+                case TvRallyPhase.Miss: return "Lower your arms. Nilo will serve.";
+                default: return "Six returns! Pinch to play again.";
             }
         }
 

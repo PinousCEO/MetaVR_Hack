@@ -7,7 +7,7 @@ using UnityEngine;
 namespace LivingPartner.MR
 {
     /// <summary>
-    /// THE PARTNER'S EYES - "when I SHOW some real object, Bambi makes it": the host asks for ONE picture of what the
+    /// THE PARTNER'S EYES - "when I SHOW some real object, Nilo makes it": the host asks for ONE picture of what the
     /// user is holding up (Msg.EyeRequest), and this takes it from the headset's passthrough camera and sends it back
     /// (Msg.EyeFrame). The host looks at it with its vision model and sculpts the thing (Companion Sight.cs).
     ///
@@ -16,7 +16,7 @@ namespace LivingPartner.MR
     ///    android.permission.CAMERA, both in the manifest). No other SDK is used.
     ///  - The permission is asked for NOW, at the first use, never when the app starts. While the user reads the
     ///    system's question the app is paused; when it comes back the picture is taken.
-    ///  - While a picture is wanted a small sign "Bambi is looking" stands beside the partner, with a light that
+    ///  - While a picture is wanted a small sign "Nilo is looking" stands beside the partner, with a light that
     ///    pulses. It goes out as soon as the one picture is taken, and no further picture is read for this.
     ///  - The picture is cut round the user's hands when they are seen by the camera (the thing they hold is there),
     ///    else to the middle of the view; its longest side is at most what the host asked for (1280).
@@ -164,7 +164,7 @@ namespace LivingPartner.MR
             box.Add(px, py);
         }
 
-        /// <summary>The sign beside the partner (in front of the user when the partner is inside the PC) for as long as a picture is wanted: "Bambi is looking" and a pulsing light.</summary>
+        /// <summary>The sign beside the partner (in front of the user when the partner is inside the PC) for as long as a picture is wanted: "Nilo is looking" and a pulsing light.</summary>
         void DrawEyeSign(float dt)
         {
             if (_eyeLabel == null || _eyeBg == null || _eyeDot == null) return;
@@ -192,7 +192,7 @@ namespace LivingPartner.MR
             }
             float pop = Mathf.Max(0.001f, Ui.Pop(_eyeShown));
             _eyeLabel.transform.localScale = Vector3.one * pop;
-            Place(_eyeLabel, at, "Bambi is looking");
+            Place(_eyeLabel, at, "Nilo is looking");
             float width = _eyeLabel.Width + 0.040f, height = _eyeLabel.Height + 0.012f;
             _eyeBg.enabled = true;
             _eyeBg.transform.SetPositionAndRotation(at + _eyeLabel.transform.forward * 0.002f - _eyeLabel.transform.right * 0.008f * pop, _eyeLabel.transform.rotation);

@@ -60,8 +60,8 @@ sealed partial class Stage
             return "";
         }
         var pack = bag.World.games.FirstOrDefault(p => p.id == id || p.title == id);
-        if (pack == null || !IsCreationId(pack.id, "game")) return "가방에서 게임을 찾을 수 없어요.";
-        if (machine.IsActive) return "밤비가 화면을 통과하면 게임을 시작할 수 있어요.";
+        if (pack == null || !IsCreationId(pack.id, "game")) return "The game is missing from your bag.";
+        if (machine.IsActive) return "Wait for Nilo to finish crossing the screen.";
         if (Match.State.active || swarm != null || afterTransfer.Length > 0) StopNativeGames(true);
         if (T.owner == Env.Mr)
         {
@@ -75,11 +75,11 @@ sealed partial class Stage
             }
             return "";
         }
-        if (screen == null || snap.calibrations.Count == 0) return "먼저 TV 화면 위치를 확인해 주세요.";
+        if (screen == null || snap.calibrations.Count == 0) return "Calibrate the TV first.";
         needReturn = false;
         if (tvPack?.id == pack.id && tvGame?.phase != "over") return "";
         var game = GlassGames.Create(pack.template);
-        if (game == null) return "이 게임을 실행할 수 없어요.";
+        if (game == null) return "Unable to start this game.";
         bag.Handle(Msg.GlassCommand, new GlassCommand { cmd = "stop" });
         tvGame = game; tvPack = pack;
         game.W = screen.bounds.w / (float)screen.bounds.h; game.inside = true;
@@ -136,7 +136,7 @@ sealed partial class Stage
                 if (request?.cmd != "make" || string.IsNullOrWhiteSpace(request.text)) return false;
                 string wish = WorldRules.TypedText(request.text);
                 string title = GamePattern(wish).name;
-                Say(QueueWork("game", title.Length > 0 ? title : "새 게임", wish, (job, ct) => MakeGame(job, wish, ct)));
+                Say(QueueWork("game", title.Length > 0 ? title : "New game", wish, (job, ct) => MakeGame(job, wish, ct)));
                 break;
             case Msg.GlassCommand:
                 var cmd = e.Body<GlassCommand>();

@@ -19,13 +19,13 @@ namespace LivingPartner.EditorTools
         {
             // ---- the card: a headline, the big button, the smaller one, and one line about what the PC app adds
             const float W = 0.30f, H = 0.17f;
-            var card = MakePanel("Welcome", panels, W, H, Ui.Pal.Orange, "Hello! I'm Bambi.", "With the PC app Bambi can talk, make new\nthings for you, and step into your screen.");
+            var card = MakePanel("Welcome", panels, W, H, Ui.Pal.Orange, "Hello! I'm Nilo.", "With the PC app Nilo can talk, make new\nthings for you, and step into your screen.");
             card.transform.localPosition = new Vector3(-0.52f, 0.36f, 0);      // authoring pose only
             card.title.characterSize = 0.0150f * 10f / 64f * 0.72f;
             card.title.transform.localPosition = new Vector3(0, H * 0.5f - 0.0085f, -0.001f);
             card.bar.transform.localPosition = new Vector3(0, H * 0.5f - 0.0300f, -0.0008f);
-            var play = AddPill(card, "Btn Play", "헤드셋으로 놀기", new Vector3(0, 0.024f, 0), 0.200f, 0.046f, 0.0170f, Ui.Pal.Orange);
-            var pc = AddPill(card, "Btn Connect", "Mac / PC 연결", new Vector3(0, -0.024f, 0), 0.200f, 0.032f, 0.0115f, Ui.Pal.Mint);
+            var play = AddPill(card, "Btn Play", "Play on Quest", new Vector3(0, 0.024f, 0), 0.200f, 0.046f, 0.0170f, Ui.Pal.Orange);
+            var pc = AddPill(card, "Btn Connect", "Connect Mac or PC", new Vector3(0, -0.024f, 0), 0.200f, 0.032f, 0.0115f, Ui.Pal.Mint);
             // (the one line under the buttons: in the middle, and large enough to be read at arm's length)
             card.body.characterSize = 0.0100f * 10f / 64f * 0.72f; card.body.anchor = TextAnchor.UpperCenter; card.body.Mesh.alignment = TextAlignment.Center;
             card.body.transform.localPosition = new Vector3(0, -0.046f, -0.001f);

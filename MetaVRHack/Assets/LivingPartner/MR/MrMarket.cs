@@ -226,7 +226,7 @@ namespace LivingPartner.MR
                 {
                     v.detailName.text = _snap == null || m.list.Count == 0 ? "The shop is empty" : "Nothing here yet";
                     v.detailBy.text = "";
-                    v.detailText.text = m.list.Count == 0 ? "The PC app has no catalogue to show.\nIs it up to date?" : "Make one with words:\n\"Bambi, make a ... and put it\nin the shop\"";
+                    v.detailText.text = m.list.Count == 0 ? "The PC app has no catalogue to show.\nIs it up to date?" : "Make one with words:\n\"Hey, Nilo, make a ... and put it\nin the shop\"";
                     v.detailDisc.enabled = false;
                 }
                 else

@@ -195,6 +195,8 @@ namespace LivingPartner.MR
             return _tnPlanOk;
         }
 
+        bool _tnSaveRipple;
+
         void UpdateTennis(float dt, bool hostOk)
         {
             // ---- a game that was asked for starts once the partner stands inside the screen
@@ -205,7 +207,7 @@ namespace LivingPartner.MR
                 else if (TransitionIdle && _ch.owner == Env.Mr && _sel == null && Time.time - _tnPendingAt > 4f) _tnPendingAt = -1f;      // it never went in
                 else if (TransitionIdle && _ch.owner == Env.Pc && _snap.pc != null && _snap.pc.overlayVisible && (_snap.pc.mode == "DesktopRoaming" || _snap.pc.mode == "WorkspaceBound") && Mon(_snap.pc.monitorId) is MonView there)
                 {
-                    if (_tnSettle < 0f) _tnSettle = Time.time + 0.7f;                // let it land and look round first
+                    if (_tnSettle < 0f) _tnSettle = Time.time + 0.18f;
                     else if (Time.time >= _tnSettle && Time.time >= _tnNextStart) { _tnNextStart = Time.time + 2.5f; _tnStartTries++; SendTennisStart(there); }
                 }
                 else _tnSettle = -1f;
@@ -224,7 +226,7 @@ namespace LivingPartner.MR
             // a point is over, or the game: heard where the court is
             if (_tn.phase != _tnPhaseWas)
             {
-                if (_tn.phase == "point") Sfx(_tn.lastPoint == "partner" ? "lose" : "win", mv.Origin, 0.4f);
+                if (_tn.phase == "point" && !(_tn.mode == "keeper" && _tn.lastPoint == "user")) Sfx(_tn.lastPoint == "partner" ? "lose" : "win", mv.Origin, 0.4f);
                 else if (_tn.phase == "over") Sfx(_tn.scoreUser > _tn.scorePartner ? "win" : "lose", mv.Origin, 0.8f);
                 _tnPhaseWas = _tn.phase;
             }
@@ -272,9 +274,15 @@ namespace LivingPartner.MR
                         _tnStruckSeq = shot.seq;
                         if (!keeper && _tn.mode != "stars") _tnLocal = Tennis.UserShot(c, shot.seq + 1, sk.pos, _tnPalmVel[h], normal[h], tk);      // stars: a hand on the ball is a catch, nothing flies back
                         _link.Send(Msg.GameCommand, new GameCommand { cmd = "hit", seq = shot.seq, pos = sk.pos, swing = _tnPalmVel[h], normal = normal[h], t = tk, eye = mv.frame.ToLocal(Conv.N(Input.HeadPos)) });
-                        _sparks.Burst(Conv.U(mv.frame.ToWorld(sk.pos)), right, Vector3.up, _tn.mode == "stars" ? 0.05f : 0.035f, _tn.mode == "stars" ? 12 : 7);
+                        _sparks.Burst(Conv.U(mv.frame.ToWorld(sk.pos)), right, Vector3.up, _tn.mode == "stars" ? 0.05f : keeper ? 0.095f : 0.035f, keeper ? 18 : _tn.mode == "stars" ? 12 : 7);
                         _tnHitFlash = 1f;
-                        Sfx("hit", Conv.U(mv.frame.ToWorld(sk.pos)), 0.8f);
+                        Vector3 contact = Conv.U(mv.frame.ToWorld(sk.pos));
+                        Sfx(keeper ? "glove" : "hit", contact, keeper ? 0.96f : 0.8f);
+                        if (keeper)
+                        {
+                            _tnRippleT = 0f; _tnSaveRipple = true;
+                            _tnRipple.transform.SetPositionAndRotation(contact, Input.HeadRot);
+                        }
                         Debug.Log($"[MR] tennis: {(h == 0 ? "right" : "left")} hand met ball #{shot.seq} at ({sk.pos.X:0.000},{sk.pos.Y:0.000},{sk.pos.Z:0.000}) swing {_tnPalmVel[h].Length():0.00} m/s");
                         if (_tnLocal != null) shot = _tnLocal; else inPlay = false;
                         break;
@@ -288,7 +296,7 @@ namespace LivingPartner.MR
             if (shot != null && shot.seq != _tnCrossSeq)
             {
                 _tnCrossSeq = shot.seq;
-                if (shot.by == "partner") Sfx("hit", room ? _pos + Vector3.up * (_H * 0.6f) : mv.Origin, 0.45f);      // the partner's stroke, from where it plays
+                if (shot.by == "partner") Sfx(keeper ? "kick" : "hit", room ? _pos + Vector3.up * (_H * 0.6f) : mv.Origin, 0.45f);      // the partner's stroke, from where it plays
                 _tnCrossOk = !room && Tennis.PassesGlass(c, shot, out _tnCrossT);
                 if (_tnCrossOk)
                 {
@@ -301,7 +309,7 @@ namespace LivingPartner.MR
             {
                 var at = Tennis.Evaluate(c, shot, _tnCrossT).pos; at.Z = 0;
                 Vector3 onGlass = Conv.U(mv.frame.ToWorld(at)) - mv.Z * 0.003f;
-                _tnRippleT = 0f;
+                _tnSaveRipple = false; _tnRippleT = 0f;
                 _tnRipple.transform.SetPositionAndRotation(onGlass, Quaternion.LookRotation(mv.Z, mv.Y));
                 _sparks.Burst(onGlass, mv.X, mv.Y, 0.05f, 11);
                 Sfx("pop", onGlass, 0.4f);
@@ -315,8 +323,8 @@ namespace LivingPartner.MR
                 if (alive)
                 {
                     float e = 1f - (1f - _tnRippleT) * (1f - _tnRippleT);
-                    _tnRipple.transform.localScale = Vector3.one * Mathf.Lerp(0.03f, 0.20f, e);
-                    _tnRipple.SetColors(new Color(1f, 0.90f, 0.55f, 1f - _tnRippleT), new Color(1f, 0.98f, 0.9f, 1f - _tnRippleT));
+                    _tnRipple.transform.localScale = Vector3.one * Mathf.Lerp(0.03f, _tnSaveRipple ? 0.34f : 0.20f, e);
+                    _tnRipple.SetColors((_tnSaveRipple ? new Color(0.43f, 1f, 0.81f, 1f - _tnRippleT) : new Color(1f, 0.90f, 0.55f, 1f - _tnRippleT)), new Color(1f, 0.98f, 0.9f, 1f - _tnRippleT));
                 }
                 else _tnRippleT = -1f;
             }
@@ -339,7 +347,7 @@ namespace LivingPartner.MR
             {
                 var s = Tennis.Evaluate(c, shot, drawT);
                 world = Conv.U(mv.frame.ToWorld(s.pos));
-                show = room || s.pos.Z < Tennis.BallRadius(_tn.mode);
+                show = (!keeper || !s.dead) && (room || s.pos.Z < Tennis.BallRadius(_tn.mode));
                 if (show)
                 {
                     Vector3 vel = Conv.U(mv.frame.DirToWorld(s.vel));

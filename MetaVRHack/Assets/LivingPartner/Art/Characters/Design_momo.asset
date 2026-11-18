@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Design_momo
   m_EditorClassIdentifier: LivingPartner.Character::LivingPartner.Character.PartnerDesign
   id: momo
-  displayName: Bambi
+  displayName: Nilo
   bodyMesh: {fileID: 4300000, guid: 7447f030a0affea4fb6aced8badf0dfb, type: 2}
   eyeL: {x: -0.11187105, y: 0.17306298, z: 0.23901562}
   eyeR: {x: 0.11162675, y: 0.17281872, z: 0.23877138}

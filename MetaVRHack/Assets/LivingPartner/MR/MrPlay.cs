@@ -11,7 +11,7 @@ namespace LivingPartner.MR
     ///  - STAR POP               how FAST the fingers are. Stars rise from the desk (or come out of the screen); a
     ///    fingertip pops them; half a minute.
     ///  - RED LIGHT              how STILL the hand can be. The partner turns its back and chants; the hand creeps up
-    ///    on it and must freeze the moment it turns round ("무궁화 꽃이 피었습니다").
+    ///    on it and must freeze the moment it turns round ("Red light, green light").
     /// A game can come as a PACK from the marketplace (GamePackDef): one of these ways of playing with its own name,
     /// pictures, pace, tune and surroundings.
     /// The GLASS GAMES (survival, umbrella, wipe) are not played by this file: the PC starts them, on the side of the
@@ -90,7 +90,7 @@ namespace LivingPartner.MR
         {
             string asked = (game ?? "").Trim();
             game = asked.ToLowerInvariant();
-            if (game == StarterGames.GomokuId || game == "gomoku" || game == "오목") { RequestGomoku(); return; }
+            if (game == StarterGames.GomokuId || game == "gomoku" || game == "Gomoku") { RequestGomoku(); return; }
             if (SwarmRules.Asked(game)) { StartSwarm(how); return; }
             if (game == "tennis" || game == StarterGames.TennisId || game == "keeper" || game == StarterGames.KeeperId)
             {
@@ -224,7 +224,7 @@ namespace LivingPartner.MR
                     else
                     {
                         int outcome = (_rpsYouSign - _rpsItSign + 3) % 3;
-                        line = outcome == 0 ? "A draw!" : outcome == 1 ? "You win this one!" : "Bambi wins this one!";
+                        line = outcome == 0 ? "A draw!" : outcome == 1 ? "You win this one!" : "Nilo wins this one!";
                         float grow = 1f + 0.22f * Mathf.Clamp01(_gT / 0.3f);
                         if (outcome == 1) { popYou = grow; cIt = new Color(0.72f, 0.72f, 0.72f, 0.75f); }
                         else if (outcome == 2) { popIt = grow; cYou = new Color(0.72f, 0.72f, 0.72f, 0.75f); }
@@ -237,7 +237,7 @@ namespace LivingPartner.MR
                     break;
                 }
                 default:
-                    line = _gUser > _gIt ? "You win the game!" : "Bambi wins the game!";
+                    line = _gUser > _gIt ? "You win the game!" : "Nilo wins the game!";
                     if (_gT > 3.2f) { EndLocalGame("game over"); return; }
                     break;
             }
@@ -246,7 +246,7 @@ namespace LivingPartner.MR
             Vector3 you = mid - right * (0.062f * far) + up * drop, it = mid + right * (0.062f * far) + up * drop;
             _rpsYou.transform.SetPositionAndRotation(you, Quaternion.LookRotation(you - head, up)); _rpsYou.transform.localScale = Vector3.one * size * popYou; _rpsYou.SetColor(cYou);
             _rpsIt.transform.SetPositionAndRotation(it, Quaternion.LookRotation(it - head, up)); _rpsIt.transform.localScale = Vector3.one * size * popIt; _rpsIt.SetColor(cIt);
-            Board(mid - up * (0.075f * far), $"You  {_gUser} : {_gIt}  Bambi\n{line}");
+            Board(mid - up * (0.075f * far), $"You  {_gUser} : {_gIt}  Nilo\n{line}");
         }
 
         // ------------------------------------------------------------------ star pop
@@ -333,7 +333,7 @@ namespace LivingPartner.MR
         }
 
         // ------------------------------------------------------------------ red light, green light
-        const string Chant = "무궁화 꽃이 피었습니다";
+        const string Chant = "Red light, green light";
         int _rlLives; float _rlYaw, _rlLen, _rlBack;
         // Where each hand's fingertip has been lately (right, then left; RlKeep places each, written round and round).
         const int RlKeep = 32;

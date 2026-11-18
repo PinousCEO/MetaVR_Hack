@@ -839,7 +839,7 @@ end");
             // the rules the user's feedback asked for: a tool stands upright and is made of the kit; flat is for boards only
             Assert.Contains("A TOOL (calculator, timer, notes, counter, converter ...) is UPRIGHT - never flat", doc);
             Assert.Contains("Keys are at least 0.14 x 0.12", doc);
-            Assert.Contains("Use flat ONLY for board and card games and for Bambi running about on the desk", doc);
+            Assert.Contains("Use flat ONLY for board and card games and for Nilo running about on the desk", doc);
             Assert.Contains("things must really LEAVE the field", doc);
             // the two worked motions are in it word for word, and the whole text fits a prompt
             Assert.Contains(LuaMotion.Worked, doc);

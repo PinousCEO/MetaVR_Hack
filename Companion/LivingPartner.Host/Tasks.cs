@@ -298,7 +298,7 @@ When finished reply with ONLY one JSON object: {{""summary"":""what you changed,
         if (passed)
         {
             await Proc.Run("git", new[] { "add", "-A" }, wt, 30, ct);
-            (code, o) = await Proc.Run("git", new[] { "-c", "user.name=Living AI Partner", "-c", "user.email=partner@localhost", "commit", "-m", $"partner: {mod.name}\n\nProposal {mod.moduleId}; task {t.taskId}" }, wt, 60, ct);
+            (code, o) = await Proc.Run("git", new[] { "-c", "user.name=Yonder", "-c", "user.email=partner@localhost", "commit", "-m", $"partner: {mod.name}\n\nProposal {mod.moduleId}; task {t.taskId}" }, wt, 60, ct);
             if (code == 0) { var (_, h) = await Proc.Run("git", new[] { "rev-parse", "--short", "HEAD" }, wt, 20, ct); commit = h.Trim(); }
         }
         _core.Post(() =>

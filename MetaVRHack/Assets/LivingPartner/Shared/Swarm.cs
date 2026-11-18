@@ -76,7 +76,7 @@ namespace LivingPartner.Shared
     public sealed class SwarmSim
     {
         public const int MaxMonsters = 64, MaxBolts = 48, MaxGems = 64, MaxEvents = 96, MaxOrbit = 6;
-        public const float IntroSeconds = 3.2f, BossAt = 150f, BossSqueeze = 5f, ArriveRadius = 0.13f, AimCone = 0.19f, BoltSpeed = 3.2f, BaseFire = 0.46f;
+        public const float IntroSeconds = 1.65f, BossAt = 150f, BossSqueeze = 3.0f, ArriveRadius = 0.13f, AimCone = 0.19f, BoltSpeed = 3.2f, BaseFire = 0.46f;
         public const int StartHearts = 5;
         public const float OuchRadius = 0.45f;
 
@@ -124,7 +124,7 @@ namespace LivingPartner.Shared
             phase = SwarmPhase.Intro; time = 0f; slow = 1f; iframes = 0f; _introT = 0f;
             hearts = maxHearts = StartHearts; level = 1; xp = 0; kills = 0; score = 0; pendingChoices = 0; surges = 0;
             won = bossSpawned = bossOut = bossDead = false; bossIndex = -1; alive = 0;
-            _spawnT = 8.5f; _fireT = 0.2f; _cometT = 1f; _orbitA = 0f; _nextSurge = 24f; _gemExtra = 0f;
+            _spawnT = 10.0f; _fireT = 0.2f; _cometT = 1f; _orbitA = 0f; _nextSurge = 24f; _gemExtra = 0f;
             // the first crowd gathers behind the glass and comes out together
             for (int i = 0; i < 8; i++) SpawnInside(i == 2 || i == 6 ? SwarmKind.Flyer : i == 5 ? SwarmKind.Splitter : SwarmKind.Hopper, IntroSeconds + 0.07f * i, 1);
             Push(SwarmEv.Started, a.center);
@@ -209,7 +209,7 @@ namespace LivingPartner.Shared
             {
                 _nextSurge += 21f; surges++;
                 int n = Math.Min(10, 5 + surges);
-                for (int k = 0; k < n; k++) SpawnInside(PickKind(), 2.6f + 0.06f * k, 1);
+                for (int k = 0; k < n; k++) SpawnInside(PickKind(), 1.65f + 0.06f * k, 1);
                 Push(SwarmEv.Surge, arena.center, n);
             }
             _spawnT -= dt;
@@ -218,7 +218,7 @@ namespace LivingPartner.Shared
                 float every = M.Lerp(3.4f, 0.70f, M.Clamp01(time / (BossAt - 10f)));
                 if (bossSpawned) every = 1.5f;
                 _spawnT += every;
-                if (alive < MaxMonsters - 10) SpawnInside(PickKind(), Rnd(2.2f, 3.2f), 0);
+                if (alive < MaxMonsters - 10) SpawnInside(PickKind(), Rnd(1.15f, 1.85f), 0);
             }
         }
 
@@ -248,7 +248,7 @@ namespace LivingPartner.Shared
                 }
                 if (m.state == SwarmState.Emerging)
                 {
-                    float dur = m.kind == SwarmKind.Boss ? 2.4f : 0.38f, k = M.Clamp01(m.t / dur);
+                    float dur = m.kind == SwarmKind.Boss ? 1.45f : 0.27f, k = M.Clamp01(m.t / dur);
                     m.grow = k;
                     m.pos = m.from + arena.outward * ((m.kind == SwarmKind.Boss ? 0.24f : 0.09f) * M.EaseOut(k));
                     if (k >= 1f) { m.state = SwarmState.Chase; m.t = 0f; m.grow = 1f; }
@@ -667,6 +667,7 @@ namespace LivingPartner.Shared
         public float elapsed;
         public bool won;
         public int shotCount;
+        public bool[] shotStar = new bool[SwarmSim.MaxBolts];
         public float[] shotU = new float[SwarmSim.MaxBolts], shotV = new float[SwarmSim.MaxBolts], shotRadius = new float[SwarmSim.MaxBolts];
         public int[] choices = new int[3]; // Index into SwarmAug, valid only in the Choosing phase.
         public float halfW, halfH;                                                          // half the lit screen in metres, as the headset measured it (the monsters are as large inside as they are outside)

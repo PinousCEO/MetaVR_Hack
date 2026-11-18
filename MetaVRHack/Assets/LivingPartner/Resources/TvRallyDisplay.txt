@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>TV Rally · 밤비</title>
+<title>TV Rally · Yonder</title>
 <style>
 * {box-sizing:border-box}
 :root {color-scheme:light;--ink:#222541;--cream:#fff9eb;--gold:#ffba42;--aqua:#63e0df;--court:#42419a}
@@ -30,45 +30,45 @@ button:disabled {opacity:.55}
 @media(max-width:700px){main{grid-template-rows:auto minmax(35vh,1fr) auto}footer{align-items:flex-start;flex-direction:column;gap:1rem}.hud{inset:auto 3vw 1vh}.controls{width:100%}}
 </style>
 <main>
- <header><h1>TV Rally</h1><div class="score">함께 넣은 공 <b><span id="score">0</span> / 6</b></div></header>
- <section class="court" aria-label="밤비와 공을 주고받는 코트"><canvas id="court"></canvas><div class="hud" aria-hidden="true"><span><i class="gold"></i> 왼쪽</span><span>오른쪽 <i class="aqua"></i></span></div></section>
- <footer><div class="text" aria-live="polite"><h2 id="cue">Quest 연결 중</h2><p id="help">같은 Wi-Fi에서 헤드셋의 TV Rally를 열어 주세요.</p></div>
- <div class="controls"><button id="ready" disabled>함께 시작</button><button id="full">전체 화면</button></div></footer>
+ <header><h1>TV Rally</h1><div class="score">Rallies <b><span id="score">0</span> / 6</b></div></header>
+ <section class="court" aria-label="Rally court with Nilo"><canvas id="court"></canvas><div class="hud" aria-hidden="true"><span><i class="gold"></i> Left</span><span>Right <i class="aqua"></i></span></div></section>
+ <footer><div class="text" aria-live="polite"><h2 id="cue">Connecting to Quest</h2><p id="help">Open TV Rally on your headset using the same Wi-Fi.</p></div>
+ <div class="controls"><button id="ready" disabled>Play together</button><button id="full">Full screen</button></div></footer>
 </main>
 <script>
 'use strict';
 const el = id => document.getElementById(id);
 const base = location.pathname.replace(/\/$/,'');
-const canvas = el('court'), ctx = canvas.getContext('2d'), bambi = new Image();
-bambi.src = base + '/bambi.png';
+const canvas = el('court'), ctx = canvas.getContext('2d'), nilo = new Image();
+nilo.src = base + '/nilo.png';
 let state = {phase:'Join',side:-1,score:0,elapsed:0,marks:0,notice:''}, connected = false, stamp = performance.now(), lastGood = 0;
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const phases = {
- Join:['TV 옆에 서 주세요','착용자는 한 걸음 뒤에서 TV와 상대방의 양팔이 함께 보이게 서세요. 오른손 엄지와 검지를 맞대거나 여기서 함께 시작을 누르세요.'],
- Align:['코트 위치 맞추기','헤드셋 착용자는 TV 중앙을 보고 오른손으로 엄지와 검지를 맞대세요.'],
- Serve:['밤비가 서브해요','TV 앞 플레이어는 양팔을 내리고 날아오는 공을 보세요.'],
- Reach:['','해당 방향으로 팔을 뻗은 후 내려 주세요. 헤드셋 착용자는 파트너를 계속 바라봅니다.'],
- Volley:['Quest 차례!','헤드셋 착용자가 날아오는 공을 손으로 받아쳐 밤비에게 돌려주세요.'],
- Return:['두 사람이 한 점!','밤비에게 공이 돌아옵니다. 양팔을 내리고 다음 서브를 준비하세요.'],
- Miss:['다시 받아볼까요?','양팔을 내리면 밤비가 다시 서브합니다.'],
- Won:['여섯 번의 랠리 성공!','두 사람이 손을 이어 밤비에게 공을 여섯 번 돌려줬어요.']
+ Join:['Stand beside the TV','Stand one step back with your partner and the TV in view. Pinch with your right hand or select Play together.'],
+ Align:['Locate the court','Look at the center of the TV and pinch with your right hand.'],
+ Serve:['Nilo serves','Lower your arms and watch for the ball.'],
+ Reach:['','Reach toward the ball, then lower your arm. Keep your partner in the headset view.'],
+ Volley:['Quest player’s turn','Return the incoming ball to Nilo with your hand.'],
+ Return:['A point for both players!','Lower your arms for the next serve.'],
+ Miss:['Try the next one','Lower your arms for another serve.'],
+ Won:['Six rallies!','You returned six balls to Nilo together.']
 };
 function write(id, str) { if (el(id).textContent !== str) el(id).textContent = str; }
 function layout() {
  const s=state, words=(phases[s.phase]||phases.Join).slice();
- if(s.phase==='Reach') words[0]=s.side<0?'왼쪽으로 손을 뻗어요!':'오른쪽으로 손을 뻗어요!';
- if(s.phase==='Align' && s.marks===1) words[1]='TV 옆에 서서 양팔을 내려 주세요. 착용자는 파트너의 가슴을 바라보고 오른손으로 한 번 더 핀치하세요.';
- if(s.phase==='Align' && s.marks===2) words[1]='가만히 선 자세를 읽고 있어요. 착용자는 파트너의 양쪽 어깨가 보이게 해 주세요.';
+ if(s.phase==='Reach') words[0]=s.side<0?'Reach left!':'Reach right!';
+ if(s.phase==='Align' && s.marks===1) words[1]='Stand beside the TV with arms down. Look at your partner’s chest and pinch again.';
+ if(s.phase==='Align' && s.marks===2) words[1]='Hold still with both shoulders in the headset view.';
  const notice=s.notice||'';
- if(notice.startsWith('Allow camera')) words[1]='Quest에서 Living AI Partner의 카메라 권한을 허용해 주세요. 이전에 거부했다면 앱 권한 설정에서 바꿀 수 있어요.';
- if(notice.startsWith('Enable camera')) words[1]='Quest 가방의 설정에서 카메라 사용을 켜 주세요.';
- if(notice.startsWith('Waiting for color')) words[1]='헤드셋을 착용하고 패스스루를 켜 주세요. 컬러 카메라가 준비되면 경기가 이어집니다.';
- if(notice.startsWith('Body play')) words[1]='두 사람의 동작을 보려면 Quest 3 또는 3S에서 게임을 열어 주세요.';
- if(notice.indexOf('steadily')>=0) words[1]='착용자는 파트너 양쪽 어깨의 링을 바라보세요. 다시 보이면 경기가 이어집니다.';
+ if(notice.startsWith('Allow camera')) words[1]='Allow camera access for Yonder in Quest app permissions.';
+ if(notice.startsWith('Enable camera')) words[1]='Enable the camera in the headset bag settings.';
+ if(notice.startsWith('Waiting for color')) words[1]='Wear the headset and enable passthrough.';
+ if(notice.startsWith('Body play')) words[1]='Open the game on Quest 3 or 3S for camera-based play.';
+ if(notice.indexOf('steadily')>=0) words[1]='Keep your partner’s shoulders inside the rings.';
  if(/[가-힣]/.test(notice)) words[1]=notice.replace(/\s+/g,' ').trim();
- if(!connected){ words[0]='Quest 연결을 기다려요'; words[1]='헤드셋의 TV Rally 화면을 열고 같은 Wi-Fi인지 확인해 주세요.'; }
+ if(!connected){ words[0]='Waiting for Quest'; words[1]='Open TV Rally in your headset on the same Wi-Fi.'; }
  write('cue',words[0]);write('help',words[1]);write('score',String(s.score));
- write('ready',s.phase==='Won'?'다시 플레이':s.phase==='Join'?'함께 시작':'위치 다시 맞추기');
+ write('ready',s.phase==='Won'?'Play again':s.phase==='Join'?'Play together':'Realign court');
  el('ready').disabled=!connected;
 }
 async function request(path, options){
@@ -85,8 +85,8 @@ el('ready').onclick=async()=>{el('ready').disabled=true;try{await request('/read
 el('full').onclick=async()=>{try{
  if(document.fullscreenElement||document.webkitFullscreenElement)await (document.exitFullscreen?document.exitFullscreen():document.webkitExitFullscreen());
  else if(document.documentElement.requestFullscreen)await document.documentElement.requestFullscreen();else document.documentElement.webkitRequestFullscreen();
- }catch(e){write('help','Mac에서 브라우저의 보기 메뉴로 전체 화면을 선택하세요.');}};
-for(const event of ['fullscreenchange','webkitfullscreenchange']) document.addEventListener(event,()=>write('full',(document.fullscreenElement||document.webkitFullscreenElement)?'전체 화면 종료':'전체 화면'));
+ }catch(e){write('help','Use your browser’s View menu to enter full screen.');}};
+for(const event of ['fullscreenchange','webkitfullscreenchange']) document.addEventListener(event,()=>write('full',(document.fullscreenElement||document.webkitFullscreenElement)?'Exit full screen':'Full screen'));
 function render(now){
  const w=canvas.clientWidth,h=canvas.clientHeight,dpr=Math.min(2,devicePixelRatio||1);
  if(canvas.width!==Math.round(w*dpr)||canvas.height!==Math.round(h*dpr)){canvas.width=Math.round(w*dpr);canvas.height=Math.round(h*dpr);}
@@ -111,9 +111,9 @@ function render(now){
  const t=state.elapsed+Math.min(.35,(now-stamp)/1000);
  const jump=(phase==='Serve'||phase==='Return')&&!reduce?Math.sin(Math.PI*Math.min(1,t))*.045*h:0;
  ctx.fillStyle='rgba(29,27,65,.37)';ctx.beginPath();ctx.ellipse(mid,h*.82,w*.085,h*.022,0,0,Math.PI*2);ctx.fill();
- if(bambi.complete&&bambi.naturalWidth){
-   const bh=Math.min(h*.71,w*.34),bw=bh*bambi.naturalWidth/bambi.naturalHeight;
-   ctx.drawImage(bambi,mid-bw/2,h*.83-bh-jump,bw,bh);
+ if(nilo.complete&&nilo.naturalWidth){
+   const bh=Math.min(h*.71,w*.34),bw=bh*nilo.naturalWidth/nilo.naturalHeight;
+   ctx.drawImage(nilo,mid-bw/2,h*.83-bh-jump,bw,bh);
  }
  let x=mid+w*.055,y=h*.58,visible=connected&&phase!=='Align'&&phase!=='Join';
  const side=state.side, cap=(n)=>Math.max(0,Math.min(1,n));

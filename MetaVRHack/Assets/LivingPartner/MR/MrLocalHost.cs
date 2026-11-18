@@ -156,9 +156,9 @@ namespace LivingPartner.MR
             if (key != _wlShown)
             {
                 _wlShown = key;
-                p.title.text = full ? "밤비와 어떻게 놀까요?" : "컴퓨터 연결하기";
-                p.body.SetWrapped(full ? "Mac이나 Windows에서 밤비를 실행하세요. 헤드셋만으로도 놀 수 있어요."
-                                       : "컴퓨터와 Quest를 같은 Wi-Fi에 연결한 뒤 밤비를 실행하세요.", p.width - 0.040f);
+                p.title.text = full ? "How would you like to play?" : "Connect a computer";
+                p.body.SetWrapped(full ? "Open Yonder on your Mac or PC, or play on Quest."
+                                       : "Connect your Quest and computer to the same Wi-Fi, then open Yonder.", p.width - 0.040f);
                 if (_welcomePc.gameObject.activeSelf != full) _welcomePc.gameObject.SetActive(full);
                 // (the side card: its few words above its one button)
                 p.body.transform.localPosition = new Vector3(0f, full ? -0.046f : 0.050f, -0.001f);
@@ -184,7 +184,7 @@ namespace LivingPartner.MR
         bool _wlFollow;
 
         // ------------------------------------------------------------------ the menu in local mode
-        /// <summary>A sticker of Bambi / Tools was pressed (MrMenuBoard.MenuPressAct). True: there is no PC, and this is what it does then.</summary>
+        /// <summary>A sticker of Nilo / Tools was pressed (MrMenuBoard.MenuPressAct). True: there is no PC, and this is what it does then.</summary>
         bool LocalMenuAct(int act, Vector3 at)
         {
             if (!LocalMode) return false;
@@ -302,7 +302,7 @@ namespace LivingPartner.MR
             {
                 _lcHello = true;
                 if (_mode == Mode.Free) { _emoteForced = Emote.Wave; _emoteT = 2.4f; }
-                Caption(_local != null && _local.Restored ? "Welcome back!" : "Hi! I'm Bambi.", 2.6f);
+                Caption(_local != null && _local.Restored ? "Welcome back!" : "Hi! I'm Nilo.", 2.6f);
                 _fsQuietUntil = Mathf.Max(_fsQuietUntil, Time.time + 2.8f);
             }
 

@@ -146,11 +146,15 @@ namespace LivingPartner.Windows
                 if (shot == null)
                 {
                     shot = _swgShots[i] = Instantiate(v.rings[0], v.root.transform);
-                    shot.mode = 8; shot.param = new Vector4(3.4f, 0, 0, 0);
+                    shot.mode = 13;
                     shot.SetColors(new Color(1f, 0.63f, 0.21f), new Color(1f, 0.98f, 0.8f));
                 }
                 shot.transform.position = origin + new Vector3(_swg.shotU[i] * hw, _swg.shotV[i] * hh, 0.2f);
-                shot.transform.localScale = Vector3.one * (_swg.shotRadius[i] * 4f);
+                bool comet = _swg.shotStar != null && i < _swg.shotStar.Length && _swg.shotStar[i];
+                var rim = comet ? new Color(.97f, .35f, .66f) : new Color(1f, .49f, .13f);
+                if (!shot.color.Equals(rim)) shot.SetColors(rim, new Color(1f, .98f, .84f));
+                shot.transform.localRotation = Quaternion.Euler(0, 0, Time.time * 180f + i * 37f);
+                shot.transform.localScale = Vector3.one * (_swg.shotRadius[i] * (comet ? 8.4f : 7f));
                 shot.enabled = true;
             }
             // ---- rings where they came out, the glow of a crowd

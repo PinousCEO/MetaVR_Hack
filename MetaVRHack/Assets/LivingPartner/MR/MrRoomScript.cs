@@ -8,7 +8,7 @@ namespace LivingPartner.MR
 {
     /// <summary>
     /// What a THING DOES, in the room: the headset's side of the room scripts (Shared/RoomScript.cs). A thing may carry
-    /// a small Lua program (ItemDef.script), written on the PC when the thing was made - "a baseball bat: when Bambi
+    /// a small Lua program (ItemDef.script), written on the PC when the thing was made - "a baseball bat: when Nilo
     /// holds it, a swing is added". Here the room such a script lives in is made real:
     ///  - the PARTNER does what the script asks while it asks (RoomScriptPose, called from StagePose): it walks to a
     ///    spot, turns, takes a built-in pose, sits or lies on a thing, or plays a MOTION the script defined itself

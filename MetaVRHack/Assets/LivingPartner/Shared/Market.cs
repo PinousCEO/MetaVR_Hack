@@ -22,7 +22,7 @@ namespace LivingPartner.Shared
         public static readonly string[] RetiredIds = { "game-dustbunnies", "game-wipe", "game-umbrella", "game-vampire", "game-rps", "game-pop", "game-redlight", "game-catch", "game-pairs", "game-focus", "game-tag", "game-tv-rally", "game-shooter", "game-calculator", "game-omok" };
         public static bool Retired(string id) => Array.IndexOf(RetiredIds, id) >= 0;
         public static bool IsStarter(string id) => id == TennisId || id == KeeperId || id == SwarmRules.PackId || id == GomokuId;
-        public static GamePackDef Tennis() => new GamePackDef { id = TennisId, template = "tennis", title = "Tennis", howTo = "Rally with Bambi by returning the ball with either hand." };
+        public static GamePackDef Tennis() => new GamePackDef { id = TennisId, template = "tennis", title = "Tennis", howTo = "Rally with Nilo by returning the ball with either hand." };
         public static GamePackDef Keeper() => new GamePackDef { id = KeeperId, template = "keeper", title = "Goalkeeper", howTo = "Face the goal and save five shots with your hands." };
         public static GamePackDef Gomoku() => new GamePackDef { id = GomokuId, template = "gomoku", title = "오목", howTo = "두 사람이 TV의 같은 바둑판을 보고 번갈아 돌을 놓아요." };
         public static GamePackDef Defense() => new GamePackDef { id = SwarmRules.PackId, template = SwarmRules.Template, title = SwarmRules.Title, howTo = "Raise your left palm to guard. Aim your right finger to cast. Choose a charm each level." };
@@ -92,8 +92,8 @@ namespace LivingPartner.Shared
         public string kind = ModuleKinds.Item;
         public string name = "";
         public string summary = "";         // one or two lines for the shop
-        public string gives = "";           // one line: what the partner gains ("Bambi can sit down - and study, when there is a desk")
-        public string author = "";          // "Bambi Studio" for what came with the partner, "You" for what the user made
+        public string gives = "";           // one line: what the partner gains ("Nilo can sit down - and study, when there is a desk")
+        public string author = "";          // "Nilo Studio" for what came with the partner, "You" for what the user made
         public string icon = "";            // PNG file under /world/ ("" = a picture by kind)
         public int price;                   // in stars, the shop's own play money (0 = free)
         public string version = "1.0";
@@ -117,7 +117,7 @@ namespace LivingPartner.Shared
         public bool installed, mine, builtin;
         public string template = "";        // games: which way of playing
         // THE REAL MARKETPLACE (the hub: a server that many people's PCs talk to)
-        public string seller = "";          // the nickname of who sells it ("Bambi Studio" for what the makers of the partner sell)
+        public string seller = "";          // the nickname of who sells it ("Nilo Studio" for what the makers of the partner sell)
         public bool listed;                 // it is on sale on the hub (false: something of the user's that is not on sale yet - it can be put up)
         public bool owned;                  // the user has bought (or got) it on the hub, whether or not it is installed just now
         public int installs, likes;         // how many people got it, how many liked it

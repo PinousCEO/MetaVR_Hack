@@ -638,8 +638,8 @@ namespace LivingPartner.MR
         {
             if (_introDone) return;
             _introT += dt;
-            if (hostOk || _introT >= 4.8f || _introGone > 0f) _introGone += dt;
-            float show = Mathf.Clamp01(_introT / 0.6f) * (1f - Mathf.Clamp01(_introGone / 0.7f));
+            if ((_introT >= 2.35f && hostOk) || _introT >= 4.8f || _introGone > 0f) _introGone += dt;
+            float show = Mathf.SmoothStep(0f, 1f, _introT / 0.8f) * (1f - Mathf.Clamp01(_introGone / 0.7f));
             if (_introGone > 0.75f || _link.NeedsPairing || Input.Simulated && _introT > 0.1f && !_introSim)
             {
                 _introDone = true;
@@ -647,21 +647,21 @@ namespace LivingPartner.MR
                 IntroFxHide();
                 return;
             }
-            Vector3 head = Input.HeadPos, fwd = Input.HeadRot * Vector3.forward; fwd.y *= 0.3f; fwd.Normalize();
+            Vector3 head = Input.HeadPos, fwd = Input.HeadRot * Vector3.forward;
             if (_introT < 0.3f || _introAt == Vector3.zero) _introAt = head + fwd * 0.62f;
             _introAt = Vector3.Lerp(_introAt, head + fwd * 0.62f, 1f - Mathf.Exp(-dt * 1.5f));          // it drifts after the gaze, lazily
-            Quaternion face = Quaternion.LookRotation(_introAt - head, Vector3.up);
+            Quaternion face = Input.HeadRot;
             float pop = Ui.Pop(Mathf.Clamp01((_introT - 0.25f) / 0.7f)) * (1f - Mathf.Clamp01(_introGone / 0.7f));
             IntroFx(_introAt, face, show);      // the glow, the stars and the circling badges (MrIntro)
             _introLogo.enabled = true; _introRing.enabled = true;
             _introLogo.transform.SetPositionAndRotation(_introAt + Vector3.up * (0.012f * Mathf.Sin(_introT * 1.8f)), face);
-            _introLogo.transform.localScale = new Vector3(0.76f, 0.76f * 144f / 1724f, 1f) * Mathf.Max(0.001f, pop);      // the word mark is the middle third of its picture
+            _introLogo.transform.localScale = new Vector3(0.43f, 0.43f * _introLogo.texture.height / _introLogo.texture.width, 1f) * Mathf.Max(0.001f, pop);      // preserve the illustrated wordmark’s proportions
             _introLogo.SetColor(new Color(1, 1, 1, show)); _introLogo.SetLook(0f, Mathf.Repeat(_introT * 0.5f, 1.6f) < 1f ? Mathf.Repeat(_introT * 0.5f, 1.6f) : -1f);
             _introRing.transform.SetPositionAndRotation(_introAt + face * new Vector3(0, 0, 0.01f), face * Quaternion.Euler(0, 0, _introT * 50f));
             _introRing.transform.localScale = Vector3.one * (0.34f * pop);
             _introRing.SetColors(new Color(1f, 0.84f, 0.42f, 0.9f * show), new Color(1f, 0.96f, 0.86f, 0.9f * show));
-            string line = !hostOk ? "" : _mons.Count == 0 && !LocalMode ? "Finding your screens ..." : "Ready!";
-            Place(_introLine, _introAt - Vector3.up * 0.098f, show > 0.4f ? line : "");
+            string line = hostOk && _mons.Count == 0 && !LocalMode ? "Finding your screens…" : "";
+            Place(_introLine, _introAt - Vector3.up * 0.127f, show > 0.4f ? line : "");
             _introBg.enabled = _introLine.text.Length > 0;
             _introBg.transform.SetPositionAndRotation(_introLine.transform.position + _introLine.transform.forward * 0.002f, _introLine.transform.rotation);
             Ui.SizePanel(_introBg, _introLine.Width + 0.05f, _introLine.Height + 0.026f, 0.019f, 0.0018f);

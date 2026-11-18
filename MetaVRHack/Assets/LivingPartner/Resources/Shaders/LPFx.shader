@@ -214,6 +214,16 @@ Shader "LivingPartner/Fx"
                     float3 c = lerp(_Color.rgb, float3(1.0, 1.0, 1.0), saturate(rim * 0.45 + hl + ripple * 0.10));
                     return half4(c * al, al);
                 }
+                else if (_Mode > 12.5)
+                {
+                    // A white-hot core, four tapered rays and a coloured corona. Drawn in one quad on both sides of the glass.
+                    float ray = pow(max(0.0, 1.0 - min(abs(p.x), abs(p.y)) * 12.0), 3.0);
+                    float corona = exp(-6.0 * r * r);
+                    float rays = ray * pow(saturate(1.0 - r), 1.3);
+                    float core = exp(-37.0 * r * r);
+                    a = saturate(corona * 0.62 + rays * 0.95 + core) * (1.0 - smoothstep(0.84, 1.0, r));
+                    col = lerp(_Color.rgb, _Color2.rgb, saturate(core + rays * 0.8));
+                }
                 else
                 {
                     // a small flying droplet: clear in the middle, denser towards its edge, one bright point of light

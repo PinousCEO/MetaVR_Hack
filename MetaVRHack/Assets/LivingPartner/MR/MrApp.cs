@@ -72,7 +72,7 @@ namespace LivingPartner.MR
         Vector3 _pos; Quaternion _rot = Quaternion.identity;
         int _rideHand = -1; float _handLostT, _handSteadyT, _restT; Vector3 _lastPalm, _palmVel, _ridePos; Quaternion _rideRot = Quaternion.identity;
 
-        string _prepTid = ""; bool _approachSent, _readySent, _holdSent; float _approachT; int _approachRev = -1; string _landedTid = "";
+        string _prepTid = ""; bool _approachSent, _readySent, _holdSent; int _approachRev = -1; string _landedTid = "";
         double _nextBeat, _nextStatus, _nextHead, _nextPointer;
         float _crossTau, _crossProgress; string _crossPhase = "";
         float _fps = 72f;
@@ -109,7 +109,7 @@ namespace LivingPartner.MR
             InitLocal();        // playing without the PC: the card with "Play now", the first steps (MrLocalHost)
         }
 
-        void OnDestroy() { EndGomoku(true); StopTvRally(); _link?.Dispose(); }
+        void OnDestroy() { DisposeGarden(); EndGomoku(true); StopTvRally(); _link?.Dispose(); }
 
         void OnHostLost()
         {
@@ -173,7 +173,7 @@ namespace LivingPartner.MR
                 case Msg.IntentResult: { var r = env.body?.ToObject<IntentView>(); if (r != null) OnIntent(r); break; }
                 case Msg.ModuleUpdate: case Msg.TaskUpdate: break; // the snapshot that follows carries the state
                 case Msg.Debug: { var d = env.Body<DebugCommand>(); if (d != null) OnDebug(d); break; }
-                case Msg.EyeRequest: OnEyeRequest(env.Body<EyeRequest>()); break;          // "이거 만들어 줘": ONE picture of what the user holds up (MrEyes)
+                case Msg.EyeRequest: OnEyeRequest(env.Body<EyeRequest>()); break;          // "Make this for me": ONE picture of what the user holds up (MrEyes)
             }
         }
 
@@ -191,6 +191,8 @@ namespace LivingPartner.MR
         {
             switch (r.kind)
             {
+                case "gardenOpen": if (!GardenOpen) ToggleGarden(); break;
+                case "gardenClose": if (GardenOpen) ToggleGarden(); break;
                 case "enterPortal":
                     // Where it goes in: the spot the host worked out (pointed at on purpose, or looked at, round the
                     // sentence - EnterRules); with none, the screen being looked at NOW, before a hand ray that may
@@ -259,7 +261,7 @@ namespace LivingPartner.MR
                 case "returnToMr": RequestReturnDefault(); break;
                 case "playTennis": StartTennis("the user asking for it"); break;
                 case "calibrate": BeginCalibration(); break;
-                case "openMenu": MenuByVoice(true); break;       // "밤비야, 가방 열어 줘": the fan opens in front of the user (MrMenuBoard)
+                case "openMenu": MenuByVoice(true); break;       // "Hey, Nilo, open my bag": the fan opens in front of the user (MrMenuBoard)
                 case "closeMenu": MenuByVoice(false); break;
             }
         }
@@ -428,6 +430,7 @@ namespace LivingPartner.MR
             UpdateVoice(dt, hostOk, show);
             UpdateTennis(dt, hostOk);
             UpdateWorld(dt, hostOk);
+            UpdateGarden();
             UpdateRps(dt);
             UpdateSwarm(dt, hostOk);     // Screen Scamps: the monsters that come out of the screen (MrSwarm)
             UpdatePoke(dt, hostOk);     // a fingertip presses a thing on the desk (MrPoke)
@@ -579,7 +582,7 @@ namespace LivingPartner.MR
             var mv = Mon(tgt?.monitorId);
             if (tgt == null || plan == null || mv == null) return Free(dt);
             HoldAbort();      // sent into a screen while it is held in the hand: it is on the desk at once, and goes
-            if (_prepTid != _tr.transitionId) { _prepTid = _tr.transitionId; _approachSent = false; _readySent = false; _holdSent = false; _approachT = 0; _approachRev = -1; if (!_homeSet) InitHome(); }
+            if (_prepTid != _tr.transitionId) { _prepTid = _tr.transitionId; _approachSent = false; _readySent = false; _holdSent = false; _approachRev = -1; if (!_homeSet) InitHome(); }
             if (!Input.HeadTracked)
             {
                 // tracking lost: hold where we are instead of walking through space we can no longer place
@@ -605,21 +608,18 @@ namespace LivingPartner.MR
             }
             if (_mode == Mode.Hop) { StepHop(dt); ApplyRig(true); return true; }
 
-            _approachT += dt;
             if (_approachRev != _tr.revision && (_approachRev < 0 || Vector2.Distance(new Vector2(launch.x, launch.z), _lastLaunch) > 0.004f))
             { _approachRev = _tr.revision; _approachSent = false; _lastLaunch = new Vector2(launch.x, launch.z); _moveIssued = false; }
 
-            // 1) acknowledge the user, 2) look at the destination, 3) turn and go
-            if (_approachT < 0.45f) { _mixer.Set(Emote.Idle); _motor.Face(YawTo(Input.HeadPos - _pos)); }
-            else if (_approachT < 1.15f) { _mixer.Set(Emote.Point); _motor.Face(YawTo(portal - _pos)); }
-            else
+            _mixer.Set(Emote.Idle);
+            if (!_moveIssued)
             {
-                _mixer.Set(Emote.Idle);
-                if (!_moveIssued) { _moveIssued = true; float far = Vector2.Distance(_motor.Pos, _lastLaunch); _motor.MoveTo(_lastLaunch, far > 4.5f * _H, faceYaw); }
+                _moveIssued = true;
+                _motor.MoveTo(_lastLaunch, Vector2.Distance(_motor.Pos, _lastLaunch) > _H, faceYaw);
             }
             _mixer.Evaluate(Time.time, dt, _pose);
-            _motor.Update(dt, _H, _pose);
-            if (_approachT >= 0.45f)
+            _motor.Update(dt * 1.85f, _H, _pose);
+            if (_moveIssued)
             {
                 Vector3 hp = _pos + Vector3.up * (0.75f * _H);
                 Vector3 local = Quaternion.Inverse(Quaternion.Euler(0, _motor.Yaw, 0)) * (portal - hp);
@@ -710,7 +710,7 @@ namespace LivingPartner.MR
                 if (_cs.Phase == CrossPhase.Land && plan.direction == 1) _sparks.Burst(feet, camRight, Vector3.up, _H * 0.42f);
                 if (_cs.Phase == CrossPhase.FlightIn && plan.direction == 0) _sparks.Burst(feet, camRight, Vector3.up, _H * 0.34f, 7);
                 // what is heard of a crossing on this side: the rush of air as it goes through the glass, and its feet on the desk when it has come out
-                if (_cs.Phase == CrossPhase.Thread) Sfx("whoosh", portal, 0.8f);
+                if (_cs.Phase == CrossPhase.Thread) Sfx(plan.direction == 0 ? "portal-in" : "portal-out", portal, 0.82f);
                 if (_cs.Phase == CrossPhase.Land && plan.direction == 1) Sfx("land", feet, 0.6f);
                 _lastPhase = _cs.Phase;
             }

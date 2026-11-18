@@ -26,9 +26,9 @@ sealed partial class Stage
 
     string LaunchNative(string id)
     {
-        if (headset == null) return "Quest를 먼저 연결해 주세요.";
-        if (machine.IsActive) return "밤비가 화면을 통과하면 시작할 수 있어요.";
-        if (screen == null || snap.calibrations.Count == 0) return "TV를 전체 화면으로 선택하고 헤드셋에서 TV 위치를 확인해 주세요.";
+        if (headset == null) return "Connect your Quest first.";
+        if (machine.IsActive) return "Wait for Nilo to finish crossing.";
+        if (screen == null || snap.calibrations.Count == 0) return "Set the TV to fullscreen and calibrate it from the headset.";
         Table.Stop();
         StopNativeGames(Match.State.active || swarm!=null);
         StopGlassGames();
@@ -119,7 +119,7 @@ sealed partial class Stage
             return new {native="swarm",s.phase,s.bursts,s.halfW,s.halfH,s.level,s.hearts,s.maxHearts,s.score,s.xp,s.need,s.elapsed,s.won,
                 choices=s.phase==SwarmPhase.Choosing ? (s.choices??[]).Take(3).Where(i=>i>=0 && i<SwarmAug.Count).ToArray() : Array.Empty<int>(),
                 shots=Enumerable.Range(0,Math.Clamp(s.shotCount,0,new[]{SwarmSim.MaxBolts,s.shotU?.Length??0,s.shotV?.Length??0,s.shotRadius?.Length??0}.Min()))
-                    .Select(i=>new {u=s.shotU[i],v=s.shotV[i],r=s.shotRadius[i]}).ToArray(),
+                    .Select(i=>new {u=s.shotU[i],v=s.shotV[i],r=s.shotRadius[i],star=s.shotStar != null && i<s.shotStar.Length && s.shotStar[i]}).ToArray(),
                 actors=Enumerable.Range(0,s.count)
                 .Where(i=>s.kind[i]>=0 && s.kind[i]<SwarmKind.Count && float.IsFinite(s.u[i]) && float.IsFinite(s.v[i]) && float.IsFinite(s.press[i]))
                 .Select(i=>new {id=s.id[i],kind=s.kind[i],u=s.u[i],v=s.v[i],press=Math.Clamp(s.press[i],0,1),radius=SwarmKind.Radius[s.kind[i]]}).ToArray()};

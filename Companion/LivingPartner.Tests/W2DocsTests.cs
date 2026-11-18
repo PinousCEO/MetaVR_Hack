@@ -19,7 +19,7 @@ public class W2DocsTests : IDisposable
 {
     readonly string _root = Path.Combine(Path.GetTempPath(), "lp-w2docs-" + Guid.NewGuid().ToString("N")[..8]);
     string Store => Path.Combine(_root, "store");
-    string User => Path.Combine(_root, "Documents", "Bambi");
+    string User => Path.Combine(_root, "Documents", "Nilo");
     string Desktop => Path.Combine(_root, "Desktop");
     public W2DocsTests() { Directory.CreateDirectory(Store); Directory.CreateDirectory(Desktop); }
     public void Dispose() { try { Directory.Delete(_root, true); } catch { } }

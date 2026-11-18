@@ -34,11 +34,11 @@ public static class MacDocumentPages
         using var book = new Pages(folder);
         bool ko = report.korean;
         book.Start(report.title, report.made.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) + "   ·   " +
-            (report.web ? ko ? "웹 자료 조사" : "Web research" : ko ? "일반 지식 기반 · 웹 검증 없음" : "Written from general knowledge without web verification"));
+            (report.web ? ko ? "Researching sources" : "Web research" : ko ? "General knowledge · sources unverified" : "Written from general knowledge without web verification"));
         book.Paragraph(report.summary, 32, 47);
         if (report.facts.Count > 0)
         {
-            book.Heading(ko ? "주요 정보" : "At a glance");
+            book.Heading(ko ? "Key findings" : "At a glance");
             foreach (var f in report.facts) book.Paragraph(f.label + "  ·  " + f.value, 26, 38);
         }
         foreach (var section in report.sections)
@@ -50,7 +50,7 @@ public static class MacDocumentPages
         }
         if (report.sources.Count > 0)
         {
-            book.Heading(ko ? "출처" : "Sources");
+            book.Heading(ko ? "Sources" : "Sources");
             foreach (var source in report.sources)
             {
                 book.Ensure(86);
@@ -66,7 +66,7 @@ public static class MacDocumentPages
         ArgumentNullException.ThrowIfNull(pngPaths);
         if (pngPaths.Count == 0) throw new ArgumentException("At least one design is required.", nameof(pngPaths));
         using var book = new Pages(folder);
-        book.Start(title, "Bambi  /  Design options");
+        book.Start(title, "Nilo  /  Design options");
         for (int i = 0; i < pngPaths.Count; i += 4)
         {
             if (i > 0) book.NewPage();
@@ -266,7 +266,7 @@ public static class MacDocumentPages
         {
             int page = _jpegs.Count + 1;
             Rect(Margin, Height - 88, Right, Height - 86, Rule);
-            Text("Bambi", 22, true, Margin, Height - 48, Dim);
+            Text("Nilo", 22, true, Margin, Height - 48, Dim);
             string number = page.ToString(CultureInfo.InvariantCulture);
             Text(number, 21, x: Right - Text(number, 21), baseline: Height - 48, color: Dim);
             using var image = _surface.Snapshot();

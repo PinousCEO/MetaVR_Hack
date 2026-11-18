@@ -4,7 +4,7 @@ using UnityEngine;
 namespace LivingPartner.MR
 {
     /// <summary>
-    /// "Bambi made this!" (MrCore/Panels/MadeCard): the card that comes up when the partner has finished making
+    /// "Nilo made this!" (MrCore/Panels/MadeCard): the card that comes up when the partner has finished making
     /// something - the thing's picture, its name, and the question whether it should go up in the marketplace, with a
     /// price to step up and down and two buttons. The parts are authored here; MrCraft fills them from the offer the
     /// PC sends (MarketView.offerId) and sends the answer back.

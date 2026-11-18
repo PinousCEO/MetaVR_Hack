@@ -60,7 +60,7 @@ namespace LivingPartner.MR
             if (w == null) return;
             if (w.games == null) w.games = new List<GamePackDef>();
             foreach (var g in w.games) if (g != null && g.template == SwarmRules.Template) return;
-            if (_swPack == null) _swPack = new GamePackDef { id = SwarmRules.PackId, template = SwarmRules.Template, title = SwarmRules.Title, howTo = "검지로 조준하면 발사합니다." };
+            if (_swPack == null) _swPack = new GamePackDef { id = SwarmRules.PackId, template = SwarmRules.Template, title = SwarmRules.Title, howTo = "Point your index finger to fire." };
             w.games.Insert(0, _swPack);
         }
 
@@ -149,7 +149,7 @@ namespace LivingPartner.MR
             v.hud.localScale = Vector3.one * _swFar;
             foreach (var c in v.cards) c.Hide();
             v.result.Hide();
-            SwarmBanner("검지로 조준", 2f);
+            SwarmBanner("Point to aim", 2f);
             Sfx("squeak", _swCenter, 0.6f);
             if (_ch.owner == Env.Mr && _mode == Mode.Free) { _motor.Face(YawTo(_swCenter - _pos)); _emoteForced = Emote.Startle; _emoteT = 1.2f; }
             Debug.Log($"[MR] swarm: a run begins ({how}); they come out of {(mv != null ? "the screen " + mv.desc.id : "the window on the desk")} {dist:0.00} m away, {(_swHalfW * 200f):0} x {(_swHalfH * 200f):0} cm; best so far {_swBest}");
@@ -257,7 +257,7 @@ namespace LivingPartner.MR
                         if (ev.b == 1) { _sparks.Burst(p + _swOut * 0.02f, _swRight, _swUp, 0.035f, 5); SwSfx(0, "pop", p, 0.55f, 0.8f, 0.05f); _swGlow = 1f; }
                         else SwSfx(0, "pop", p, 0.35f, 1.1f);
                         break;
-                    case SwarmEv.Hit: SwPuff(p, 0.035f, SwCream, 0.18f); SwSfx(1, "tap", p, 0.30f, 1.5f, 0.06f); break;
+                    case SwarmEv.Hit: SwPuff(p, .075f, SwCream, .15f); SwRipple(p, .115f, SwHoney, .21f); SwSfx(1, "tap", p, 0.30f, 1.5f, 0.06f); break;
                     case SwarmEv.Pop:
                     {
                         Color c = SwarmMeshes.Body[Mathf.Clamp(ev.a, 0, SwarmKind.Count - 1)];
@@ -267,7 +267,9 @@ namespace LivingPartner.MR
                         if (ev.b == 0) SwSfx(2, "pop", p, 0.5f, ev.a == SwarmKind.Tank ? 0.7f : ev.a == SwarmKind.Mini ? 1.5f : 1.15f, 0.05f);
                         break;
                     }
-                    case SwarmEv.Fire: SwSfx(3, "step", p, 0.35f, 1.9f, 0.09f); break;
+                    case SwarmEv.Fire:
+                        SwPuff(p, .080f, SwCream, .11f); SwRipple(p, .095f, SwHoney, .15f);
+                        SwSfx(3, "spell", p, .53f, 1.05f, .09f); break;
                     case SwarmEv.Gem:
                         if (Time.time - _swComboAt > 0.9f) _swCombo = 0f;
                         _swCombo = Mathf.Min(8f, _swCombo + 1f); _swComboAt = Time.time;
@@ -296,7 +298,7 @@ namespace LivingPartner.MR
                         Sfx("squeak", _swCenter, 0.5f, 0.8f);
                         break;
                     case SwarmEv.BossWarn:
-                        SwarmBanner("가시 왕", 2.0f);
+                        SwarmBanner("Thorn King", 2.0f);
                         Sfx("error", _swCenter, 0.8f, 0.6f);
                         if (partnerOut) { _emoteForced = Emote.Cower; _emoteT = 2.5f; }
                         Debug.Log($"[MR] swarm: the boss is squeezing out at {_sw.time:0} s (level {_sw.level}, {_sw.kills} popped, {_sw.hearts} hearts)");
@@ -507,15 +509,21 @@ namespace LivingPartner.MR
                 if (!b.alive || (pcDraws && Vector3.Dot(Conv.U(b.pos) - _swCenter, _swOut) < 0f)) { if (g.enabled) { g.enabled = false; st.enabled = false; } continue; }
                 Vector3 pos = Conv.U(b.pos), bd = Conv.U(b.dir);
                 if (!g.enabled) g.enabled = true;
-                float size = b.radius * (b.star ? 4.6f : 5.2f);
-                g.transform.SetPositionAndRotation(pos, face * Quaternion.Euler(0f, 0f, b.star ? time * 500f : 0f));
+                float size = b.radius * (b.star ? 8.4f : 7.0f);
+                Color rim = b.star ? new Color(.97f, .35f, .66f) : new Color(1f, .49f, .13f);
+                g.transform.SetPositionAndRotation(pos, face * Quaternion.Euler(0, 0, time * (b.star ? 310f : 180f) + i * 37f));
                 g.transform.localScale = Vector3.one * size;
-                if (g.mode != (b.star ? 5 : 8)) { g.mode = b.star ? 5 : 8; g.param = new Vector4(b.star ? 1.3f : 3.4f, 0, 0, 0); g.SetColors(b.star ? new Color(1f, 0.72f, 0.80f, 1f) : new Color(1f, 0.90f, 0.55f, 1f), new Color(1f, 0.99f, 0.92f, 1f)); }
-                float len = Mathf.Min(0.10f, Vector3.Distance(pos, _swAimFrom) * 0.5f + 0.01f);
-                Vector3 mid = pos - bd * (len * 0.5f), toEye = eye - mid; toEye -= bd * Vector3.Dot(toEye, bd);
-                bool streak = !b.star && toEye.sqrMagnitude > 1e-6f;
+                if (g.mode != 13 || !g.color.Equals(rim)) { g.mode = 13; g.SetColors(rim, new Color(1f, .98f, .84f)); }
+                float len = Mathf.Min(b.star ? .25f : .18f, Vector3.Distance(pos, _swAimFrom));
+                Vector3 mid = pos - bd * (len * .5f), toEye = eye - mid; toEye -= bd * Vector3.Dot(toEye, bd);
+                bool streak = len > .005f && toEye.sqrMagnitude > 1e-7f;
                 if (st.enabled != streak) st.enabled = streak;
-                if (streak) { st.transform.SetPositionAndRotation(mid, Quaternion.LookRotation(-toEye.normalized, -bd)); st.transform.localScale = new Vector3(b.radius * 1.6f, len, 1f); }
+                if (streak)
+                {
+                    st.transform.SetPositionAndRotation(mid, Quaternion.LookRotation(-toEye.normalized, -bd));
+                    st.transform.localScale = new Vector3(b.radius * 3.3f, len, 1f);
+                    if (st.mode != 9 || !st.color.Equals(rim)) { st.mode = 9; st.SetColor(rim); }
+                }
             }
 
             // ---- gems
@@ -810,6 +818,7 @@ namespace LivingPartner.MR
                 int k = s.shotCount++;
                 SwarmProject(pos, out s.shotU[k], out s.shotV[k], out float scale);
                 s.shotRadius[k] = bolt.radius * scale;
+                s.shotStar[k] = bolt.star;
             }
             _link.Send(Msg.SwarmState, s);
         }

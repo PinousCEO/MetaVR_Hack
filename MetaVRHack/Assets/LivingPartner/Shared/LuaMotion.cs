@@ -452,7 +452,7 @@ end)
 
         /// <summary>The motion API for the language model that writes scripts (games and things alike).</summary>
         public const string Doc =
-@"MOTIONS - teach the partner (Bambi) a movement of its own.
+@"MOTIONS - teach the partner (Nilo) a movement of its own.
 motion(name, seconds, function(u, p) ... end [, loop])
   Defines a motion. While it plays, the function is called every frame with u = 0..1 (how far through; a loop
   wraps round) and p = an empty pose table to fill. Whatever you do not set comes from a built-in base pose.

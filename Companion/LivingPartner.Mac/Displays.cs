@@ -25,24 +25,24 @@ static class Displays
     // Capture a small rectangle in global Quartz display points; Retina and negative screen origins are supported.
     public static async Task<byte[]> CaptureSpotAsync(string displayId, float u, float v, CancellationToken ct, bool wholeDisplay = false)
     {
-        if (!OperatingSystem.IsMacOS()) throw new InvalidOperationException("이 기능은 Mac의 화면 기록 권한이 필요해요.");
+        if (!OperatingSystem.IsMacOS()) throw new InvalidOperationException("Allow Screen Recording on your Mac to use this feature.");
         if (!float.IsFinite(u) || !float.IsFinite(v) || u < 0 || u > 1 || v < 0 || v > 1)
-            throw new InvalidOperationException("바꾸려는 아이콘을 다시 가리켜 주세요.");
+            throw new InvalidOperationException("Point at the icon you want to change.");
         if (!CGPreflightScreenCaptureAccess() && !CGRequestScreenCaptureAccess())
-            throw new InvalidOperationException("Mac 시스템 설정의 개인정보 보호 및 보안에서 화면 기록을 허용한 뒤 밤비를 다시 실행해 주세요.");
+            throw new InvalidOperationException("Allow Screen Recording in System Settings → Privacy & Security, then reopen Yonder.");
         var active = Active();
         uint id;
         if (displayId == "mac-tv")
         {
-            var outside = active.Where(d => d.Name == "외부 디스플레이").ToArray();
-            if (outside.Length > 1) throw new InvalidOperationException("TV 설정에서 읽을 디스플레이를 선택해 주세요.");
+            var outside = active.Where(d => d.Name == "External display").ToArray();
+            if (outside.Length > 1) throw new InvalidOperationException("Select a display in TV settings first.");
             id = outside.Length == 1 ? uint.Parse(outside[0].Id[4..]) : CGMainDisplayID();
         }
         else if (!active.Any(d => d.Id == displayId) || !uint.TryParse(displayId[4..], out id))
-            throw new InvalidOperationException("선택한 TV가 연결되어 있는지 확인해 주세요.");
+            throw new InvalidOperationException("Check that the selected TV is connected.");
         var bounds = CGDisplayBounds(id);
         int width = (int)Math.Floor(bounds.size.width), height = (int)Math.Floor(bounds.size.height);
-        if (width < 100 || height < 100) throw new InvalidOperationException("Mac 화면의 크기를 확인할 수 없어요.");
+        if (width < 100 || height < 100) throw new InvalidOperationException("Unable to read the display dimensions.");
         int size = Math.Clamp(Math.Min(width,height)/6,96,260);
         int x = (int)Math.Round(bounds.x) + Math.Clamp((int)Math.Round(u * width) - size/2, 0, width-size);
         int y = (int)Math.Round(bounds.y) + Math.Clamp((int)Math.Round(v * height) - size/2, 0, height-size);
@@ -55,15 +55,15 @@ static class Displays
             var start = new ProcessStartInfo("/usr/sbin/screencapture")
             { UseShellExecute=false, RedirectStandardError=true, ArgumentList={"-x","-t","png","-R",$"{x},{y},{width},{height}",file} };
             using var request = Process.Start(start);
-            if (request == null) throw new InvalidOperationException("화면을 캡처할 수 없어요.");
+            if (request == null) throw new InvalidOperationException("Unable to capture the display.");
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
             timeout.CancelAfter(TimeSpan.FromSeconds(10));
             try { await request.WaitForExitAsync(timeout.Token); }
             catch(OperationCanceledException) { if (!request.HasExited) request.Kill(); throw; }
-            if (request.ExitCode != 0 || !File.Exists(file)) throw new InvalidOperationException("Mac에서 가리킨 영역을 캡처할 수 없어요. 화면 기록 권한을 확인해 주세요.");
+            if (request.ExitCode != 0 || !File.Exists(file)) throw new InvalidOperationException("Unable to capture that area. Check Screen Recording permission.");
             var bytes = await File.ReadAllBytesAsync(file,ct);
             if (bytes.Length < 24 || bytes.Length > 8*1024*1024 || bytes[0]!=137 || bytes[1]!=80)
-                throw new InvalidOperationException("화면 영역의 PNG를 읽을 수 없어요.");
+                throw new InvalidOperationException("Unable to read the captured image.");
             return bytes;
         }
         finally { File.Delete(file); Directory.Delete(directory); }
@@ -77,7 +77,7 @@ static class Displays
         return ids.Take((int)count).Select(id =>
         {
             var size = CGDisplayScreenSize(id);
-            return new Display("mac-" + id, CGDisplayIsBuiltin(id) == 0 ? "외부 디스플레이" : "MacBook 내장 화면",
+            return new Display("mac-" + id, CGDisplayIsBuiltin(id) == 0 ? "External display" : "Built-in MacBook display",
                 (int)CGDisplayPixelsWide(id), (int)CGDisplayPixelsHigh(id), size.width, size.height);
         }).ToArray();
     }

@@ -23,8 +23,8 @@ async function register(force=false){
 async function button(action){const r=await post(action,context());if(!r.ok)el('help').textContent=await r.text();}
 el('start').onclick=async()=>{
   try{
-    if(!full()){const p=document.documentElement;if(p.requestFullscreen)await p.requestFullscreen();else if(p.webkitRequestFullscreen)p.webkitRequestFullscreen();else throw Error('이 브라우저에서 전체 화면을 열 수 없어요.');}
-    if(await register(true))await button('start');else el('help').textContent='선택한 TV 위치를 헤드셋에서 확인하세요.';
+    if(!full()){const p=document.documentElement;if(p.requestFullscreen)await p.requestFullscreen();else if(p.webkitRequestFullscreen)p.webkitRequestFullscreen();else throw Error('This browser cannot open full screen.');}
+    if(await register(true))await button('start');else el('help').textContent='Confirm the selected TV in your headset.';
   }catch(e){el('help').textContent=e.message;}
 };
 el('close').onclick=()=>button('stop');
@@ -71,11 +71,12 @@ function update(s){
   if((s.waiting||s.active)&&options.some(d=>d.id===s.monitorId))select.value=s.monitorId;
   const playing=s.active&&full()&&select.value===s.monitorId&&layoutReady;
   el('setup').hidden=playing;el('start').disabled=!options.length||!s.connected;
-  el('who').textContent=s.active?(s.turn===1?'흑 차례':s.turn===2?'백 차례':s.status):'';
+  el('who').textContent=s.active?(s.turn===1?'Black to play':s.turn===2?'White to play':s.status):'';
   el('who').dataset.turn=s.active?s.turn:0;
   el('close').hidden=!playing;el('restart').hidden=!playing||s.turn!==0;
-  el('guide').textContent=playing&&s.turn===2?(s.guestNotice||visionError||(s.moves===1?'원하는 칸을 1초 가리키세요.':'')):'';
-  el('help').textContent=!s.connected?'Quest와 컴패니언을 먼저 연결하세요.':!options.length?'Quest에서 TV 화면의 위치를 확인하세요.':s.waiting?s.status:'';
+  el('guide').textContent=playing&&s.turn===2?(s.guestNotice||visionError||(s.moves===1?'Point at an intersection for one second.':'')):'';
+  el('help').textContent=!s.connected?'Connect the Quest to Yonder.':!options.length?'Locate the TV in your headset.':s.waiting?s.status:'';
+  document.querySelector('#board canvas').setAttribute('aria-label', 'Gomoku board, ' + s.moves + (s.moves === 1 ? ' stone' : ' stones'));
   boardPaint(s);
 }
 async function detect(s){
@@ -92,7 +93,7 @@ async function detect(s){
     if(!closed&&state.active&&state.turn===2&&state.round===s.round&&state.revision===s.revision)
       await post('guest',{viewer,monitorId:s.monitorId,round:s.round,revision:s.revision,seq:frame.seq,u:where?.u??null,v:where?.v??null});
     visionError='';
-  }catch{visionError='손 인식을 준비하지 못했어요. 브라우저에서 이 페이지를 다시 여세요.';}
+  }catch{visionError='Could not start hand tracking. Reopen this page in your browser.';}
   finally{busy=false;}
 }
 async function poll(){
@@ -101,7 +102,7 @@ async function poll(){
     const s=await fetch('/table/api/state',{cache:'no-store'}).then(r=>r.json());update(s);
     await register();
     if(s.turn===2)void detect(s);else if(frameKey){frameKey='';latest=-1;detector?.reset();visionError='';}
-  }catch{el('help').textContent='컴패니언과 다시 연결하는 중이에요.';}
+  }catch{el('help').textContent='Reconnecting to Yonder…';}
   if(!closed)setTimeout(poll,document.hidden?650:state.active?90:250);
 }
 poll();

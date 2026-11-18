@@ -283,15 +283,15 @@ namespace LivingPartner.Windows
             _tnRacket.localScale = Vector3.one * Mathf.Max(0.001f, Ui.Pop(_tnFade));
 
             // ---- the scoreboard on the back wall
-            _tnScore.text = $"You  {_tn.scoreUser} : {_tn.scorePartner}  Bambi";
+            _tnScore.text = $"You  {_tn.scoreUser} : {_tn.scorePartner}  Nilo";
             string note = "";
             if (!leaving)
                 switch (_tn.phase)
                 {
                     case "ready": note = _tn.scoreUser + _tn.scorePartner == 0 ? "First to " + Tennis.PointsToWin : "Get ready ..."; break;
                     case "rally": note = _tn.rally >= 2 ? "Rally " + _tn.rally : ""; break;
-                    case "point": note = _tn.lastPoint == "user" ? "Point to you!" : "Point to Bambi!"; break;
-                    case "over": note = _tn.scoreUser > _tn.scorePartner ? "You win!" : "Bambi wins!"; break;
+                    case "point": note = _tn.lastPoint == "user" ? "Point to you!" : "Point to Nilo!"; break;
+                    case "over": note = _tn.scoreUser > _tn.scorePartner ? "You win!" : "Nilo wins!"; break;
                 }
             if (_tn.mode.Length > 0)
             {

@@ -19,6 +19,15 @@ namespace LivingPartner.Tests;
 /// </summary>
 public class W2TalkTests
 {
+    [Theory]
+    [InlineData("밤비야, 여기로 들어가 볼래?", false)]
+    [InlineData("이 화면에 들어가 줘", false)]
+    [InlineData("이 창 안으로 들어가", true)]
+    [InlineData("go into this terminal window", true)]
+    [InlineData("go into this screen", false)]
+    public void Following_a_window_requires_an_explicit_window_destination(string text, bool bind)
+        => Assert.Equal(bind, EnterRules.IntoWindow(text));
+
     // ------------------------------------------------------------------ what the recogniser made up
     public const string Echo1057 = "밤비야, 이쪽으로 들어가 봐. 밤비야, 이 화면이 어떤 화면이야? 밤비야, 이거 피드백 줘. 밤비야, 이 아이콘 네가 직접 수정해 볼래? 밤비야, 테니스 하자. 밤비야, 책상 하나 만들어 줘. 밤별아, 춤춰 봐. 밤비야, 노래 틀어 줘. 밤비야, 앞으로 집중 모드라고 하면 비 내리고 조용한 노래 틀어 줘.";
     public const string Echo1104 = "밤비야, 이쪽으로 들어가 봐. 밤비야, 이리 나와 봐. 밤비야, 이 화면이 어떤 화면이야? 밤비야, 이거 피드백 줘. 밤비야, 이 아이콘 네가 직접 수정해 볼래? 밤비야, 테니스 하자. 밤비야, 책상 하나 만들어 줘. 밤별아, 춤춰 봐. 밤비야, 노래 틀어 줘. 밤비야, 앞으로 집중 모드라고 하면 비 내리고 조용한 노래 틀어 줘.";
@@ -64,13 +73,13 @@ public class W2TalkTests
     [InlineData("밤비야")]
     [InlineData("밤비야!")]
     [InlineData("밤비야, 밤비야, 밤비야!")]
-    [InlineData("Bambi")]
+    [InlineData("Nilo")]
     [InlineData("밤비")]
     [InlineData("음...")]
     [InlineData("응")]
     [InlineData("그만")]
     [InlineData("밤비야, 고마워.")]
-    [InlineData("Bambi, thank you so much, that was great.")]
+    [InlineData("Nilo, thank you so much, that was great.")]
     [InlineData("두 번째 거 틀어줘.")]
     [InlineData("밤비야, 일단 나와봐.")]
     public void What_the_user_said_is_kept(string transcript) => Assert.Equal("", HearRules.Drop(transcript));
@@ -79,7 +88,7 @@ public class W2TalkTests
     public void The_hint_for_the_recogniser_has_no_sentence_in_it()
     {
         Assert.True(HearRules.Prompt.Length < 40);
-        Assert.Contains("밤비", HearRules.Prompt);
+        Assert.Contains("Nilo", HearRules.Prompt);
         Assert.DoesNotContain("밤비야", HearRules.Prompt);      // (an echo of the hint must not read as a call of the name)
         Assert.DoesNotContain("들어가", HearRules.Prompt);
         Assert.NotEqual("", HearRules.Drop(HearRules.Prompt));
@@ -92,20 +101,21 @@ public class W2TalkTests
     [InlineData("밤비야, 멈춰.", "stop")]
     [InlineData("게임 그만", "stop")]
     [InlineData("stop", "stop")]
-    [InlineData("Bambi, stop!", "stop")]
+    [InlineData("Nilo, stop!", "stop")]
     [InlineData("나와", "returnToMr")]
     [InlineData("밤비야, 나와봐.", "returnToMr")]
     [InlineData("밤비야, 일단 나와봐.", "returnToMr")]       // 10:59:32
     [InlineData("밤비야, 이리 나와 봐.", "returnToMr")]
     [InlineData("밤별아, 이제 나와 줘", "returnToMr")]
     [InlineData("come out", "returnToMr")]
-    [InlineData("Bambi, come back out.", "returnToMr")]
+    [InlineData("Nilo, come back out.", "returnToMr")]
     [InlineData("쉿", "quietOn")]
     [InlineData("밤비야, 조용히 해.", "quietOn")]
     [InlineData("be quiet", "quietOn")]
     [InlineData("취소", "cancel")]
     [InlineData("밤비야, 취소해 줘", "cancel")]
     [InlineData("cancel", "cancel")]
+    [InlineData("밤비야, 화면에 들어가 줘.", "enterPortal")]
     public void An_exact_short_order_is_carried_out_by_the_rule(string said, string kind) => Assert.Equal(kind, TurnRules.ExactOrder(said));
 
     [Theory]
@@ -148,8 +158,8 @@ public class W2TalkTests
     [InlineData("밤비야, 바탕화면에 어떤 파일이 있어?")]
     [InlineData("밤비야, 여기 폴더가 뭐뭐 있어?")]
     [InlineData("밤비야, 저 안에 있는 게 뭐야?")]
-    [InlineData("Bambi, what's in this screen?")]
-    [InlineData("Bambi, do you see the logo here?")]
+    [InlineData("Nilo, what's in this screen?")]
+    [InlineData("Nilo, do you see the logo here?")]
     [InlineData("What is inside that window?")]
     public void A_question_about_something_is_never_a_move(string said) => Assert.True(TurnRules.AsksNotMoves(said));
 
@@ -160,8 +170,8 @@ public class W2TalkTests
     [InlineData("밤비야, 바탕화면으로 나와 줄래?")]
     [InlineData("밤비야, 이리 와.")]
     [InlineData("밤비야, 일단 나와봐.")]
-    [InlineData("Bambi, can you come out?")]
-    [InlineData("Bambi, go into that screen.")]
+    [InlineData("Nilo, can you come out?")]
+    [InlineData("Nilo, go into that screen.")]
     [InlineData("밤비야, 안녕.")]
     public void An_order_to_go_somewhere_is_left_to_the_model(string said) => Assert.False(TurnRules.AsksNotMoves(said));
 
@@ -426,7 +436,7 @@ public class W2TalkTests
         string title = r.point switch { "video" => VideoTitle, "search" => SearchTitle, "code" => CodeTitle, _ => "" };
         var x = new TurnContext
         {
-            name = "Bambi", personality = "curious, warm, a little playful", activity = "idle", insidePc = r.where != "R",
+            name = "Nilo", personality = "curious, warm, a little playful", activity = "idle", insidePc = r.where != "R",
             where = TurnRules.Where(r.where != "R", r.where is "B" or "M", "display 2", r.where is "B" or "M" ? VideoTitle : "", r.where == "M"),
             pointing = r.point.Length == 0 ? "" : TurnRules.Pointing(false, "display 2", title),
             language = r.said.Any(ch => ch >= 0xAC00 && ch <= 0xD7A3) ? "Korean" : "English",

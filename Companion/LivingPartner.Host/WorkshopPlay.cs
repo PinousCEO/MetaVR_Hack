@@ -11,7 +11,7 @@ namespace LivingPartner.Host;
 //   random   hands that wander, rest and fire anywhere, as a child would
 //   seeker   a player who goes for what the script draws: rests a hand on keys, cells and things, follows what moves,
 //            points and fires at targets (and learns which kind of target scores), shields most of what flies out
-// - and what happened is written down: errors, a timeline of score / lives / level / banners / sounds / what Bambi did /
+// - and what happened is written down: errors, a timeline of score / lives / level / banners / sounds / what Nilo did /
 // what left the field and what became of it, how it ended, and the sprite list at a few moments (WorkshopLook.cs turns
 // one into a picture). Nothing of the host is in this file: the tests run it as it is.
 
@@ -67,7 +67,7 @@ public sealed class PlayReport
         sb.Append($"; score {scoreStart} -> {score} ({scoreChanges} change(s)); lives {livesStart} -> {lives}; level {level}");
         if (player != WorkshopPlay.Nobody) sb.Append($"; {taps} tap(s), {shots} shot(s) fired");
         if (outsSent > 0 || usedOuts) sb.Append($"; through the glass: {outsSent} sent out, {blocked} blocked, {hit} hit, {missed} missed");
-        sb.Append(PetActed ? $"; Bambi: {petLines} line(s), {petPlays} motion(s) played, walked {F(petWalked)}" : "; Bambi did NOTHING (no pet_say, pet_play, pet_goto, pet_pose)");
+        sb.Append(PetActed ? $"; Nilo: {petLines} line(s), {petPlays} motion(s) played, walked {F(petWalked)}" : "; Nilo did NOTHING (no pet_say, pet_play, pet_goto, pet_pose)");
         if (!drew) sb.Append("; NOTHING WAS DRAWN");
         return sb.ToString();
     }
@@ -81,8 +81,8 @@ public sealed class PlayReport
         sb.Append("calls: hands() ").Append(readHands ? "yes" : "no").Append(", taps() ").Append(readTaps ? "yes" : "no").Append(", held() ").Append(readHeld ? "yes" : "no")
           .Append(", shots() ").Append(readShots ? "yes" : "no").Append(", aim() ").Append(readAim ? "yes" : "no").Append(", shoot_out ").Append(usedOuts ? "yes" : "no")
           .Append(", out_events() ").Append(readOutEvents ? "yes" : "no").Append(", UI kit ").Append(usedKit ? "yes" : "no").Append(flat ? ", flat" : ", upright").Append($", at most {maxSprites} things in a frame\n");
-        if (petSaid.Count > 0) sb.Append("Bambi said: ").Append(string.Join(" | ", petSaid.Take(6).Select(s => "\"" + s + "\""))).Append(petSaid.Count > 6 ? " ..." : "").Append('\n');
-        if (petMotions.Count > 0) sb.Append("Bambi's motions played: ").Append(string.Join(", ", petMotions.GroupBy(m => m).Select(g => g.Key + " x" + g.Count()))).Append('\n');
+        if (petSaid.Count > 0) sb.Append("Nilo said: ").Append(string.Join(" | ", petSaid.Take(6).Select(s => "\"" + s + "\""))).Append(petSaid.Count > 6 ? " ..." : "").Append('\n');
+        if (petMotions.Count > 0) sb.Append("Nilo's motions played: ").Append(string.Join(", ", petMotions.GroupBy(m => m).Select(g => g.Key + " x" + g.Count()))).Append('\n');
         sb.Append("timeline (seconds: what happened):\n");
         int n = timeline.Count, head = n <= maxEvents ? n : maxEvents * 2 / 3, tail = n <= maxEvents ? 0 : maxEvents - head;
         for (int i = 0; i < head; i++) sb.Append("  ").Append(F(timeline[i].t).PadLeft(5)).Append("  ").Append(timeline[i].what).Append('\n');
@@ -142,7 +142,7 @@ public static class WorkshopPlay
         if (f == null) return "(no frame)";
         var sb = new StringBuilder();
         sb.Append($"DRAWN at t={N(f.t)} s ({f.player}; phase {f.phase}; score {f.score}, lives {f.lives}, level {f.level}{(f.banner.Length > 0 ? $"; banner \"{f.banner}\"" : "")}{(f.result.Length > 0 ? $"; result \"{f.result}\"" : "")})\n");
-        sb.Append($"  Bambi at ({N(f.petX)}, {N(f.petY)}) facing {(f.petRight ? "right" : "left")}, {(f.petMotion.Length > 0 ? "playing motion '" + f.petMotion + "'" : "pose " + f.petPose)}{(f.petLine.Length > 0 ? $", says \"{f.petLine}\"" : "")}\n");
+        sb.Append($"  Nilo at ({N(f.petX)}, {N(f.petY)}) facing {(f.petRight ? "right" : "left")}, {(f.petMotion.Length > 0 ? "playing motion '" + f.petMotion + "'" : "pose " + f.petPose)}{(f.petLine.Length > 0 ? $", says \"{f.petLine}\"" : "")}\n");
         if (f.hand) sb.Append($"  the player's hand is at ({N(f.handX)}, {N(f.handY)})");
         if (f.aim) sb.Append($"{(f.hand ? "; " : "  ")}the player points at ({N(f.aimX)}, {N(f.aimY)})");
         if (f.hand || f.aim) sb.Append('\n');
@@ -235,7 +235,7 @@ public static class WorkshopPlay
         sb.Append("PLAYTEST in a room that is not there: the thing is made, pressed (on_use), every act it offers is asked for, it is put on, the acts are asked for again, it is taken off. Each line: the step (how long the script was busy): time call ...\n");
         sb.Append(r.Report());
         foreach (var m in motions) sb.Append(m.text).Append('\n');
-        if (r.said.Count > 0) sb.Append("Bambi said: ").Append(string.Join(" | ", r.said.Take(8).Select(s => "\"" + s + "\""))).Append('\n');
+        if (r.said.Count > 0) sb.Append("Nilo said: ").Append(string.Join(" | ", r.said.Take(8).Select(s => "\"" + s + "\""))).Append('\n');
         if (r.sounds.Count > 0) sb.Append("sounds: ").Append(string.Join(" ", r.sounds.Distinct().Take(12))).Append('\n');
         return sb.ToString();
     }
@@ -325,11 +325,11 @@ public static class WorkshopPlay
                 }
                 if (game.level != lastLevel) { Note(t, $"level {lastLevel} -> {game.level}"); lastLevel = game.level; }
                 if ((game.banner ?? "") != lastBanner) { lastBanner = game.banner ?? ""; if (lastBanner.Length > 0) Note(t, $"banner \"{lastBanner}\""); }
-                if ((game.petLine ?? "") != lastLine) { lastLine = game.petLine ?? ""; if (lastLine.Length > 0) { r.petLines++; if (r.petSaid.Count < 40) r.petSaid.Add(lastLine); Note(t, $"Bambi says \"{lastLine}\""); } }
+                if ((game.petLine ?? "") != lastLine) { lastLine = game.petLine ?? ""; if (lastLine.Length > 0) { r.petLines++; if (r.petSaid.Count < 40) r.petSaid.Add(lastLine); Note(t, $"Nilo says \"{lastLine}\""); } }
                 string motion = game.petCustom ? game.PetMotion : "";
-                if (motion != lastMotion) { lastMotion = motion; if (motion.Length > 0) { r.petPlays++; if (r.petMotions.Count < 200) r.petMotions.Add(motion); Note(t, $"Bambi plays the motion '{motion}'"); } }
+                if (motion != lastMotion) { lastMotion = motion; if (motion.Length > 0) { r.petPlays++; if (r.petMotions.Count < 200) r.petMotions.Add(motion); Note(t, $"Nilo plays the motion '{motion}'"); } }
                 string pose = game.petPose ?? "";
-                if (pose != lastPose) { if (pose != "walk" && pose != "run" && pose != "idle") { r.petPosed = true; Note(t, $"Bambi's pose: {pose}"); } lastPose = pose; }
+                if (pose != lastPose) { if (pose != "walk" && pose != "run" && pose != "idle") { r.petPosed = true; Note(t, $"Nilo's pose: {pose}"); } lastPose = pose; }
                 r.petWalked += Math.Abs(game.petX - lastPetX) + Math.Abs(game.petY - lastPetY); lastPetX = game.petX; lastPetY = game.petY;
                 foreach (string s in game.sounds)
                     if (!soundAt.TryGetValue(s, out float at) || t - at > 2.5f) { soundAt[s] = t; Note(t, "sound " + s); }

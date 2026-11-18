@@ -58,7 +58,7 @@ public sealed partial class OpenAiClient
         using var form = new MultipartFormDataContent();
         form.Add(new StringContent(shortClipLanguage == null ? SttModel : _shortClipModel), "model");
         form.Add(new StringContent("json"), "response_format");
-        if (shortClipLanguage != null) form.Add(new StringContent(shortClipLanguage), "language");
+        form.Add(new StringContent(shortClipLanguage ?? "en"), "language");
         // (the hint is the name and nothing else: example sentences came back as transcripts - HearRules)
         form.Add(new StringContent(HearRules.Prompt), "prompt");
         var file = new ByteArrayContent(Wav(pcm16, sampleRate));
@@ -98,7 +98,7 @@ public sealed partial class OpenAiClient
         var body = new JObject
         {
             ["model"] = TtsModel, ["voice"] = Voice, ["input"] = text, ["response_format"] = "pcm",
-            ["instructions"] = $"You are the voice of Bambi, a tiny gentle companion who lives on a desk. Light, warm, a touch playful, never babyish. Natural pace. Right now: {manner}.",
+            ["instructions"] = $"You are the voice of Nilo, a tiny gentle companion who lives on a desk. Light, warm, a touch playful, never babyish. Natural pace. Right now: {manner}.",
         };
         using var r = await _http.PostAsync("audio/speech", new StringContent(body.ToString(), Encoding.UTF8, "application/json"), ct);
         if (!r.IsSuccessStatusCode) throw new Exception("speech: " + await Fail(r));
@@ -141,7 +141,6 @@ public sealed class Conversation
     // The partner's name as the transcription writes it - 밤비야, 밤미야, 반비야, Bamby ... - is NameRules (TalkRules.cs).
     static System.Text.RegularExpressions.Regex NameRx => NameRules.NameRx;
 
-    static readonly string[] NameAliases = { "카메라", "밤벌아", "밤 벌아", "박별아", "발별아", "밤벼락", "방벽아", "밤비야", "밤볕아", "방울아", "반려라", "밤이라" };
 
     /// <summary>Does this name the partner? "only": nothing but the name (a call, "밤비야!").</summary>
     internal static bool Named(string text, out bool only) => NameRules.Named(text, out only);
@@ -150,7 +149,7 @@ public sealed class Conversation
     public OpenAiClient Ai => _ai;
     public string KeySource { get; private set; } = "";
     public string LastError { get; private set; } = "";
-    public string LastLanguage { get; private set; } = "Korean";
+    public string LastLanguage { get; private set; } = "English";
     /// <summary>For the status page: is conversation set up, and how did the last exchanges go.</summary>
     public object Diagnostics => new { enabled = Enabled, keySource = KeySource, chat = _ai?.ChatModel ?? "", stt = _ai?.SttModel ?? "", voice = "text only (no speech)", turns = _turns, notes = _notes.Count, lastLanguage = LastLanguage, lastError = LastError };
 
@@ -239,12 +238,11 @@ public sealed class Conversation
         // perhaps not. It is listened to quietly (no "thinking" face), one at a time, and never while the partner speaks.
         bool open = clip.source == "microphone-open";
         if (open && seconds < 0.35) return;
-        // one at a time; what is said meanwhile is not thrown away (it was: "Bambi!" said while an earlier sentence was
+        // one at a time; what is said meanwhile is not thrown away (it was: "Nilo!" said while an earlier sentence was
         // still being worked on simply vanished) - the newest waits its turn
         if (open && _openBusy) { _openNext = (c, clip); return; }
         if (open) _openBusy = true; else { _thinkingSince = HostClock.Now; SetTalk("thinking"); }
-        // A bare name has too little audio for language detection. Longer speech still detects a switch of language.
-        string language = open && seconds <= 2.0 ? (LastLanguage == "Korean" ? "ko" : "en") : null;
+        string language = open && seconds <= 2.0 ? "en" : null;
         _ = Task.Run(async () =>
         {
             try
@@ -287,19 +285,12 @@ public sealed class Conversation
         // the ears always open, every remark in the room used to go to the model.) A call with nothing else ("밤비야!")
         // is answered, and the ONE thing said next within a few seconds is taken as said to it. Text typed on the PC and
         // speech after the Talk button are addressed by definition.
-        bool named = Named(u.text, out bool nameOnly);
-        // "밤비야, 이쪽으로 나와 봐" has come back as "카메라 이쪽으로 나와봐": a first word that sounds like the name,
-        // followed by something that is plainly a command, is the name
-        if (!named && open)
-        {
-            string t0 = u.text.Trim();
-            foreach (string alias in NameAliases)
-                if (t0.StartsWith(alias) && t0.Length > alias.Length + 2 && IntentParser.Parse(t0[alias.Length..]).kind is "enterPortal" or "returnToMr" or "comeHere" or "playTennis" or "stopTennis" or "calibrate")
-                { named = true; Log.Info($"conversation: '{alias}' taken for the name in '{t0}'"); break; }
-        }
+        bool nameOnly;
+        bool named = open ? NameRules.Wake(u.text, out nameOnly) : Named(u.text, out nameOnly);
+        if (open && !named && HostClock.Now > _attentionUntil && !_core.Shop.Listening) { HeardAs(u, "not for me"); return; }
         if (named && nameOnly)
         {
-            bool koName = u.text.Any(ch => ch >= 0xAC00 && ch <= 0xD7A3) || LastLanguage == "Korean";
+            bool koName = u.text.Any(ch => ch >= 0xAC00 && ch <= 0xD7A3);
             LastLanguage = koName ? "Korean" : "English";
             string[] lines = koName ? new[] { "응, 왜?", "응, 나 여기 있어!", "응, 말해 봐." } : new[] { "Yes?", "I'm here!", "Yes, tell me." };
             string hello = lines[_nameCalls++ % lines.Length];
@@ -309,16 +300,26 @@ public sealed class Conversation
             return;
         }
         string gameWish = NameRules.Strip(u.text);
+        string garden = RadishGarden.Request(gameWish);
+        if (garden.Length > 0 && (!open || named || HostClock.Now <= _attentionUntil))
+        {
+            if (open && !named) _attentionUntil = -1;
+            if (_core.HasMr) _core.Broadcast(Msg.IntentResult, new IntentResultMsg { kind = garden }, _core.IsMr);
+            else Say("Connect your headset to open the garden.", "neutral", 3, "garden");
+            HeardAs(u, garden);
+            return;
+        }
         string tableAsk=gameWish.ToLowerInvariant();
         var boardIntent=IntentParser.Parse(tableAsk);
         if((boardIntent.kind=="playGame"&&boardIntent.name==StarterGames.GomokuId ||
             boardIntent.kind=="stopTennis"&&(tableAsk.Contains("오목")||tableAsk.Contains("gomoku")))&&
             (!open||named||HostClock.Now<=_attentionUntil))
         {
+            if (open && !named) _attentionUntil = -1;
             bool stop=boardIntent.kind=="stopTennis";
             if(stop)_core.Table.Stop();
             string reason=stop?"":_core.Table.Request(pt?.monitorId);
-            Say(reason.Length>0?reason:stop?"오목을 마쳤어.":"TV에 오목판을 펼칠게.","happy",4,"two-player TV board");
+            Say(reason.Length>0?reason:stop?"Gomoku finished.":"Opening Gomoku on the TV.","happy",4,"two-player TV board");
             HeardAs(u,stop?"stopTennis":"playGame");return;
         }
         if (Market.AskedForGame(gameWish))

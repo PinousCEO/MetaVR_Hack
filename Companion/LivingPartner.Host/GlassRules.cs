@@ -81,7 +81,7 @@ public static class GlassRules
         {
             string w = raw.ToLowerInvariant();
             if (w.Length < 2 || Asking.Contains(w)) continue;
-            if (System.Text.RegularExpressions.Regex.IsMatch(w, @"^(밤비|밤별|bambi|bambyeol)(야|아|이)?$")) continue;
+            if (System.Text.RegularExpressions.Regex.IsMatch(w, @"^(밤비|밤별|nilo|bambi|bambyeol)(야|아|이)?$")) continue;
             yield return w;
             foreach (string e in Endings)
                 if (w.Length - e.Length >= 2 && w.EndsWith(e, StringComparison.Ordinal)) { string cut = w[..^e.Length]; if (!Asking.Contains(cut)) yield return cut; break; }

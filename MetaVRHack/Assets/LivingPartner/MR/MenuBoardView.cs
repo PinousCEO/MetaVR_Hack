@@ -82,7 +82,7 @@ namespace LivingPartner.MR
         [Header("Header: everything that unfolds together")]
         public Transform header;
         public UiSprite ribbon;
-        [Tooltip("The page's name on the ribbon: Bag, Bambi, Tools.")]
+        [Tooltip("The page's name on the ribbon: Bag, Nilo, Tools.")]
         public StoryLabel title;
         [Tooltip("close: only while the fan stands in the room (asked for by voice) - on the palm, closing the hand closes it.")]
         public UiButton prev, next, close;
@@ -117,7 +117,7 @@ namespace LivingPartner.MR
         [Header("Pictures by kind")]
         public Texture2D texItem;
         public Texture2D texSkill, texDance, texMusic, texGame, texDemonGate, texKeeper, texSurvival, texTennis, texPop, texRps, texRedLight;
-        [Header("Bambi and Tools")]
+        [Header("Nilo and Tools")]
         public Texture2D texGoIn;
         public Texture2D texComeOut, texHere, texWave, texLook, texCheer, texMarket, texScreen, texFind, texQuiet, texRain, texCancel;
     }

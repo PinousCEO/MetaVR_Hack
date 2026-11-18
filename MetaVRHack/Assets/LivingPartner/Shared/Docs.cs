@@ -8,7 +8,7 @@ namespace LivingPartner.Shared
     //   designs   "that icon is not good, make me a new one": the partner looks at what the user points at on a screen
     //             and draws several options (PNG each, and one PDF sheet of all of them)
     // The host makes them (the language / image model, the PDF) and keeps the files in a folder of its own on the PC
-    // (Documents\Bambi\...). The headset shows a document on a board in the room (the pages as pictures) and the options
+    // (Documents\Nilo\...). The headset shows a document on a board in the room (the pages as pictures) and the options
     // as cards to pick from; when the user asks, the partner carries the file INTO the PC: the PC client shows it in the
     // partner's hands, and a click on it there opens the real file.
 

@@ -1,25 +1,25 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>악마의 문 · 1인 디펜스</title><link rel="icon" href="/demon-gate/art/demon-guard.jpg"><link rel="stylesheet" href="/demon-gate/game.css">
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Demon Gate · Solo Defense</title><link rel="icon" href="/demon-gate/art/demon-guard.jpg"><link rel="stylesheet" href="/demon-gate/game.css">
 <script src="/demon-gate/mesh.js" defer></script><script src="/demon-gate/game.js" defer></script></head>
 <body>
-<main id="stage" aria-label="악마의 문 경기장">
-  <div id="backdrop"></div><canvas id="ground" aria-hidden="true"></canvas><canvas id="demons" aria-hidden="true"></canvas><canvas id="spell" aria-label="마우스로 조준하고 클릭해 발사"></canvas>
-  <section id="hud" hidden aria-label="플레이 상태">
-    <div class="vitals"><span>생명</span> <strong id="hearts"></strong></div>
-    <div class="xp"><span id="level"></span><progress id="xp" max="4" value="0" aria-label="경험치"></progress></div>
-    <div class="clock"><span id="timer-label">보스까지</span> <strong id="clock"></strong></div>
-    <button id="pause" aria-label="일시정지">Ⅱ</button>
+<main id="stage" aria-label="Demon Gate arena">
+  <div id="backdrop"></div><canvas id="ground" aria-hidden="true"></canvas><canvas id="demons" aria-hidden="true"></canvas><canvas id="spell" aria-label="Aim with the mouse and click to fire"></canvas>
+  <section id="hud" hidden aria-label="Game status">
+    <div class="vitals"><span>Health</span> <strong id="hearts"></strong></div>
+    <div class="xp"><span id="level"></span><progress id="xp" max="4" value="0" aria-label="Experience"></progress></div>
+    <div class="clock"><span id="timer-label">Boss in</span> <strong id="clock"></strong></div>
+    <button id="pause" aria-label="Pause">Ⅱ</button>
   </section>
-  <div id="boss" hidden><span>가시 왕</span><progress id="boss-hp" max="1" value="1" aria-label="보스 생명"></progress></div>
+  <div id="boss" hidden><span>Thorn King</span><progress id="boss-hp" max="1" value="1" aria-label="Boss health"></progress></div>
   <div id="cue" role="status"></div>
   <section id="welcome" class="sheet">
-    <div class="copy"><h1>악마의 문</h1>
-    <dl class="keys"><div><dt>마우스 왼쪽</dt><dd>조준 · 연속 발사</dd></div><div><dt>A · D / ← · →</dt><dd>좌우 이동</dd></div></dl>
-    <button class="action" id="start" disabled>준비 중…</button><p id="record"></p><p id="error" role="alert"></p></div>
+    <div class="copy"><h1>Demon Gate</h1>
+    <dl class="keys"><div><dt>Left mouse</dt><dd>Aim and hold to fire</dd></div><div><dt>A · D / ← · →</dt><dd>Move sideways</dd></div></dl>
+    <button class="action" id="start" disabled>Getting ready…</button><p id="record"></p><p id="error" role="alert"></p></div>
   </section>
-  <section id="choice" class="modal" aria-label="강화 선택" hidden><div><h2>부적을 고르세요</h2><div id="cards"></div></div></section>
-  <section id="break" class="modal" hidden><div><h2>일시정지</h2><button class="action" id="resume">계속 플레이</button></div></section>
-  <section id="over" class="modal" hidden><div><img class="seal" src="/demon-gate/art/demon-guard.jpg" alt=""><h2 id="ending"></h2><p id="summary"></p><button class="action" id="again">다시 플레이</button></div></section>
+  <section id="choice" class="modal" aria-label="Choose an upgrade" hidden><div><h2>Choose a charm</h2><div id="cards"></div></div></section>
+  <section id="break" class="modal" hidden><div><h2>Pause</h2><button class="action" id="resume">Resume</button></div></section>
+  <section id="over" class="modal" hidden><div><img class="seal" src="/demon-gate/art/demon-guard.jpg" alt=""><h2 id="ending"></h2><p id="summary"></p><button class="action" id="again">Play again</button></div></section>
 </main>
 </body></html>

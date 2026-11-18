@@ -47,7 +47,7 @@ public sealed class GomokuTableTests
             Black(6+k*dx,6+k*dy);
             if(k<4)White(k,0);
         }
-        Assert.Equal(0,(int)View["turn"]);Assert.Equal("흑 승리",(string)View["status"]);
+        Assert.Equal(0,(int)View["turn"]);Assert.Equal("Black wins",(string)View["status"]);
         Assert.Equal(9,(int)View["moves"]);
         var before=Click();
         Assert.Empty(table.Button(before,"restart"));Assert.True((int)View["round"]>before.Round);Assert.Equal(0,(int)View["moves"]);

@@ -12,7 +12,7 @@ namespace LivingPartner.Character
     {
         [Tooltip("Stable id used in the shared state (CharacterInfo.design), e.g. \"bunny\".")]
         public string id = "momo";
-        public string displayName = "Bambi";
+        public string displayName = "Nilo";
         public Mesh bodyMesh;
         [Tooltip("Eye positions in the Head bone's space, and the scale of the eye objects (1 = as modelled).")]
         public Vector3 eyeL, eyeR, eyeScale = Vector3.one;

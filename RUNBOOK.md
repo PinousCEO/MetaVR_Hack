@@ -1,16 +1,16 @@
-# RUNBOOK — Living AI Partner
+# RUNBOOK — Yonder
 
 ## 0. What you run
 
 | Where | What | Path |
 |---|---|---|
-| Windows | Play Demon Gate solo with a mouse and keyboard | `dist/Play-Demon-Gate.cmd` |
-| PC | Companion Host (tray) — also starts the character client | `dist/LivingAIPartner-Host/LivingPartner.Host.exe` |
-| PC | Windows character client (started by the host) | `dist/LivingAIPartner-Windows/LivingAIPartner.exe` |
-| MacBook | Standalone companion and TV stage | `dist/LivingPartner-Mac/LivingPartner-Mac-arm64.zip` or `LivingPartner-Mac-x64.zip` |
-| Quest 3 / 3S | MR app | `dist/LivingAIPartner-Quest/LivingAIPartner.apk` |
+| Windows | Play Demon Gate solo with a mouse and keyboard | `dist/Yonder/Play-Demon-Gate.cmd` |
+| PC | Companion Host (tray) — also starts the character client | `dist/Yonder/LivingAIPartner-Host/LivingPartner.Host.exe` |
+| PC | Windows character client (started by the host) | `dist/Yonder/LivingAIPartner-Windows/LivingAIPartner.exe` |
+| MacBook | Standalone companion and TV stage | `dist/Yonder/Mac/LivingPartner-Mac-arm64.zip` or `LivingPartner-Mac-x64.zip` |
+| Quest 3 / 3S | MR app | `dist/Yonder/LivingAIPartner-Quest/LivingAIPartner.apk` |
 
-Connect the TV to the MacBook and open `Bambi TV/Start-Bambi.command`. Choose **악마의 문 · 혼자 플레이** for the single-player desktop game. For two-player Gomoku, pair the Quest on the same local network, calibrate the TV and open the board fullscreen. Both people can see the turns, aiming cursor and stones on the TV. [MacBook setup and game instructions (한국어)](Companion/LivingPartner.Mac/README.md)
+Connect the TV to the MacBook and open `Yonder TV/Start-Yonder.command`. Choose **Demon Gate · Play solo** for the single-player desktop game. For two-player Gomoku, pair the Quest on the same local network, calibrate the TV and open the board fullscreen. Both people can see the turns, aiming cursor and stones on the TV. [MacBook setup and game instructions](Companion/LivingPartner.Mac/README.md)
 
 ## 1. Start the PC side
 
@@ -27,17 +27,17 @@ Connect the TV to the MacBook and open `Bambi TV/Start-Bambi.command`. Choose **
 ## 2. Install and pair the Quest app
 
 ```powershell
-adb install -r dist\LivingAIPartner-Quest\LivingAIPartner.apk
+adb install -r dist\Yonder\LivingAIPartner-Quest\LivingAIPartner.apk
 ```
 
 1. Put the headset on the same Wi-Fi as the PC. Enable hand tracking in the headset settings. Put the controllers away — nothing needs them.
-2. Start **Living AI Partner**. Allow hand tracking; allow the headset camera permission if you want camera-based observations (optional).
+2. Start **Yonder**. Allow hand tracking; allow the headset camera permission if you want camera-based observations (optional).
 3. The app finds the PC by a LAN beacon. A numpad appears: poke the 6-digit code shown in the tray menu (**Pair a headset**), then **OK**. The token is stored; you only pair once.
    - Beacon blocked on your network? Use USB: `adb reverse tcp:47610 tcp:47610` and restart the app.
 
 ### 2.1 With the USB cable in (development)
 
-Starting the companion with an authorized Quest on USB checks the bundled APK. The launcher installs an updated build before you put on the headset if the game is closed.
+While the companion is open, connecting an authorized Quest over USB restores the connection and checks the bundled APK. If the build has changed, the companion updates the headset and reopens the Quest app if it was running. The current game session ends during an update.
 
 ```powershell
 .\tools\Start-Quest.ps1 -Install -Watch 600     # install the APK, forward the port, start the host, wait until the headset is WORN, start the app, follow it
@@ -49,7 +49,7 @@ This path needs no Wi-Fi, no firewall rule and no pairing code: the headset reac
 
 Nothing to touch. When the app knows of a display it has not found yet, the PC lights each display with a plain colour (red, green, blue - the colour says which display) and the headset's camera finds the four corners of each. **Glance at each lit display once**: the colour goes away the moment that display is found (three displays took 6.5 s on the first run). The partner says when all are found.
 
-- Say **"화면 다시 찾아" / "find my screens"** (or press **Calibrate** on the hand menu) to do it again, for example after moving a monitor.
+- Say **"Hey, Nilo, find my screens"** (or press **Calibrate** on the hand menu) to do it again, for example after moving a monitor.
 - It happens again by itself when the headset finds its place in the room anew (recentre, boundary change).
 - The colours never stay: a click or a key on a lit display removes them all, taking the headset off removes them within a second, and a round ends by itself after 22 s without a new display.
 - It needs the headset's camera permission (`horizonos.permission.HEADSET_CAMERA`; the app asks, or `adb shell pm grant com.livingaipartner.quest horizonos.permission.HEADSET_CAMERA`).
@@ -71,14 +71,14 @@ Nothing to touch. When the app knows of a display it has not found yet, the PC l
 | Poke **Approve** on the task panel | pushes that branch (only if the project allows publishing) |
 | Hand menu **Timer** / timer panel buttons | creates and starts a 25-minute timer module; **Go** (start / pause), **Reset**, **+5m** / **-5m**, **View** |
 | Hand menu **Rain** | virtual rain; cover its head with your hand to shelter it |
-| **Pinch the partner** (fingers on it, or point at it and pinch - also through the glass while it is in the PC), or hand menu **Talk** | it turns to you and listens ("I'm listening."); speak; it stops by itself when you stop (or pinch again), thinks, then answers in its speech bubble and out loud |
+| **Pinch the partner** (fingers on it, or point at it and pinch - also through the glass while it is in the PC), or hand menu **Talk** | it turns to you and listens ("I'm listening."); speak; it stops by itself when you stop (or pinch again), then answers in its speech bubble |
 | Say "go in there" **while pointing** at a spot on a monitor | it goes in at the spot you pointed at while you were speaking |
 | Hand menu **Quiet** / **Cancel** | quiet mode (it also stops speaking aloud) / cancel the current transition and task |
-| Point at a window and say "what do you think of this?" / "피드백 줘" (or hand menu **Look**) | it goes in, looks at that window, tells you the main point, and saves the notes, a marked-up capture and a redrawn revised version on the PC (§4.1) |
-| Point at a window showing a PDF or a picture and say "read this file" / "이 파일 읽어줘" | it reads the file itself, tells you what it is, and saves notes and a revised version; afterwards you can ask it about the file (§4.1) |
-| Hand menu **Tennis**, or say "let's play tennis" / "테니스 하자" | it goes into the screen if it is not there, a court opens inside the monitor, and it serves (§4.2). **Stop** (the same button) or "stop tennis" ends the game |
+| Point at a window and say "Hey, Nilo, what do you think of this?" (or hand menu **Look**) | it goes in, looks at that window, tells you the main point, and saves the notes, a marked-up capture and a redrawn revised version on the PC (§4.1) |
+| Point at a window showing a PDF or a picture and say "Hey, Nilo, read this file" | it reads the file itself, tells you what it is, and saves notes and a revised version; afterwards you can ask it about the file (§4.1) |
+| Hand menu **Tennis**, or say "Hey, Nilo, let's play tennis" | it goes into the screen if it is not there, a court opens inside the monitor, and it serves (§4.2). **Stop** (the same button) or "stop tennis" ends the game |
 
-Voice needs an OpenAI API key on the PC, stored once with `.\tools\Set-OpenAiKey.ps1` (it asks for the key with hidden input, encrypts it for your Windows user and keeps it out of the repository; `-Check` tests it, `-Remove` deletes it), then restart the host. Recordings are made only after you ask to talk and are sent to OpenAI for transcription; the reply text goes there to be spoken. Without a key everything else works and the partner answers in text only. On a PC without a headset, tray → **Talk to the partner (microphone)** does the same with the PC's microphone. Text works too, in Korean or English: `lpctl utter "타이머 하나 만들어서 25분 시작해 줘"`.
+On Windows, enable the microphone and configure transcription with `.\tools\Set-OpenAiKey.ps1`. Restart the host, then say **“Hey, Nilo”** followed by a request. The Windows host sends microphone phrases to OpenAI for transcription. Use the tray microphone or enter text with `lpctl utter "start a 25-minute timer"`. The Mac companion uses the English speech recognition model bundled in its download.
 
 ### 4.1 Looking at a screen, reading a file
 
@@ -96,8 +96,8 @@ Try it without a headset:
 .\tools\Make-ReviewSamples.ps1                                  # a flawed sign-up screen (PNG) and a flawed meeting note (PDF)
 .\tools\Start-Dev.ps1 -LoopbackOnly                             # host + PC character
 $ctl = "Companion\LivingPartner.Ctl\bin\Release\net8.0\lpctl.exe"
-& $ctl readfile samples\review\meeting-notes.pdf "이 파일 읽고 고칠 점 알려줘"     # -> notes.pdf + revised.pdf, opened when done
-& $ctl utter "방금 읽은 파일에서 예산이 얼마야?"                                   # answered from what it read
+& $ctl readfile samples\review\meeting-notes.pdf "Read this file and suggest changes"     # -> notes.pdf + revised.pdf, opened when done
+& $ctl utter "What was the budget in that file?"                                   # answered from what it read
 & $ctl readfile samples\review\signup-form.png "Give me feedback on this design"  # -> review.pdf + revised.png + feedback.png
 & $ctl review 0 0 "What do you think of this window?"            # the window you were last using (0 0), or the one at a pixel
 & $ctl tasks                                                     # status, notes and the saved files
@@ -147,7 +147,7 @@ Per-transition measurements (state trace, max shared-clock error per side, heart
 
 | Symptom | Check |
 |---|---|
-| Headset is looking for a companion | On Windows, open the launcher to bring up the Companion window. On Mac, open `Bambi TV/Start-Bambi.command` and select the TV in the browser. Check the six-digit pairing code and that Quest and the computer are on the same local network. On Windows, allow the host on private networks. |
+| Headset is looking for a companion | On Windows, open the launcher to bring up the Companion window. On Mac, open `Yonder TV/Start-Yonder.command` and select the TV in the browser. Check the six-digit pairing code and that Quest and the computer are on the same local network. On Windows, allow the host on private networks. |
 | "I can't go there: …" / "I can't go right now: …" | the reason is shown: PC client not running, protected desktop (UAC), target window gone, partner is on the other side |
 | Ring is orange | not enough room at the requested spot; the ring shows the nearest valid spot — pinch again to accept or point elsewhere |
 | "The room changed - I'll find your screens again." | the headset re-centred: the screens are found again by themselves (§3) |
@@ -201,12 +201,12 @@ Scripted checks against a running `Start-Dev.ps1` set-up (each writes its result
 
 - **PC shop**: tray icon > "Open the marketplace", or `http://127.0.0.1:47610/market` on the PC that runs the host.
   The box "Make something with words" makes a module (furniture, skill, game pack, ability) and publishes it.
-- **Shop in MR**: left palm > Tools > Market, or say "밤비야 상점 열어줘". Poke a card, then Get / Remove. Stars are
+- **Shop in MR**: left palm > Tools > Market, or say "Hey, Nilo, open the shop". Poke a card, then Get / Remove. Stars are
   the shop's own play money (300 to start); nothing is ever charged.
-- Open **Play** for Tennis, Goalkeeper, Demon Gate and Gomoku. Say “밤비야, 오목 하자” to open the shared board or “밤비야, … 게임팩 만들어줘” to create a new game.
-- **Things and skills**: "밤비야 책상 만들어줘", "앞으로 노래 틀어달라고 하면 레코드로 가서 틀고 춤춰" (teaches a skill).
+- Open **Play** for Tennis, Goalkeeper, Demon Gate and Gomoku. Say “Hey, Nilo, let’s play Gomoku” to open the shared board or “Hey, Nilo, make a game pack” to create a new game.
+- **Things and skills**: "Hey, Nilo, make a desk", "Hey, Nilo, when I ask for a song, go to the record player and dance" (teaches a skill).
   With a Tripo key (`tools/Set-TripoKey.ps1`) things get a generated model; without one, a built-in shape.
-- **A PC screen in the room**: Tools > Bring screen, or "밤비야 1번 화면 가져와 봐"; "Send back" closes it.
+- **A PC screen in the room**: Tools > Bring screen, or "Hey, Nilo, bring screen one into the room"; "Send back" closes it.
 - **From the PC, without a headset**: `lpctl market | install <name> | remove <name> | make "<words>" | screen 1 | song export`.
 - **Disk space**: an Android build needs about 3 GB free on C:. `MetaVRHack/Library/Bee` is a build cache and can be
   deleted at any time (the next build is slower once).
@@ -219,15 +219,15 @@ host), holds accounts (a nickname, 300 stars to start), what everybody has put u
 move from the buyer to the seller; there is no other way to earn them and no real money anywhere.
 
 - **Out of the box** the host starts its own hub on this PC (`http://127.0.0.1:47620`) and registers you with a made-up
-  nickname ("밤비친구-1234"). Change it on the shop page (banner at the top, or the profile chip) or `lpctl nickname <name>`.
+  nickname ("NiloFriend-1234"). Change it on the shop page (banner at the top, or the profile chip) or `lpctl nickname <name>`.
 - **One marketplace for several PCs**: run `LivingPartner.MarketHub.exe --lan` on one machine (or a server; the hub is
   plain .NET 8 and has no Windows code) and on the others set the address: profile drawer on the shop page,
   `lpctl hub http://that-pc:47620`, or the environment variable `LP_MARKET_HUB`. No public hub is hosted by us.
-- **Selling**: shop page > 내 상점 (set a price, 판매 시작; price stepper and 판매 중지 for what is on sale), in MR the
-  shop board's **Mine** tab (- / + and "Sell for N stars" / "Stop selling"), or say "밤비야 이거 20별에 팔아줘".
-- **Buying**: 구매 on the page (a small confirm sheet), two taps on the MR board ("Buy" then "Tap again to buy"), or
-  "밤비야 선인장 화분 사줘". Uninstalling keeps what you bought; there are no refunds.
-- **Module files**: 내보내기 writes `Documents/LivingAIPartner/Modules/<name>.bambi`; 가져오기 (or `lpctl import <path>`)
+- **Selling**: shop page > My shop (set a price, Start selling; price stepper and Stop selling for what is on sale), in MR the
+  shop board's **Mine** tab (- / + and "Sell for N stars" / "Stop selling"), or say "Hey, Nilo, sell this for 20 stars".
+- **Buying**: Buy on the page (a small confirm sheet), two taps on the MR board ("Buy" then "Tap again to buy"), or
+  "Hey, Nilo, buy the cactus pot". Uninstalling keeps what you bought; there are no refunds.
+- **Module files**: Export writes `Documents/LivingAIPartner/Modules/<name>.yonder`; Import (or `lpctl import <path>`)
   installs one. Only your own things can be exported.
 - **Showing a sale on one PC**: `lpctl hub-as <nickname> buy "<listing>"` acts as a second TEST account on the hub
   (it prints that it is one). `lpctl hub-as <nickname> publish-sample` puts two sample listings up under that name.
@@ -237,19 +237,19 @@ move from the buyer to the seller; there is no other way to earn them and no rea
 When no Tripo key is stored, a thing made with words is built out of simple parts (boxes, cylinders, cones, balls,
 capsules, rings - at most 40) by the language model, in the same toy look as the built-in furniture. It appears at
 once in a built-in shape and changes into the sculpted one when that is ready (13-65 s). Samples:
-`artifacts/sculpt-sheet.png`. To try one without starting anything: `LivingPartner.Host.exe --sculpt "기타" --out guitar.json`
+`artifacts/sculpt-sheet.png`. To try one without starting anything: `LivingPartner.Host.exe --sculpt "guitar" --out guitar.json`
 (needs the OpenAI key). A Tripo model, when a key exists, still takes precedence.
 
 
 ## Asking the pet to make things; the bag; games as modules (added 2026-11-17, afternoon)
 
-- **Making**: Ask Bambi ("밤비야 ... 만들어볼래?"). PDF and PNG jobs appear in the queue, where you can open the finished file. Bambi hammers at the room workbench when making a 3D object and goes into the screen for a game job. Finished objects are stored in the bag. When Bambi offers to list an item in the Windows marketplace, answer on the card (price - / +, Sell it / Keep it) or by voice within 25 s without its name
-  ("응", "20별에 올려줘", "아니"); `lpctl offer yes [price] | no` from the PC.
-- **The menu** (headset): open the left hand towards your face or upwards. Hold at least three fingers open for a moment. A fan of stickers unfolds from the palm and follows it. Bambi can stand on your right palm. Close the left hand
+- **Making**: Ask Nilo ("Hey, Nilo, make a wooden chair"). PDF and PNG jobs appear in the queue, where you can open the finished file. Nilo hammers at the room workbench when making a 3D object and goes into the screen for a game job. Finished objects are stored in the bag. When Nilo offers to list an item in the Windows marketplace, answer on the card (price - / +, Sell it / Keep it) or by voice within 25 s without its name
+  ("yes", "sell it for 20 stars", "no"); `lpctl offer yes [price] | no` from the PC.
+- **The menu** (headset): open the left hand towards your face or upwards. Hold at least three fingers open for a moment. A fan of stickers unfolds from the palm and follows it. Nilo can stand on your right palm. Close the left hand
   or turn it away and it folds back. While the right index fingertip is within 9 cm of it, it stands still in the room
-  (so pressing is steady). During a game the palm carries only a "Stop" chip. By voice ("밤비야, 가방 열어 줘") the same
+  (so pressing is steady). During a game the palm carries only a "Stop" chip. By voice ("Hey, Nilo, open the bag") the same
   fan stands in the room until closed. Pages: **Bag** (everything you own, one list: things, game packs, skills,
-  places), **Bambi**, **Tools**.
+  places), **Nilo**, **Tools**.
   Press a sticker: a thing comes out onto the desk / goes back, a game pack starts / stops, a skill is used / stopped,
   a place is switched on / off; the line at the bottom says what happened. A thing on the desk is also put back by
   pressing it and then "Put away" over it, or by carrying it (pinch) to the open other palm and letting go there.
@@ -270,14 +270,14 @@ once in a built-in shape and changes into the sculpted one when that is ready (1
 
 ## Added on 2026-11-17 (evening)
 
-- **Giving orders**: say "밤비야, ..." (or "Bambi, ...") anywhere, no button. The menu board's Help tab lists phrases and
+- **Giving orders**: say "Hey, Nilo" followed by the request anywhere, no button. The menu board's Help tab lists phrases and
   shows "Heard: ..." (what the partner understood last). On the PC: the talk box of the market page, or `lpctl say`.
-- **Menu**: open the left palm and touch an item in the fan with the right index finger. Say “밤비야, 가방 열어 줘” to open it in the room. During a
+- **Menu**: open the left palm and touch an item in the fan with the right index finger. Say “Hey, Nilo, open the bag” to open it in the room. During a
   game the palm shows "Stop" instead.
 - **Things on the desk** can be pressed: the partner goes and uses them; the record player shows its records.
 - **Surroundings** that are owned are tiles in the Bag: press = on, press again = off (`lpctl world ambience <id|clear>`).
-- Custom scripted games can use the hand in front of the monitor as a cursor. Use `lpctl glass` to inspect a running scripted game. For Demon Gate, the headset tracks each demon across the calibrated screen and applies shield and projectile hits in room space.
-- **Pointing**: "밤비야, 이거 뭐야?" reads the monitor that is pointed at, round the pointed spot (hand first, then where
+- Custom scripted games can use the hand in front of the monitor as a cursor. Use `lpctl glass` to inspect a running scripted game. Demon Gate also opens directly as a solo mouse-controlled desktop game.
+- **Pointing**: "Hey, Nilo, what is this?" reads the monitor that is pointed at, round the pointed spot (hand first, then where
   the user looks). The PC frames the region on the real screen while it reads. Test without capturing a real screen:
   start the host with `LP_LOOK_TEST_IMAGE=<png>`.
 - **Sound**: the headset's own media volume must be above 0 (volume + under the right side); the app raises it from 0
@@ -285,7 +285,7 @@ once in a built-in shape and changes into the sculpted one when that is ready (1
 
 ## Modules are scripts (added 2026-11-17, night)
 
-- **Making**: "밤비야, 오목 게임 만들어 줘" / "스톱워치 만들어 줘" / "야구배트 만들어 줘. 착용하면 스윙 모션이 추가돼" (or
+- **Making**: "Hey, Nilo, make a Gomoku game" / "Hey, Nilo, make a stopwatch" / "Hey, Nilo, make a baseball bat that I can swing when equipped" (or
   `lpctl make "<words>"`, `lpctl world make "<words>"`). The partner WRITES the module: the request goes to the language
   model with the script API, a small Lua program comes back, the host RUNS it in a checker, and errors and warnings go
   back to the model until it passes (three repairs at most; the best version is kept). Meanwhile the work queue shows
@@ -299,7 +299,7 @@ once in a built-in shape and changes into the sculpted one when that is ready (1
   (new motions of the partner) - pasted verbatim into the writer's prompt (`Companion/LivingPartner.Host/ScriptWriter.cs`;
   the checks are `ScriptRules.cs`). Game design, code generation and AI playtest review use Claude Fable 5.2. Set `ANTHROPIC_API_KEY` on the host for custom game generation. Installed games run locally.
 - **Scripted things**: `lpctl world wear <thing> [handR|handL|head|back]`, `unwear <thing>`, `act <thing> <act>`; by
-  voice "배트 들어 봐", "스윙 해 봐", "배트 내려놔". `lpctl world` shows `script=N lines` and `WORN on ...`.
+  voice "Hey, Nilo, equip the bat", "Hey, Nilo, swing", "Hey, Nilo, put the bat away". `lpctl world` shows `script=N lines` and `WORN on ...`.
 - **Tools**: `lpctl script check <file.lua> [game|thing|skill]` runs any script in the same checker (no host needed);
   `lpctl script show <id|name>` prints the script of a game, thing or skill in the bag; `lpctl remake <game> "<request>"`
   has one of the user's own games written again under its id, name and listing.

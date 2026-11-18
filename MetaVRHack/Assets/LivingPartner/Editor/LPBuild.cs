@@ -13,6 +13,7 @@ namespace LivingPartner.EditorTools
     public static class LPBuild
     {
         static string RepoRoot => Path.GetFullPath(Path.Combine(Application.dataPath, "..", ".."));
+        static string Distribution => Path.GetFullPath(Environment.GetEnvironmentVariable("YONDER_BUILD_DIR") ?? Path.Combine(RepoRoot, "dist"));
         public static string LastResult = "";
 
         // One scene per client, all authored in the hierarchy (see LPSceneBuilder):
@@ -31,15 +32,17 @@ namespace LivingPartner.EditorTools
         }
         static void CommonSettings()
         {
+            // The companion keeps a live adb reverse tunnel to the headset while players are built.
+            EditorPrefs.SetBool("AndroidADBKillServerOnExit", false);
             PlayerSettings.companyName = "LivingAIPartner";
-            PlayerSettings.productName = "Living AI Partner";
+            PlayerSettings.productName = "Yonder";
             PlayerSettings.runInBackground = true;
             PlayerSettings.SplashScreen.show = false;
             PlayerSettings.colorSpace = ColorSpace.Linear;
         }
 
         [MenuItem("LivingPartner/Build Windows Character Client")]
-        public static void BuildWindows() => BuildWindowsTo(Path.Combine(RepoRoot, "dist", "LivingAIPartner-Windows"));
+        public static void BuildWindows() => BuildWindowsTo(Path.Combine(Distribution, "LivingAIPartner-Windows"));
 
         public static void BuildWindowsTo(string outDir)
         {
@@ -77,7 +80,7 @@ namespace LivingPartner.EditorTools
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel32;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
-            string outDir = Path.Combine(RepoRoot, "dist", "LivingAIPartner-Quest");
+            string outDir = Path.Combine(Distribution, "LivingAIPartner-Quest");
             Directory.CreateDirectory(outDir);
             var opts = new BuildPlayerOptions
             {

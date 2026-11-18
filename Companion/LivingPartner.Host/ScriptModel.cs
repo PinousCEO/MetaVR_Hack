@@ -10,7 +10,7 @@ namespace LivingPartner.Host;
 /// each picture a program asks for adds about half a minute), seconds until the module was in the bag: a shooting
 /// game across the glass 52 (first writing 47, critic 4), tic-tac-toe 37, a to-do list 46 and 79, catch across the
 /// glass 58, the script of a wearable hat 16. Of seven first writings of games five were right as they came; one
-/// had two keys overlapping and a key on its line of hints, one drew "Bambi's clones" as the stock monsters. Every
+/// had two keys overlapping and a key on its line of hints, one drew "Nilo's clones" as the stock monsters. Every
 /// game across the glass used shoot_out / out_events / aim / shots rightly at low effort: medium (143 - 157 s for
 /// the first writing) buys nothing the user would wait for. What low gets wrong is caught WITHOUT the model where
 /// it can be: names that do not exist (the rules list them now), keys that overlap or lie on a display

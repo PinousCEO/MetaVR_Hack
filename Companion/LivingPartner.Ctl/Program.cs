@@ -32,7 +32,7 @@ using Newtonsoft.Json.Linq;
 //   lpctl market                   (the marketplace: the user's nickname and stars on the hub, what is on sale and by whom, what is theirs)
 //   lpctl buy <name|id> | install <name|id> | remove <name|id>      (buy = install: what is not the user's yet is paid for on the hub)
 //   lpctl publish <name|id> <price> | price <name|id> <stars> | unpublish <name|id>      (selling the user's own things)
-//   lpctl like <name|id> | nickname "<name>" | export <name|id> | import <path of a .bambi file>
+//   lpctl like <name|id> | nickname "<name>" | export <name|id> | import <path of a .yonder file>
 //   lpctl hub [<address>|default]  (which hub the host talks to; without an argument: where it is and whether it answers)
 //   lpctl hub-as <nickname> buy|like "<listing name>" | publish-sample [price] | me
 //                                  (TEST HELPER: acts as ANOTHER account straight against the hub, so that selling to
@@ -483,7 +483,7 @@ internal static class Program
                     string tag = Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(LivingPartner.Host.HubRules.NickKey(nick))))[..8].ToLowerInvariant();
                     var ability = new MarketModule
                     {
-                        id = "ability-" + tag, kind = ModuleKinds.Ability, name = "칭찬 요정", summary = "기운 없을 때 한마디. 뻔하지 않게, 방금 한 일을 콕 집어서 칭찬해 줘요.", gives = "Bambi can cheer you up with a compliment that is about you.", tags = new[] { "칭찬", "응원", "cheer", "compliment" },
+                        id = "ability-" + tag, kind = ModuleKinds.Ability, name = "칭찬 요정", summary = "기운 없을 때 한마디. 뻔하지 않게, 방금 한 일을 콕 집어서 칭찬해 줘요.", gives = "Nilo can cheer you up with a compliment that is about you.", tags = new[] { "칭찬", "응원", "cheer", "compliment" },
                         ability = new AbilityDef
                         {
                             id = "ability-" + tag, name = "칭찬 요정",

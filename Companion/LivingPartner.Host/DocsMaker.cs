@@ -50,7 +50,7 @@ public sealed class DocsProblem : Exception
 /// <summary>
 /// Making a document, from the request to the files: the research and the writing (or the look and the drawings), the
 /// pages as pictures in the store folder (served to the clients under /docs/&lt;id&gt;/), the PDF and the PNGs in a new
-/// folder of the user's (Documents\Bambi\&lt;date time&gt; &lt;title&gt;\ - never one that is there). No host in it: the models,
+/// folder of the user's (Documents\Nilo\&lt;date time&gt; &lt;title&gt;\ - never one that is there). No host in it: the models,
 /// the folders and the clock are given, so that a test runs all of it with made-up answers.
 /// progress(stage, 0..1, title or null) is called as it goes.
 /// </summary>
@@ -127,7 +127,7 @@ public static class DocsMaker
         using (var thumb = new Bitmap(img, Math.Max(1,(int)(img.Width*factor)),Math.Max(1,(int)(img.Height*factor))))
             thumb.Save(Path.Combine(store,"option-1-s.png"),ImageFormat.Png);
         ct.ThrowIfCancellationRequested();
-        string title = DocsRules.SafeTitle(prompt,"Bambi image"), folder = NewFolder(root,now,title);
+        string title = DocsRules.SafeTitle(prompt,"Nilo image"), folder = NewFolder(root,now,title);
         string path = WriteNew(folder,title,".png",png);
         return new DocsMade { title=title, folder=folder,
             options={new DocOption {name=title,picture="option-1.png",picked=true}},

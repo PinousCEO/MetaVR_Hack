@@ -23,12 +23,12 @@ namespace LivingPartner.Shared
 
         public const string Game =
 @"You write ONE small Lua program: a game, a toy or a little tool that is played with the HANDS on a field, together
-with Bambi, a small character. It runs inside the app in a sandbox. Write only Lua, about 40 - 160 lines.
+with Nilo, a small character. It runs inside the app in a sandbox. Write only Lua, about 40 - 160 lines.
 
 THE FIELD   x runs from 0 (left) to W (about 1.78), y from 0 to 1. A length of 0.1 is a tenth of the field's height.
   upright (the default): y is UP and the floor is y = 0. Things fall towards y = 0; gravity is yours to write.
   flat (write flat(true) at the top): the field lies on the desk like a board, y points away from the player.
-  Use flat ONLY for board and card games and for Bambi running about on the desk. Everything else is upright:
+  Use flat ONLY for board and card games and for Nilo running about on the desk. Everything else is upright:
   a tool, anything with words to read, anything that falls, flies, jumps or is shot.
         y=1 +-----------------------------+
             |                             |
@@ -48,14 +48,14 @@ RULES
   3. At most 160 things a frame, 32 of them words. Words: at most 60 letters, size 0.04 or more.
   4. taps() for placing and choosing; hands() for what follows or touches a hand; shots() for shooting; button
      for keys. There is no mouse and no keyboard. Something must happen when the player plays.
-  5. Do not draw the score, the lives or Bambi: the frame around the game shows them. Set them with the functions.
+  5. Do not draw the score, the lives or Nilo: the frame around the game shows them. Set them with the functions.
   6. When the game can end, call finish(text) - and keep drawing after it, so that the last picture stays.
   7. Words on the screen are English. Colours are a storybook's: cream paper, brown ink, pastels - never a black
      background, never neon.
   8. A TOOL (calculator, timer, notes, counter, converter ...) is UPRIGHT - never flat -, fills most of the field
-     and is built from panel / button / display. Keys are at least 0.14 x 0.12. Send Bambi to one side
+     and is built from panel / button / display. Keys are at least 0.14 x 0.12. Send Nilo to one side
      (pet_goto(0.16)) so that it does not stand in front of the keys.
-  9. Asked for a game across the glass (Bambi kicks, throws or shoots at the player; the player blocks or shoots
+  9. Asked for a game across the glass (Nilo kicks, throws or shoots at the player; the player blocks or shoots
      back)? Then things must really LEAVE the field: shoot_out and out_events, aim and shots. A flat picture of
      it is not what was asked for.
 
@@ -68,7 +68,7 @@ DRAWING   x, y is always the MIDDLE of the thing. alpha is 0..1 (default 1). rot
   pic(name, x, y, size [, rot [, alpha [, flip]]])   a sticker; size is its height; flip = true mirrors it. The names:
         star gem heart gold drop orb sparkle puff splash bolt shot ring blob frost     small things
         enemy flyer brute         a grumpy little monster, one that flies, a big one
-        stone-a stone-b           the player's game piece and Bambi's
+        stone-a stone-b           the player's game piece and Nilo's
         rock paper scissors       a hand showing each, 0.3 is big ('paper' is the picture paper-sign): pic(h.shape, ...)
         or a picture that was made for this module, by its name
   card(title, note, x, y, size [, fill])             a card to choose (size is its height, about 0.34); fill 0..1 closes a ring on it
@@ -102,13 +102,13 @@ TOOLS AND MENUS   ready-made parts in the app's own look: cream paper, ink outli
   toggle(label, x, y, on) -> on           a switch, its label to the right. Tapped, it gives back the other state:
             music = toggle('Music', 0.5, 0.3, music)
 
-THROUGH THE GLASS   the field is a window between Bambi's side and the player's. Things can leave it and fly through
+THROUGH THE GLASS   the field is a window between Nilo's side and the player's. Things can leave it and fly through
 the ROOM at the player: out of the screen when the game is played inside a monitor, up from the desk otherwise.
   inside() -> true when the game is played inside a monitor (the player sits in front of its glass), false on the desk
   shoot_out(x, y [, pic_or_color [, speed [, size]]]) -> id    something leaves the field at (x, y) and flies at the
         player: a sticker or a colour (default 'orb'). speed is metres a second (0.7 is fair, 1.2 fast - the player
         is about 0.6 m away), size metres across (0.06). At most 6 on their way at once and 40 in a minute (more
-        are not sent: id 0). Show that it is coming: Bambi winds up, the thing grows.
+        are not sent: id 0). Show that it is coming: Nilo winds up, the thing grows.
   out_events() -> a list of {id=, what=}: what became of them since the last frame. what is 'blocked' (the player's
         open hand was in the way), 'hit' (it reached the player) or 'missed' (it flew past). Usually blocked
         scores and hit takes a life. Every id gets exactly one event, within a few seconds.
@@ -133,7 +133,7 @@ THE GAME
   banner(text [, seconds])      one line across the top
   finish(text)                  the game is over; text is the result (""You win!"")
   time() -> seconds played
-  sound(name)                   tap pop open close page hammer sparkle ta-da coin error whoosh land squeak step hit bounce win lose drop tick
+  sound(name)                   tap pop open close page hammer sparkle ta-da coin error portal-in portal-out kick glove spell whoosh land squeak step hit bounce win lose drop tick
   flat(true)                    lay the field on the desk (only at the top of the script)
   W, H                          the size of the field (H is 1)
   grid(cols, rows, x, y, w, h) -> g: a board of cells in the rectangle w x h around (x, y). Column 1 is the left

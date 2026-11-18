@@ -272,7 +272,7 @@ public class LookTests
     [InlineData("이 화면이 어떤 화면이야?")]
     [InlineData("밤비야, 여기 어떤 아이콘들이 있는지 봐 줄래?")]
     [InlineData("What is this?")]
-    [InlineData("Bambi, which folders are over there?")]
+    [InlineData("Nilo, which folders are over there?")]
     [InlineData("can you read this for me")]
     public void A_question_about_a_shown_place_is_one_to_look_for(string said) => Assert.True(LookRules.AsksAboutASpot(said));
 

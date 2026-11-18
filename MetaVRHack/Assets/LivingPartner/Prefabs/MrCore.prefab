@@ -44104,7 +44104,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1721364065015388788}
-  m_Text: Bambi's work
+  m_Text: Nilo's work
   m_OffsetZ: 0
   m_CharacterSize: 0.0015187501
   m_LineSpacing: 1
@@ -57555,7 +57555,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2319982826179957051}
-  m_Text: 'You  0 : 0  Bambi
+  m_Text: 'You  0 : 0  Nilo
 
     Rock, paper, scissors!'
   m_OffsetZ: 0
@@ -85873,7 +85873,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3482383696717101427}
-  m_Text: Furniture  -  by Bambi Studio
+  m_Text: Furniture  -  by Nilo Studio
   m_OffsetZ: 0
   m_CharacterSize: 0.00126
   m_LineSpacing: 1
@@ -99506,7 +99506,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 4054908438821094059}
-  m_Text: 'With the PC app Bambi can talk, make new
+  m_Text: 'With the PC app Nilo can talk, make new
 
     things for you, and step
     into your screen.'
@@ -162450,7 +162450,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 6730260092123905125}
-  m_Text: Bambi is looking ...
+  m_Text: Nilo is looking ...
   m_OffsetZ: 0
   m_CharacterSize: 0.0016875
   m_LineSpacing: 1
@@ -172310,7 +172310,7 @@ GameObject:
   - component: {fileID: 4969341009976337324}
   - component: {fileID: 3026114751402122155}
   m_Layer: 0
-  m_Name: Rps Bambi
+  m_Name: Rps Nilo
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -176061,7 +176061,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7277489769996088366}
-  m_Text: 'You  0 : 0  Bambi'
+  m_Text: 'You  0 : 0  Nilo'
   m_OffsetZ: 0
   m_CharacterSize: 0.0021375
   m_LineSpacing: 1
@@ -200683,7 +200683,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8324966078868701247}
-  m_Text: Hello! I'm Bambi.
+  m_Text: Hello! I'm Nilo.
   m_OffsetZ: 0
   m_CharacterSize: 0.0016874999
   m_LineSpacing: 1
@@ -210858,7 +210858,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8764013290673049748}
-  m_Text: Bambi made this!
+  m_Text: Nilo made this!
   m_OffsetZ: 0
   m_CharacterSize: 0.002025
   m_LineSpacing: 1
@@ -219900,7 +219900,7 @@ TextMesh:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 9174397175050244692}
-  m_Text: 'Bambi can sit down - and study,
+  m_Text: 'Nilo can sit down - and study,
 
     when there is a desk.'
   m_OffsetZ: 0

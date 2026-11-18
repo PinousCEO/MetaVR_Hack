@@ -49,7 +49,7 @@ public class SceneryTests
         Assert.Equal(ModuleKinds.Ambience, e.module.kind); Assert.Equal(name, e.module.name); Assert.Equal(koName, e.koName); Assert.Equal(price, e.module.price);
         Assert.False(e.preinstalled); Assert.True(e.module.builtin);
         Assert.Equal("", MarketRules.Problem(e.module));
-        Assert.True(e.module.summary.Length > 20 && e.module.gives.StartsWith("Bambi can"));
+        Assert.True(e.module.summary.Length > 20 && e.module.gives.StartsWith("Nilo can"));
         Assert.True(e.koSummary.Length > 10 && e.koGives.StartsWith("밤비가"));
         Assert.True(e.draw.Length > 20);                                   // its shop picture: drawn through the same queue as every other
         Assert.Contains(koName, e.module.tags);

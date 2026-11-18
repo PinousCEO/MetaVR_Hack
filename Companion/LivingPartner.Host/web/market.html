@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ko">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Bambi Market</title>
+<title>Nilo Market</title>
 <!--
   The shop on the PC: a real marketplace, where people sell what they made to each other under their nicknames.
   One self-contained page. It asks only this host for anything (its font, its sticker art, the state of the shop
@@ -76,13 +76,13 @@ header .wrap { display: flex; align-items: center; gap: 14px; height: 76px; }
 .banner.off { background: #FFE9E2; }
 .banner.off svg { width: 46px; height: 46px; flex: none; }
 
-/* ---------------------------------------------------------------- the strip: new things are asked of Bambi, not made on this page */
+/* ---------------------------------------------------------------- the strip: new things are asked of Nilo, not made on this page */
 .ask { margin: 24px 0 8px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 26px; align-items: center; padding: 18px 26px; border-radius: 30px; border: 3px solid var(--ink);
   background: linear-gradient(120deg, #FFE7A6 0%, #FFDCC6 52%, #F9CADB 100%); box-shadow: 0 6px 0 rgba(74,47,39,.9); position: relative; overflow: hidden; }
 .ask::before { content: ""; position: absolute; width: 220px; height: 220px; right: -70px; top: -120px; border-radius: 50%; background: rgba(255,255,255,.35); pointer-events: none; }
 .askside { display: flex; flex-direction: column; gap: 10px; position: relative; z-index: 1; min-width: 0; }
 .askside .hint { font: 13.5px/1.4 var(--body); color: #6A4A3E; }
-/* talking to Bambi by typing: this is where new things are asked for */
+/* talking to Nilo by typing: this is where new things are asked for */
 .talkbox { display: flex; gap: 8px; scroll-margin-top: 96px; }
 .talkbox input { flex: 1; min-width: 0; height: 48px; padding: 0 20px; border-radius: 999px; border: 3px solid var(--ink); background: #fff; font-size: 16px; outline: none; box-shadow: inset 0 3px 0 rgba(74,47,39,.07); }
 .talkbox input:focus { box-shadow: inset 0 3px 0 rgba(74,47,39,.07), 0 0 0 4px rgba(255,255,255,.75); }
@@ -353,7 +353,7 @@ html.still * { animation: none !important; transition: none !important; }      /
 <body>
 <header>
   <div class="wrap">
-    <a class="mark" href="#top" aria-label="Bambi Market"><img data-art="logo.png" alt="Bambi"><span data-t="market"></span></a>
+    <a class="mark" href="#top" aria-label="Nilo Market"><img data-art="logo.png" alt="Nilo"><span data-t="market"></span></a>
     <label class="search">
       <svg viewBox="0 0 24 24" fill="none" stroke="#4A2F27" stroke-width="2.6" stroke-linecap="round"><circle cx="10.5" cy="10.5" r="6.5"/><path d="M16 16l5 5"/></svg>
       <input id="q" type="search" autocomplete="off" spellcheck="false">
@@ -377,8 +377,8 @@ html.still * { animation: none !important; transition: none !important; }      /
     <div class="grow"><h3 id="off-title"></h3><p id="off-sub"></p></div>
   </div>
 
-  <!-- Talking to Bambi. New things are not made with a form: the user ASKS Bambi - in the room by voice, or here by
-       typing - and goes on with other things while it works. On the left what the user typed and what Bambi last
+  <!-- Talking to Nilo. New things are not made with a form: the user ASKS Nilo - in the room by voice, or here by
+       typing - and goes on with other things while it works. On the left what the user typed and what Nilo last
        said; on the right the box to type in, what it is making just now, and - when it has finished something -
        its question whether to put that up for sale. -->
   <section class="ask" id="ask">
@@ -421,7 +421,7 @@ html.still * { animation: none !important; transition: none !important; }      /
 <aside class="drawer profile" id="profile" aria-hidden="true"></aside>
 <div class="toast" id="toast" role="status"></div>
 <audio id="audio" loop preload="none"></audio>
-<input type="file" id="file" accept=".bambi" hidden>
+<input type="file" id="file" accept=".yonder,.bambi" hidden>
 
 <script>
 "use strict";
@@ -439,11 +439,11 @@ const T = {
   en: {
     market: "Market", search: "Search things and sellers ...",
     sorts: { popular: "Popular", new: "New", price: "Price" },
-    hostDown: "Bambi's host is not answering", hostDownSub: "Is the companion running on this PC? The page tries again by itself.",
+    hostDown: "Nilo's host is not answering", hostDownSub: "Is the companion running on this PC? The page tries again by itself.",
     hubDown: "The marketplace cannot be reached right now", hubDownSub: "This is the list as it was last seen. What you have still works; buying and selling come back with the connection.",
     nameTitle: "Choose your nickname", nameSub: n => `For now you are shown as “${n}”. It is the name on everything you sell.`, namePh: "2 to 16 characters", nameGo: "That's me",
-    askHint: "Ask Bambi for new things - what it makes shows up here under My shop.",
-    talkPh: "Say something to Bambi - e.g. will you make me a little flower pot?", talkSend: "Send", talkDown: "Bambi cannot hear that right now",
+    askHint: "Ask Nilo for new things - what it makes shows up here under My shop.",
+    talkPh: "Say something to Nilo - e.g. will you make me a little flower pot?", talkSend: "Send", talkDown: "Nilo cannot hear that right now",
     tries: ["Will you make me an umbrella?", "Make a game about catching stars", "Play some music"],
     makingNow: (kind, name, pct) => `Making ${kind ? "a " + kind.toLowerCase() : "something"}${name ? " · " + name : ""} · ${pct}%`,
     offerAsk: "Put it up in the marketplace?", offerYes: "Put it up", offerNo: "Keep it",
@@ -456,13 +456,13 @@ const T = {
     confirm: "Buy this?", cPrice: "Price", cSeller: "Seller", cAfter: "Your stars after", cancel: "Cancel", buyNow: "Buy",
     ownedNote: "It is yours: installing it again costs nothing.", removeNote: "It stays yours when removed.",
     moreBy: "See everything by this seller", sellerFilter: "Seller", got: n => `${n} got it`, likes: "likes", like: "Like",
-    gains: "What Bambi gains", does: "What happens", say: "Ask for it with", how: "How to play", tune: "Its tune", listen: "Listen", stop: "Stop", mood: "Its surroundings", tryIt: "Try saying", goodFor: "Good for",
+    gains: "What Nilo gains", does: "What happens", say: "Ask for it with", how: "How to play", tune: "Its tune", listen: "Listen", stop: "Stop", mood: "Its surroundings", tryIt: "Try saying", goodFor: "Good for",
     seconds: "seconds", lives: "lives", pace: "pace", enemy: "Watch out for", pickup: "Collect", bpm: "bpm",
     myOnSale: "On sale", mySales: "Times sold", myEarned: "Stars earned", selling: "What I sell", unsold: "Mine, not on sale yet",
     sold: n => `sold ${n} time${n === 1 ? "" : "s"}`, earned: n => `${n} stars earned`, notSold: "nobody has bought it yet", away: "put away",
-    start: "Start selling", stopSell: "Stop selling", savePrice: "Save price", exportB: "Export", importB: "Import a module", importSub: "Drop a .bambi file from a friend here, or click to pick one",
-    emptyMine: "Your shop is empty", emptyMineSub: "Ask Bambi to make something - a thing, a game, an ability. It shows up here, and you decide whether to sell it.",
-    emptySearch: "Nothing here matches", emptySearchSub: "Try another word - or have Bambi make it.",
+    start: "Start selling", stopSell: "Stop selling", savePrice: "Save price", exportB: "Export", importB: "Import a module", importSub: "Drop a .yonder file from a friend here, or click to pick one",
+    emptyMine: "Your shop is empty", emptyMineSub: "Ask Nilo to make something - a thing, a game, an ability. It shows up here, and you decide whether to sell it.",
+    emptySearch: "Nothing here matches", emptySearchSub: "Try another word - or have Nilo make it.",
     foot: "Stars are the shop's own play money: everyone starts with 300, and more come only from selling what you made.",
     acts: { music: "Music", dance: "Dance", ambience: "Surroundings", activity: "Activity", emote: "Emote", say: "Says", rain: "Rain", goto: "Walks to", wait: "Waits" },
     uses: { sit: "sitting", table: "working", sleep: "napping", read: "reading", play: "playing", music: "music", light: "light", decor: "decoration", eat: "a treat" },
@@ -471,7 +471,7 @@ const T = {
     profile: "My profile", rename: "Nickname", renameGo: "Change", renameHint: "2 to 16 characters: letters, digits, spaces, - and _. One name per person.",
     hub: "Marketplace server", online: "connected", offline: "not reachable", hubOwn: "This PC's own marketplace. To share one with friends, run the hub on one PC with --lan and set LP_MARKET_HUB=http://that-pc:47620 on the others.",
     hubShared: "A shared marketplace: everyone who uses this address buys and sells with each other.",
-    myStars: "Stars", bought: "What I got", noBought: "Nothing yet. What you buy stays yours for good.", paid: "paid", importing: "Importing ...", importBad: "That is not a .bambi file",
+    myStars: "Stars", bought: "What I got", noBought: "Nothing yet. What you buy stays yours for good.", paid: "paid", importing: "Importing ...", importBad: "That is not a .yonder file",
   },
   ko: {
     market: "마켓", search: "물건이나 판매자 찾기 ...",
@@ -497,7 +497,7 @@ const T = {
     seconds: "초", lives: "목숨", pace: "빠르기", enemy: "조심", pickup: "모으기", bpm: "bpm",
     myOnSale: "판매 중", mySales: "판매 횟수", myEarned: "번 별", selling: "판매 중인 물건", unsold: "아직 안 파는 내 것",
     sold: n => `${n}번 팔림`, earned: n => `별 ${n}개 벌었어요`, notSold: "아직 아무도 안 샀어요", away: "넣어 둠",
-    start: "판매 시작", stopSell: "판매 중지", savePrice: "가격 저장", exportB: "내보내기", importB: "모듈 가져오기", importSub: "친구에게 받은 .bambi 파일을 여기에 놓거나, 눌러서 골라 주세요",
+    start: "판매 시작", stopSell: "판매 중지", savePrice: "가격 저장", exportB: "내보내기", importB: "모듈 가져오기", importSub: "친구에게 받은 .yonder 파일을 여기에 놓거나, 눌러서 골라 주세요",
     emptyMine: "아직 내 상점이 비어 있어요", emptyMineSub: "밤비에게 물건이나 게임, 능력을 만들어 달라고 말해 보세요. 여기에 나타나고, 팔지 말지는 내가 정해요.",
     emptySearch: "찾는 게 없어요", emptySearchSub: "다른 말로 찾아보거나, 밤비에게 만들어 달라고 해 보세요.",
     foot: "별은 상점에서만 쓰는 놀이 돈이에요. 누구나 300개로 시작하고, 내가 만든 걸 팔아야만 더 벌 수 있어요.",
@@ -508,7 +508,7 @@ const T = {
     profile: "내 프로필", rename: "닉네임", renameGo: "바꾸기", renameHint: "2~16자. 글자, 숫자, 띄어쓰기, - 와 _ 를 쓸 수 있어요. 한 사람에 이름 하나예요.",
     hub: "상점 서버", online: "연결됨", offline: "연결 안 됨", hubOwn: "이 PC 혼자 쓰는 상점이에요. 친구들과 같이 쓰려면 한 PC에서 허브를 --lan 으로 켜고, 다른 PC에는 LP_MARKET_HUB=http://그PC주소:47620 을 설정해 주세요.",
     hubShared: "여럿이 같이 쓰는 상점이에요. 이 주소를 쓰는 모두가 서로 사고팔아요.",
-    myStars: "가진 별", bought: "내가 산 것", noBought: "아직 없어요. 한 번 산 건 계속 내 것이에요.", paid: "지불", importing: "가져오는 중 ...", importBad: ".bambi 파일이 아니에요",
+    myStars: "가진 별", bought: "내가 산 것", noBought: "아직 없어요. 한 번 산 건 계속 내 것이에요.", paid: "지불", importing: "가져오는 중 ...", importBad: ".yonder 파일이 아니에요",
   },
 };
 
@@ -595,10 +595,10 @@ const starImg = () => `<img src="${ART}star.png" alt="">`;
 
 // ------------------------------------------------------------------ state
 let state = PREVIEW ? PREVIEW.state : null;
-let lang = localStorage.getItem("bambi-market-lang") || "";      // "" = follow the language the user last spoke to the partner
+let lang = localStorage.getItem("yonder-market-lang") || "en";      // "" = follow the language the user last spoke to the partner
 let tab = (PREVIEW && PREVIEW.tab) || "all", query = "", sort = (PREVIEW && PREVIEW.sort) || "popular", seller = (PREVIEW && PREVIEW.seller) || "";
 let openId = (PREVIEW && PREVIEW.open) || "", confirmId = PREVIEW && PREVIEW.confirm ? openId : "", profileOpen = !!(PREVIEW && PREVIEW.profile);
-let typed = (PREVIEW && PREVIEW.typed) || "", typedAt = 0, typedSaidAt = -1;      // what the user last typed to Bambi, when, and what Bambi's last line was then (until a newer one comes it is thinking)
+let typed = (PREVIEW && PREVIEW.typed) || "", typedAt = 0, typedSaidAt = -1;      // what the user last typed to Nilo, when, and what Nilo's last line was then (until a newer one comes it is thinking)
 let drawn = "", drawnDrawer = "", drawnProfile = "", drawnOffer = "", waiting = new Set(), seen = null, seenRevision = -1, toastTimer = 0, playing = "", lastNotice = "", shownStars = null, firstDraw = true, hostUp = true;
 const drafts = {};                                                  // prices being set in "my shop", by id, until they are saved
 const L = () => T[lang || (state && state.korean === false ? "en" : "ko")];
@@ -683,7 +683,7 @@ function row(m, t) {
       ${stepper}
       ${m.listed ? `<button class="btn sun${wait}" data-do="setPrice" data-id="${esc(m.id)}" ${price === m.price ? "hidden" : ""}>${esc(t.savePrice)}</button><button class="btn${wait}" data-do="unpublish" data-id="${esc(m.id)}">${esc(t.stopSell)}</button>`
                  : `<button class="btn go${wait}" data-do="publish" data-id="${esc(m.id)}">${esc(t.start)}</button>`}
-      <a class="btn quiet" href="/market/export/${encodeURIComponent(m.id)}.bambi" download title="${esc(t.exportB)} (.bambi)">${ICON.out}${esc(t.exportB)}</a>
+      <a class="btn quiet" href="/market/export/${encodeURIComponent(m.id)}.yonder" download title="${esc(t.exportB)} (.yonder)">${ICON.out}${esc(t.exportB)}</a>
     </div>
   </div>`;
 }
@@ -753,9 +753,9 @@ function render() {
   $("offline").hidden = hostUp && state.online;
   $("off-title").textContent = hostUp ? t.hubDown : t.hostDown; $("off-sub").textContent = hostUp ? state.hubProblem || t.hubDownSub : t.hostDownSub;
 
-  // the strip: what Bambi last said about the shop, what it is making just now (kind, name, how far), and its offer
-  $("who").textContent = state.name || "Bambi";
-  // (after something was typed: three dots until Bambi's next line is there - or for as long as it says it is thinking)
+  // the strip: what Nilo last said about the shop, what it is making just now (kind, name, how far), and its offer
+  $("who").textContent = state.name || "Nilo";
+  // (after something was typed: three dots until Nilo's next line is there - or for as long as it says it is thinking)
   const waitingForAnswer = (typedAt && state.saidAt === typedSaidAt && Date.now() - typedAt < 25000) || state.talk === "thinking";
   if (waitingForAnswer) { if (!$("said").firstElementChild) $("said").innerHTML = `<span class="dots"><i></i><i></i><i></i></span>`; }
   else $("said").textContent = state.said || t.bubbleIdle;
@@ -949,7 +949,7 @@ function send(cmd) {
   return fetch("/market/api/command", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(cmd) }).then(() => setTimeout(poll, 250), () => { hostUp = false; render(); });
 }
 
-/** Something typed to Bambi: it goes into the conversation as if it had been said to it by name (the host: POST /market/api/say). */
+/** Something typed to Nilo: it goes into the conversation as if it had been said to it by name (the host: POST /market/api/say). */
 function say(text) {
   text = String(text || "").trim();
   if (!text) return;
@@ -993,10 +993,10 @@ function listen(id) {
   drawnDrawer = ""; renderDrawer();
 }
 
-/** A .bambi file from a friend: its bytes go to the host, which makes it a thing of the user's own. */
+/** A .yonder file from a friend: its bytes go to the host, which makes it a thing of the user's own. */
 function importFile(file) {
   if (!file) return;
-  if (!/\.bambi$/i.test(file.name)) { toast(L().importBad); return; }
+  if (!/\.(yonder|bambi)$/i.test(file.name)) { toast(L().importBad); return; }
   toast(L().importing);
   if (PREVIEW) return;
   fetch("/market/api/import?name=" + encodeURIComponent(file.name), { method: "POST", headers: { "Content-Type": "application/octet-stream" }, body: file }).then(() => setTimeout(poll, 250), () => { hostUp = false; render(); });
@@ -1064,7 +1064,7 @@ document.addEventListener("submit", e => {
 function closeDrawers() { if (playing) { $("audio").pause(); playing = ""; } openId = ""; confirmId = ""; profileOpen = false; renderDrawer(); renderProfile(); }
 $("q").addEventListener("input", e => { query = e.target.value.trim(); render(); });
 $("talk").addEventListener("submit", e => { e.preventDefault(); const box = $("talktext"); say(box.value); box.value = ""; });
-// (the tray's "Talk to Bambi ..." opens the page at #talk: the box is ready to type in)
+// (the tray's "Talk to Nilo ..." opens the page at #talk: the box is ready to type in)
 if (location.hash === "#talk") setTimeout(() => { $("talk").scrollIntoView({ block: "center" }); $("talktext").focus(); }, 300);
 $("file").addEventListener("change", e => { importFile(e.target.files[0]); e.target.value = ""; });
 // a module file can be dropped anywhere on the page; "my shop" shows where
@@ -1073,7 +1073,7 @@ document.addEventListener("dragleave", () => { const d = $("drop"); if (d) d.cla
 document.addEventListener("drop", e => { if (!e.dataTransfer || !e.dataTransfer.files.length) return; e.preventDefault(); const d = $("drop"); if (d) d.classList.remove("over"); importFile(e.dataTransfer.files[0]); });
 $("lang-ko").addEventListener("click", () => setLang("ko"));
 $("lang-en").addEventListener("click", () => setLang("en"));
-function setLang(l) { lang = l; localStorage.setItem("bambi-market-lang", l); chromeLang = L(); chrome(); drawn = ""; drawnDrawer = ""; drawnProfile = ""; drawnOffer = ""; render(); }
+function setLang(l) { lang = l; localStorage.setItem("yonder-market-lang", l); chromeLang = L(); chrome(); drawn = ""; drawnDrawer = ""; drawnProfile = ""; drawnOffer = ""; render(); }
 $("audio").addEventListener("error", () => { playing = ""; drawnDrawer = ""; renderDrawer(); });
 
 chromeLang = L(); chrome();

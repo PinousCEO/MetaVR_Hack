@@ -13,7 +13,7 @@ namespace LivingPartner.Host;
 /// Plain shapes (rect, disc, hoop, the lines made of them), words, cards and the paper of the UI kit are drawn as
 /// the clients draw them, in the storybook colours; a sticker is the real picture when it is found
 /// (Art/Ui/glass-&lt;name&gt;.png beside or above the program), otherwise a labelled shape; a picture that is yet to be
-/// painted for the module is a dashed box with its name. Bambi is a small figure with its pose written under it; the
+/// painted for the module is a dashed box with its name. Nilo is a small figure with its pose written under it; the
 /// player's hand is a soft shadow, their aim a grey cross; what has left the field for the room is an arrow at the
 /// place it went through. A strip above shows what the frame round a game shows (score, lives, level, banner).
 /// Never throws: a frame that cannot be drawn gives null.
@@ -105,7 +105,7 @@ public static class WorkshopLook
                 {
                     try { Draw(g, s, S, P, centre); } catch (Exception) { }
                 }
-                // Bambi: 0.2 tall, its feet at (petX, petY)
+                // Nilo: 0.2 tall, its feet at (petX, petY)
                 {
                     var feet = P(f.petX, f.petY);
                     float bh = 0.2f * S, bw = 0.12f * S;
@@ -117,7 +117,7 @@ public static class WorkshopLook
                     float look = f.petRight ? 1f : -1f, ey = head.Y + head.Height * 0.55f;
                     g.FillEllipse(inkB, feet.X + look * bw * 0.08f - 3, ey - 3, 6, 6); g.FillEllipse(inkB, feet.X + look * bw * 0.30f - 3, ey - 3, 6, 6);
                     using var small = new Font("Segoe UI", 9f, FontStyle.Bold);
-                    string tag = "Bambi" + (f.petMotion.Length > 0 ? " [" + f.petMotion + "]" : f.petPose.Length > 0 && f.petPose != "idle" ? " (" + f.petPose + ")" : "");
+                    string tag = "Nilo" + (f.petMotion.Length > 0 ? " [" + f.petMotion + "]" : f.petPose.Length > 0 && f.petPose != "idle" ? " (" + f.petPose + ")" : "");
                     g.ResetClip();
                     var size = g.MeasureString(tag, small);
                     float lx = Math.Clamp(feet.X - size.Width / 2, 2, w - size.Width - 2), ly = Math.Min(feet.Y + 1, Top + FieldH - size.Height);

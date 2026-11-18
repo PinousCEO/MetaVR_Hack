@@ -9,7 +9,7 @@ using Newtonsoft.Json.Linq;
 namespace LivingPartner.Host;
 
 /// <summary>
-/// "3D making: when I SHOW some real object in the MR environment, Bambi makes it and brings it into the PC."
+/// "3D making: when I SHOW some real object in the MR environment, Nilo makes it and brings it into the PC."
 ///   1. "이거 만들어 줘" (action makeFromSight; the rules and wordings: SightRules.cs) - a job in the work queue begins
 ///      ("Looking at what you are holding") and the headset is asked for ONE picture (Msg.EyeRequest; MR/MrEyes.cs asks
 ///      for its camera only then and shows that the partner is looking).
@@ -20,7 +20,7 @@ namespace LivingPartner.Host;
 ///      thing out of simple solids - is given the PICTURE and sculpts that object ("Shaping it").
 ///   4. The thing stands on the desk as an ordinary thing (ItemDef with parts: grab, place, put away), with its own
 ///      rendered picture as its icon.
-///   5. Its shape is written as a real 3D file, Documents\Bambi\Models\<date> <name>\<name>.glb (GlbWriter: the very
+///   5. Its shape is written as a real 3D file, Documents\Nilo\Models\<date> <name>\<name>.glb (GlbWriter: the very
 ///      triangles the headset draws, PartMesh) with a PNG preview next to it, and the partner CARRIES it into the PC the
 ///      way it carries documents (DocsHost: the show of kind "file", a copy on the Desktop, a click on it reveals the file).
 ///      "의자 PC로 가져가 줘" (exportThing) does the same for any thing it sculpted earlier.
@@ -294,7 +294,7 @@ public sealed class SightHost
         return ms.ToArray();
     }
 
-    /// <summary>Writes the model's files into a folder of their own under Documents\Bambi\Models. Returns (folder, glb, png); throws when the disk says no.</summary>
+    /// <summary>Writes the model's files into a folder of their own under Documents\Nilo\Models. Returns (folder, glb, png); throws when the disk says no.</summary>
     internal static (string folder, string glb, string png) Save(Made made, string title, DateTime now, string root)
     {
         Directory.CreateDirectory(root);

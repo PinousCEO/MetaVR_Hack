@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Globalization;
 using System.Security.Cryptography;
 using System.Text;
 using LivingPartner.Shared;
@@ -126,9 +125,9 @@ public sealed class HubLink : IDisposable
         }
     }
 
-    /// <summary>A friendly name for somebody who has not chosen one: "밤비친구-4821" on a Korean system, "BambiFriend-4821" elsewhere.</summary>
+    /// <summary>A friendly name for somebody who has not chosen one: "NiloFriend-4821".</summary>
     public static string FriendlyNickname() =>
-        (CultureInfo.CurrentUICulture.TwoLetterISOLanguageName == "ko" ? "밤비친구-" : "BambiFriend-") + RandomNumberGenerator.GetInt32(1000, 10000);
+        "NiloFriend-" + RandomNumberGenerator.GetInt32(1000, 10000);
 
     /// <summary>The user's account on this hub; registered now when there is none yet.</summary>
     public async Task<HubIdentity> Identity(CancellationToken ct)

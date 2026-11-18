@@ -27,7 +27,7 @@ public class StopAndMenuTests
     [InlineData("스톱!", "")]
     [InlineData("stop", "")]
     [InlineData("Stop!", "")]
-    [InlineData("Bambi, stop.", "")]
+    [InlineData("Nilo, stop.", "")]
     [InlineData("stop the game", "game")]
     [InlineData("게임 그만", "game")]
     [InlineData("게임 그만해", "game")]
@@ -69,7 +69,7 @@ public class StopAndMenuTests
 
     [Theory]
     [InlineData("밤비야")]              // the 비 of the name
-    [InlineData("밤비 내려와")]         // "Bambi, come down" - not "let it rain"
+    [InlineData("밤비 내려와")]         // "Nilo, come down" - not "let it rain"
     [InlineData("밤비야 꺼 줘")]
     [InlineData("방비야 멈춰")]         // the name as the transcription sometimes writes it
     [InlineData("비디오 꺼 줘")]

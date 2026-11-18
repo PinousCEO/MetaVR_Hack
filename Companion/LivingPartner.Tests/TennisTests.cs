@@ -15,6 +15,27 @@ public class TennisTests
     }
     static readonly Vector3 Eye = new(0.03f, 0.12f, -0.62f);
 
+    [Theory]
+    [InlineData(0f, -1f)]
+    [InlineData(12f, 1f)]
+    public void A_kick_reaches_the_keeper_within_half_a_second_and_stops_at_the_ground(float tilt, float aim)
+    {
+        var court = Court(tilt);
+        court.radius = Tennis.BallRadius("keeper");
+        var from = Tennis.ServePoint(court, 0);
+        var kick = Tennis.PartnerShot(court, 1, from, Eye, aim, 10, keeper: true);
+        Assert.True(Tennis.PassesGlass(court, kick, out double crossing));
+        var ball = Tennis.Evaluate(court, kick, 10.52);
+        Assert.True(crossing < 10.36 && ball.Front && !ball.dead && ball.pos.Z < -.30f);
+        for (double t = 10.52; t < 13; t += .01)
+        {
+            var later = Tennis.Evaluate(court, kick, t);
+            Assert.Equal(0, later.bouncesFront);
+            if (later.dead) return;
+        }
+        Assert.Fail("The shot remained in play after passing the keeper.");
+    }
+
     [Fact]
     public void Saving_a_keeper_shot_ends_its_flight_and_scores_exactly_once()
     {

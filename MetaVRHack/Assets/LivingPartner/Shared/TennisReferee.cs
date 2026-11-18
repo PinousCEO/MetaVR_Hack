@@ -67,8 +67,8 @@ namespace LivingPartner.Shared
             partnerX += Clamp(s.partnerX-partnerX,-Tennis.PartnerSpeed*dt,Tennis.PartnerSpeed*dt);
             if (s.phase=="ready" && now>=s.serveAt)
             {
-                float spread = (float)(random.NextDouble()*1.2-.6)*(s.mode=="keeper"?.4f:1f);
-                s.shot = Tennis.PartnerShot(s.court,++seq,Tennis.ServePoint(s.court,partnerX),eye,spread,now);
+                float spread = (float)(random.NextDouble()*1.2-.6)*(s.mode=="keeper"?1.5f:1f);
+                s.shot = Tennis.PartnerShot(s.court,++seq,Tennis.ServePoint(s.court,partnerX),eye,spread,now,s.mode=="keeper");
                 s.phase="rally"; s.phaseAt=now; s.note="serve"; s.rally=0; planned=false; Publish();
             }
             else if (s.phase=="rally" && s.shot!=null)

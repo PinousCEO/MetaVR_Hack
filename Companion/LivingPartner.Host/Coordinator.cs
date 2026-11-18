@@ -141,7 +141,7 @@ public sealed class Coordinator
         // final plan from the real positions both sides just reported
         Info.plan = BuildPlan();
         _tauAllThrough = PlanEvaluator.TauForProgress(Info.plan, 0.999f) + 0.03f;
-        Info.clock = new CrossClock { transitionId = Info.transitionId, anchorHost = now + 0.30, anchorTau = 0, rate = _slowRate, revision = 1 };
+        Info.clock = new CrossClock { transitionId = Info.transitionId, anchorHost = now + 0.12, anchorTau = 0, rate = _slowRate, revision = 1 };
         if (_pendingFreeze >= 0) { Info.clock.hasStop = true; Info.clock.stopTau = PlanEvaluator.TauForProgress(Info.plan, _pendingFreeze); _frozen = true; }
         if (Machine.Apply(TEvent.StartCrossing, Info.transitionId, now))
         {
@@ -278,7 +278,7 @@ public sealed class Coordinator
         if (r.x == tgt.windowRect.x && r.y == tgt.windowRect.y && r.w == tgt.windowRect.w && r.h == tgt.windowRect.h) return;
         // the window moved: a window-anchored portal follows it (same relative point), the MR side re-routes to the new place
         var q = new TargetQuery { queryId = tgt.queryId, usePixel = true, px = r.x + tgt.winU * r.w, py = r.y + tgt.winV * r.h, direction = 0 };
-        var nt = _core.Desktop.Resolve(q);
+        var nt = _core.Desktop.Resolve(q, enterWindow: true);
         if (!nt.valid) { Cancel("the target window moved somewhere the partner cannot enter: " + nt.reason); return; }
         if (nt.hwnd != tgt.hwnd) { Cancel("the target window is now covered by another window"); return; }
         Info.target = nt; Info.approachDone = false; Info.receiverReady = false;

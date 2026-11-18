@@ -37,13 +37,13 @@ sealed partial class Stage
 
     string QueueWork(string kind, string title, string words, Func<WorkJob,CancellationToken,Task<Action>> run)
     {
-        if (waiting.Count >= 4) return "대기줄이 가득 찼어. 하나가 끝나면 다시 부탁해 줘.";
+        if (waiting.Count >= 4) return "The queue is full. Try again when a job finishes.";
         var job = new WorkJob { id = Guid.NewGuid().ToString("N"), kind = kind, title = title, asked = words,
-            where = WorkJob.IsObject(kind) ? Env.Mr : Env.Pc, worker = "Mac", step = "대기 중", startedAt = Now };
+            where = WorkJob.IsObject(kind) ? Env.Mr : Env.Pc, worker = "Mac", step = "Queued", startedAt = Now };
         waiting.Add(new(job, run, new()));
         snap.work.jobs.Add(job);
         RefreshWork();
-        return "작업 대기줄에 넣었어.";
+        return "Added to the queue.";
     }
 
     void RefreshWork()
@@ -72,7 +72,7 @@ sealed partial class Stage
         {
             running = waiting[0]; waiting.RemoveAt(0);
             running.Job.status = "working"; running.Job.startedAt = Now;
-            WorkStep(running.Job, "시작하는 중", .02f);
+            WorkStep(running.Job, "Starting", .02f);
             var current = running;
             _ = Task.Run(() => ExecuteWork(current));
         }
@@ -97,14 +97,14 @@ sealed partial class Stage
             lock (Sync)
             {
                 task.Stop.Token.ThrowIfCancellationRequested();
-                finish(); j.status = "done"; j.step = "완료"; j.progress = 1;
+                finish(); j.status = "done"; j.step = "Done"; j.progress = 1;
             }
         }
-        catch (OperationCanceledException) { lock (Sync) { j.status = "cancelled"; j.step = j.note = "작업이 중단됐어."; } }
+        catch (OperationCanceledException) { lock (Sync) { j.status = "cancelled"; j.step = j.note = "The job stopped."; } }
         catch (Exception e)
         {
             // Provider replies can include request details. Only local user-facing errors enter snapshots.
-            lock (Sync) { j.status = "failed"; j.step = j.note = e is InvalidOperationException && e.Message.Any(c => c >= '가' && c <= '힣') ? e.Message : "작업을 마치지 못했어. 연결과 생성 설정을 확인해 줘."; }
+            lock (Sync) { j.status = "failed"; j.step = j.note = e is InvalidOperationException && e.Message.Any(c => c >= '가' && c <= '힣') ? e.Message : "The job could not finish. Check the connection and creation settings."; }
         }
         finally
         {
@@ -143,16 +143,16 @@ sealed partial class Stage
     {
         if (cmd == "clear") { snap.work.jobs.RemoveAll(j => j.status is not ("working" or "queued")); RefreshWork(); return ""; }
         var j = snap.work.jobs.Find(x => x.id == id);
-        if (j == null) return "대기줄에서 찾을 수 없어.";
+        if (j == null) return "This job is missing from the queue.";
         if (cmd == "cancel")
         {
             var task = waiting.FirstOrDefault(x => x.Job == j);
             if (running?.Job == j) running.Stop.Cancel();
             else if (task != null) { waiting.Remove(task); task.Stop.Dispose(); }
             else return "";
-            j.status = "cancelled"; j.step = "취소"; j.endedAt = Now; RefreshWork(); return "";
+            j.status = "cancelled"; j.step = "Cancel"; j.endedAt = Now; RefreshWork(); return "";
         }
-        if (cmd != "open" || j.status != "done") return "완료된 작업을 선택해 줘.";
+        if (cmd != "open" || j.status != "done") return "Select a completed job.";
         switch (j.resultKind)
         {
             case "doc":
@@ -161,7 +161,7 @@ sealed partial class Stage
                     documents.Begin(saved.id,saved.kind,saved.title,saved.asked,saved.madeUnixMs,"",out _);
                     documents.Ready(saved.id,saved.title,saved.pages,saved.options,saved.files,saved.folder);
                 }
-                return documents.OpenDoc(j.resultId) ? "" : "문서를 열 수 없어.";
+                return documents.OpenDoc(j.resultId) ? "" : "Unable to open the document.";
             case "module": case "game": return GameButton(j.resultId);
             case "item": bag.Handle(Msg.World,new WorldCommand { cmd = "place",id = j.resultId }); return "";
             default: return "";

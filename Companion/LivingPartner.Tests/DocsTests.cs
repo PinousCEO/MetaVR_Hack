@@ -165,8 +165,8 @@ public class DocsNameTests
         Assert.DoesNotContain('\\', bad); Assert.DoesNotContain('/', bad); Assert.DoesNotContain(':', bad); Assert.DoesNotContain('?', bad);
         Assert.DoesNotContain('<', bad); Assert.DoesNotContain('|', bad); Assert.DoesNotContain('"', bad);
         Assert.Equal(bad, Path.GetFileName(bad));
-        Assert.Equal("2026-11-18 0142 Bambi document", DocsRules.FolderName(at, "  ...  "));
-        Assert.Equal("2026-11-18 0142 Bambi document", DocsRules.FolderName(at, "CON"));
+        Assert.Equal("2026-11-18 0142 Nilo document", DocsRules.FolderName(at, "  ...  "));
+        Assert.Equal("2026-11-18 0142 Nilo document", DocsRules.FolderName(at, "CON"));
         Assert.True(DocsRules.FolderName(at, new string('가', 200)).Length <= 16 + 60);
         Assert.Equal("2026-11-18 0142 메타 VR 대회 정리", DocsRules.FolderName(at, "메타 VR 대회 정리"));
     }
@@ -571,7 +571,7 @@ public class DocsMakerTests : IDisposable
 {
     readonly string _root = Path.Combine(Path.GetTempPath(), "lp-docs-make-" + Guid.NewGuid().ToString("N")[..8]);
     string Store => Path.Combine(_root, "store");
-    string User => Path.Combine(_root, "Documents", "Bambi");
+    string User => Path.Combine(_root, "Documents", "Nilo");
     string Desktop => Path.Combine(_root, "Desktop");
     public DocsMakerTests() { Directory.CreateDirectory(Store); Directory.CreateDirectory(Desktop); }
     public void Dispose() { try { Directory.Delete(_root, true); } catch { } }

@@ -28,7 +28,7 @@ public class HubTests
 
     static MarketModule Ability(string id, string name = "칭찬 요정") => new MarketModule
     {
-        id = id, kind = ModuleKinds.Ability, name = name, summary = "기운이 없을 때 한마디 해 줘요.", gives = "Bambi can cheer you up.", tags = new[] { "칭찬", "cheer" },
+        id = id, kind = ModuleKinds.Ability, name = name, summary = "기운이 없을 때 한마디 해 줘요.", gives = "Nilo can cheer you up.", tags = new[] { "칭찬", "cheer" },
         ability = new AbilityDef { id = id, name = name, prompt = "When the user says they are tired or asks for a compliment, you answer with one warm, specific sentence about them.", examples = new[] { "칭찬해 줘", "cheer me up" } },
     };
 
@@ -68,7 +68,7 @@ public class HubTests
     [InlineData("민수", "")]
     [InlineData("BambiFriend-4821", "")]
     [InlineData("밤비친구-4821", "")]
-    [InlineData("Bambi Friend 4821", "nickname-invalid")]            // 17
+    [InlineData("Nilo Friend 482100", "nickname-invalid")]            // 17
     [InlineData("별_수집가", "")]
     [InlineData("ab", "")]
     [InlineData("열여섯글자짜리닉네임이에요열여섯", "")]            // 16 characters
@@ -80,7 +80,7 @@ public class HubTests
     [InlineData("민수!", "nickname-invalid")]
     [InlineData("--", "nickname-invalid")]
     [InlineData("a/b", "nickname-invalid")]
-    [InlineData("Bambi Studio", "nickname-reserved")]
+    [InlineData("Nilo Studio", "nickname-reserved")]
     [InlineData("bambi  studio", "nickname-reserved")]
     [InlineData("BAMBI_STUDIO", "nickname-reserved")]
     [InlineData("BambiStudio", "nickname-reserved")]
@@ -104,7 +104,7 @@ public class HubTests
 
         // renaming: to a free name yes, to somebody else's no, to one's own in other letters yes
         Assert.Equal("nickname-taken", hub.Rename(jiwoo.token, "minsu").error);
-        Assert.Equal("nickname-reserved", hub.Rename(jiwoo.token, "Bambi Studio").error);
+        Assert.Equal("nickname-reserved", hub.Rename(jiwoo.token, "Nilo Studio").error);
         Assert.Equal("nickname-invalid", hub.Rename(jiwoo.token, "x").error);
         Assert.Equal("unauthorized", hub.Rename("nobody", "새이름").error);
         Assert.Equal("MinSu", hub.Rename(minsu.token, "MinSu").value.nickname);
@@ -354,7 +354,7 @@ public class HubTests
         Assert.Equal("칭찬 요정", hub.Listing("ability-cheer01").value.name);
         Assert.Equal("unauthorized", hub.Publish("", Offer(Ability("ability-other001"), 1)).error);
         // whatever the module says about itself, it is the seller's and it did not come with the partner
-        var liar = Ability("ability-liar0001"); liar.author = "Bambi Studio"; liar.builtin = true; liar.installs = 5000;
+        var liar = Ability("ability-liar0001"); liar.author = "Nilo Studio"; liar.builtin = true; liar.installs = 5000;
         var a = hub.Publish(other.token, Offer(liar, 5));
         Assert.Equal("하늘", a.value.seller); Assert.False(a.value.official); Assert.Equal(0, a.value.installs);
         Assert.False(Proto.FromJson<MarketModule>(hub.Package(other.token, "ability-liar0001").value).builtin);
@@ -489,7 +489,7 @@ public class HubTests
         Assert.True(hub.SeedOfficial(seeds) > 0);
         var list = hub.Listings(limit: 1000).list;
         Assert.Equal(seeds.Count, list.Count);
-        Assert.All(list, l => { Assert.Equal("Bambi Studio", l.seller); Assert.True(l.official); Assert.True(l.listed); });
+        Assert.All(list, l => { Assert.Equal("Nilo Studio", l.seller); Assert.True(l.official); Assert.True(l.listed); });
         foreach (var e in seeds) Assert.Equal(e.module.price, list.First(l => l.id == e.module.id).price);
         Assert.Equal("swarm", hub.Listing("game-swarm").value.template);
         Assert.Equal("gomoku",hub.Listing("game-gomoku").value.template);

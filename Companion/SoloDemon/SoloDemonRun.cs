@@ -54,7 +54,7 @@ public sealed class SoloDemonRun
             monsters.Add(new[]{m.id,(float)m.kind,m.pos.X,m.pos.Y,m.pos.Z,m.radius,m.phase,m.state,m.grow,m.flash,m.hp/m.maxHp});
         var bolts = new List<float[]>();
         foreach (var b in Sim.bolts) if (b.alive)
-            bolts.Add(new[]{b.pos.X,b.pos.Y,b.pos.Z,b.prev.X,b.prev.Y,b.prev.Z,b.radius});
+            bolts.Add(new[]{b.pos.X,b.pos.Y,b.pos.Z,b.prev.X,b.prev.Y,b.prev.Z,b.radius,b.star ? 1f : 0f});
         var gems = new List<float[]>();
         foreach (var g in Sim.gems) if (g.alive) gems.Add(new[]{g.pos.X,g.pos.Y,g.pos.Z});
         var orbit = new List<float[]>();

@@ -1,7 +1,7 @@
 "use strict";
 window.demonModels = async function(canvas) {
   const root="/demon-gate/art/", result=await fetch(root+"swarm-meshes.json");
-  if(!result.ok) throw Error("악마 모델을 불러오지 못했어요.");
+  if(!result.ok) throw Error("Unable to load the demon models.");
   const source=(await result.json()).meshes;
   const figures=["Hopper","Flyer","Tank","Splitter","Mini","Boss"].map(key=>source[key]);
   const color=(m,i)=>m.colors.slice(i*4,i*4+3);

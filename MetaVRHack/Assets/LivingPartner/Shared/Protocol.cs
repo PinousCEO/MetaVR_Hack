@@ -276,7 +276,7 @@ namespace LivingPartner.Shared
     public sealed class CharacterInfo
     {
         public string characterId = "partner-001";
-        public string name = "Bambi";
+        public string name = "Nilo";
         public string design = "momo";     // which look both clients show: one of Designs.Ids
         public float heightM = 0.10f;
         public string personality = "curious, gentle, careful; suggests rather than asserts";

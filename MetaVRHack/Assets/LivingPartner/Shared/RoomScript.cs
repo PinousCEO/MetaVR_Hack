@@ -6,7 +6,7 @@ using MoonSharp.Interpreter;
 namespace LivingPartner.Shared
 {
     // ROOM SCRIPTS: what a THING on the desk DOES, as a small Lua program (ItemDef.script) written by the host's language
-    // model when the thing was made - "a baseball bat: when Bambi holds it, a swing is added".
+    // model when the thing was made - "a baseball bat: when Nilo holds it, a swing is added".
     //   RoomScript          one thing's script, for as long as the thing is in the room. Pure C#, no engine types: the
     //                       host runs it to CHECK a script it has just written (RoomScriptCheck), the headset runs it to
     //                       make it real (MR/MrRoomScript.cs).

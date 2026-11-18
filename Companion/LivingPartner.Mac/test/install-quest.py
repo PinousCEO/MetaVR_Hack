@@ -11,7 +11,7 @@ def verify():
     shell = sys.argv[1] if len(sys.argv) > 1 else "/bin/sh"
     installer = Path(__file__).resolve().parents[1] / "Install-Quest.command"
     with tempfile.TemporaryDirectory(prefix="bambi-quest-install-") as temp:
-        kit = Path(temp) / "Bambi TV"
+        kit = Path(temp) / "Yonder TV"
         quest = kit / "Quest"
         quest.mkdir(parents=True)
         shutil.copy(installer, kit)
@@ -54,7 +54,7 @@ exit 4
             assert (result.returncode == 0) == (case == "success"), (case, result.stdout)
             assert attempt.exists() == (case in {"success", "fail"}), case
             if attempt.exists():
-                assert attempt.read_text().strip().endswith("/Bambi TV/Quest/LivingAIPartner.apk")
+                assert attempt.read_text().strip().endswith("/Yonder TV/Quest/LivingAIPartner.apk")
         print("PASS Quest installer selects only one authorized Quest, supplies exactly install -r, handles multiple/absent/unauthorized/non-Quest devices and installation failure")
 
 

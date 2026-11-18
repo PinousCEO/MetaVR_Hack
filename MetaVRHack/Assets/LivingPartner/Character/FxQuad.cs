@@ -12,7 +12,7 @@ namespace LivingPartner.Character
     [RequireComponent(typeof(MeshRenderer))]
     public sealed class FxQuad : MonoBehaviour
     {
-        [Tooltip("0 soft disc, 1 ring, 2 gradient panel, 3 frame, 4 radial progress, 5 sparkle, 6 ripple, 7 dashed ring, 8 glow; water: 9 rain streak, 10 splash ripple, 11 sheet of water, 12 droplet")]
+        [Tooltip("0 soft disc, 1 ring, 2 gradient panel, 3 frame, 4 radial progress, 5 sparkle, 6 ripple, 7 dashed ring, 8 glow; water: 9 rain streak, 10 splash ripple, 11 sheet of water, 12 droplet, 13 spell flare")]
         public int mode;
         public Color color = Color.white;
         public Color color2 = Color.white;

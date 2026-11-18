@@ -574,7 +574,7 @@ end", touch: true, rounded: true);
             {
                 int had = room.all.Count;
                 Step(g);
-                // the kick is SEEN coming: Bambi's own motion plays, and the ball grows on its way to the glass before it leaves
+                // the kick is SEEN coming: Nilo's own motion plays, and the ball grows on its way to the glass before it leaves
                 if (g.PetMotion == "kick" && g.petCustom) { if (!kicked) windUps++; kicked = true; } else kicked = false;
                 var ball = g.sprites.FirstOrDefault(s => GlassArt.IsFootball(s.art));
                 room.After(g, "blocked");
@@ -658,12 +658,12 @@ end", touch: true, rounded: true);
                 charged |= g.PetMotion == "fling" && g.sprites.Any(s => s.art == GlassArt.Shot);
                 room.After(g, "blocked");
             }
-            o.WriteLine($"shooter: {shots} shots, {hits} hits, score {g.score}, level {g.level}, {room.all.Count} shots from Bambi");
+            o.WriteLine($"shooter: {shots} shots, {hits} hits, score {g.score}, level {g.level}, {room.all.Count} shots from Nilo");
             Assert.True(shots > 20 && hits >= shots - 3 && g.score > hits && g.level >= 3);
-            Assert.True(seen >= 1, "clones were seen"); Assert.True(crosshair, "the crosshair is drawn where the player points"); Assert.True(charged, "Bambi's shot is seen coming");
+            Assert.True(seen >= 1, "clones were seen"); Assert.True(crosshair, "the crosshair is drawn where the player points"); Assert.True(charged, "Nilo's shot is seen coming");
             Assert.True(room.all.Count >= 8);
             foreach (var x in room.all) { Assert.Equal(GlassArt.Shot, x.art); Assert.Equal(0.7f, x.speed, 4); Assert.InRange(x.x, 0.05f, g.W - 0.05f); }
-            Assert.Equal(3, g.lives); Assert.Equal("play", g.phase);        // every shot of Bambi was blocked by the open hand
+            Assert.Equal(3, g.lives); Assert.Equal("play", g.phase);        // every shot of Nilo was blocked by the open hand
             Assert.Empty(g.Box.Notes);
 
             // a shot that lands on nothing pops nothing
@@ -735,7 +735,7 @@ end", touch: true, rounded: true);
             Assert.Equal(20, keys.Count);
             foreach (var k in keys) { Assert.True(k.w >= 0.14f && k.size >= 0.12f - 1e-4f); Assert.InRange(k.x - k.w / 2, 0.4f, g.W); Assert.InRange(k.x + k.w / 2, 0f, g.W); Assert.InRange(k.y, 0.06f, 0.7f); }
             Assert.True(g.sprites.Where(s => s.art == box).Max(s => s.w * s.size) > 0.9f, "the card fills most of the field");
-            Assert.True(g.petX < 0.3f, "Bambi stands beside the keys, not in front of them");
+            Assert.True(g.petX < 0.3f, "Nilo stands beside the keys, not in front of them");
             foreach (var s in g.sprites) if (s.art == GlassArt.Label) Assert.True(s.size >= 0.04f, s.text + " is " + s.size);
             Assert.InRange(g.sprites.Count, 60, 80);
 
@@ -745,7 +745,7 @@ end", touch: true, rounded: true);
             Assert.Equal("30", Shown(g));
             Press(g, how, "=");
             Assert.Equal("42", Shown(g));
-            Assert.Equal("It is 42!", g.petLine);                      // Bambi says the result
+            Assert.Equal("It is 42!", g.petLine);                      // Nilo says the result
             Assert.Equal(1, g.score);
             Press(g, how, "7", "/", "2", "=");
             Assert.Equal("3.5", Shown(g));

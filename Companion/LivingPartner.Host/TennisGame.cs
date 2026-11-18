@@ -170,7 +170,7 @@ public sealed class TennisGame
                 {
                     S.partnerX = _px; S.partnerZ = Tennis.Baseline(S.court);
                     var from = Tennis.ServePoint(S.court, _px);
-                    S.shot = Tennis.PartnerShot(S.court, ++_seq, from, _eye, (float)(_rng.NextDouble() * 1.2 - 0.6) * (S.mode == "stars" ? 1.5f : S.mode == "keeper" ? 0.4f : 1f), now);
+                    S.shot = Tennis.PartnerShot(S.court, ++_seq, from, _eye, (float)(_rng.NextDouble() * 1.2 - 0.6) * (S.mode == "stars" ? 1.5f : S.mode == "keeper" ? 1.5f : 1f), now, S.mode == "keeper");
                     S.rally = 0; _planned = false;
                     Phase("rally", now, "serve");
                     Publish();

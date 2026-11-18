@@ -1,12 +1,12 @@
 <!doctype html>
-<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>밤비의 오목판</title>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Yonder · Gomoku</title>
 <link rel="stylesheet" href="/table/board.css"><script type="module" src="/table/board.mjs"></script></head>
 <body><main>
-  <header><h1>오목</h1><p id="who" role="status"></p></header>
-  <div id="board"><canvas aria-label="15줄 오목판"></canvas></div>
+  <header><h1>Gomoku</h1><p id="who" role="status"></p></header>
+  <div id="board"><canvas aria-label="15-line Gomoku board"></canvas></div>
   <section id="setup">
-    <label for="monitor">화면</label><select id="monitor"></select>
-    <button id="start">이 TV에서 시작</button><p id="help" role="status"></p>
+    <label for="monitor">Display</label><select id="monitor"></select>
+    <button id="start">Play on this TV</button><p id="help" role="status"></p>
   </section>
-  <footer><p id="guide" role="status"></p><div><button id="restart" hidden>다시 두기</button><button id="close" hidden>종료</button></div></footer>
+  <footer><p id="guide" role="status"></p><div><button id="restart" hidden>Play again</button><button id="close" hidden>Close</button></div></footer>
 </main></body></html>
