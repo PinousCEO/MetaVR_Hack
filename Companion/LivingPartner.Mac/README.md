@@ -28,7 +28,7 @@ With developer mode enabled, connect one Quest to the Mac with a USB data cable.
 
 ## Creation and privacy
 
-Open **Work** on the TV to follow a creation job and download the result. Ask for a researched PDF, new icon options or a 3D object. Screen-based requests need macOS screen recording permission. Asking Nilo to make an object you are holding sends one camera image to your configured generation service.
+Open **Work** on the TV to follow a creation job and download the result. Ask for a researched PDF, new icon options or a 3D object. Screen-based requests need macOS screen recording permission. Set a generic password in Keychain Access with the service name `LivingPartner.Tripo` or provide `TRIPO_API_KEY` to the companion. Leave the cup on the table and ask “Hey, Nilo, do you see a cup on my desk?” The companion detects it in the Quest’s room view. To make a copy, look at the cup (or point at it when several are visible) and say “Hey, Nilo, copy this cup.” The companion sends the selected region to Tripo. Common objects are detected locally. An optional OpenAI credential enables identification of additional objects. When the model is ready, choose it in your bag or say “Hey, Nilo, put it on my desk.” Say “Hey, Nilo, export it as a GLB” to save the same textured model in Documents/Nilo/Models.
 
 For generated game rules, set the Anthropic API key in the Mac keychain under the service name `LivingPartner.Anthropic`, or pass `ANTHROPIC_API_KEY` to the companion process. New game generation requires model access. Installed games and local speech recognition work offline. Research, image generation and freeform 3D creation use the OpenAI credential under `LivingPartner.OpenAI` or `OPENAI_API_KEY`.
 

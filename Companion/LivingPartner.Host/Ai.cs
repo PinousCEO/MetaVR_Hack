@@ -300,6 +300,23 @@ public sealed class Conversation
             return;
         }
         string gameWish = NameRules.Strip(u.text);
+        string sight = SightRules.Plain(gameWish) ?? (SightRules.WantsModelFile(gameWish) ? SightRules.Export : SightRules.WantsIdentification(gameWish) ? SightRules.Identify : null);
+        if (sight != null && (!open || named || HostClock.Now <= _attentionUntil))
+        {
+            if (open && !named) _attentionUntil = -1;
+            LastLanguage = gameWish.Any(ch => ch >= 0xAC00 && ch <= 0xD7A3) ? "Korean" : "English";
+            _core.Sight.Act(c, sight, sight == SightRules.Export ? gameWish : "", u);
+            HeardAs(u, sight);
+            return;
+        }
+        if ((!open || named || HostClock.Now <= _attentionUntil) && SightRules.BagCommand(_core.State.world.items, gameWish) is { } placement)
+        {
+            if (open && !named) _attentionUntil = -1;
+            LastLanguage = "English";
+            _core.World.Run(c, placement, true);
+            HeardAs(u, placement.cmd == "place" ? "placeItem" : "storeItem");
+            return;
+        }
         string garden = RadishGarden.Request(gameWish);
         if (garden.Length > 0 && (!open || named || HostClock.Now <= _attentionUntil))
         {

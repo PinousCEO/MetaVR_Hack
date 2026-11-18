@@ -26,22 +26,53 @@ public static class SightRules
     static string Flat(string s) => new string((s ?? "").ToLowerInvariant().Where(char.IsLetterOrDigit).ToArray());
 
     // "이거" - the thing in the hand, never named
-    const string KoThis = @"(이거|이것|이걸|이건|요거|요걸|이물건|이거랑|이것과|이거하고|내가들고있는거|내가들고있는것|내가든거|손에든거|손에들고있는거|지금들고있는거|지금보여주는거|내가보여주는거)";
+    const string KoThis = @"(이거|이것|이걸|이건|요거|요걸|이물건|이오브젝트|이컵|이머그컵|이거랑|이것과|이거하고|내가들고있는거|내가들고있는것|내가든거|손에든거|손에들고있는거|지금들고있는거|지금보여주는거|내가보여주는거)";
     static readonly Regex KoMake = new("^" + KoThis + @"(을|를|좀|한번)?(똑같은거|똑같은걸|똑같이|그대로|비슷하게|비슷한거)?(3d|3디|쓰리디|입체)?(모델|모형)?(로|으로)?(하나)?(좀)?(따라)?(만들어|만들어줘|만들어봐|만들어줄래|만들어줄수있어|만들수있어|만들어볼래|만들어줘봐|만들어주라|복제해줘|스캔해줘|본떠줘)$");
-    static readonly Regex EnMake = new(@"^(hey)?(can|could|would)?(you)?(please)?(make|build|sculpt|model|copy|scan|recreate)(me)?(a3dmodelof|a3dcopyof|acopyof|amodelof)?(this|thisthing|thisone|thisobject|whatimholding|whatiamholding|whatsinmyhand|whatisinmyhand|thethinginmyhand|whatimshowingyou)(in3d|into3d|as3d|asa3dmodel|forme)?(please)?$");
+    static readonly Regex EnMake = new(@"^(hey)?(can|could|would)?(you)?(please)?(make|build|sculpt|model|copy|scan|recreate)(me)?(a3dmodelof|a3dcopyof|acopyof|amodelof)?(this|thisthing|thisone|thisobject|thiscup|thismug|thecupimholding|themugimholding|whatimholding|whatiamholding|whatsinmyhand|whatisinmyhand|thethinginmyhand|whatimshowingyou)(in3d|into3d|as3d|asa3dmodel|forme)?(please)?$");
 
     /// <summary>The plainest wordings, understood with no language model: "이거 만들어 줘", "이거 3D로 만들어 줘", "make this". null = not one of them.</summary>
     public static string Plain(string said)
     {
         string flat = Flat(said);
-        if (flat.Length < 4 || flat.Length > 40) return null;
+        if (flat.Length < 4 || flat.Length > 96) return null;
         if (KoMake.IsMatch(flat) || EnMake.IsMatch(flat)) return Make;
+        if (Regex.IsMatch(said.Trim(), @"^(?:please )?(?:copy|scan|recreate|make a 3d (?:copy|model) of) (?:this|that|the) (?:cup|mug|bowl|bottle|object|thing)(?: (?:on|in|next to|beside) (?:my|the|this|that) (?:desk|table|room|hand))?[\s.!?]*$", RegexOptions.IgnoreCase) ||
+            Regex.IsMatch(flat, @"^(?:책상|테이블|탁자)(?:위)?(?:에|위에)(?:있는|놓인|놓여있는)(?:이|저|그)?(?:컵|머그컵|물건|오브젝트)(?:을|를)?(?:그대로|똑같이)?(?:3d로)?(?:만들어|복제해|스캔해)(?:줘|줄래)?$")) return Make;
+        return null;
+    }
+
+    public const string Identify = "identifyRoomObject";
+    public static bool WantsIdentification(string words) =>
+        Regex.IsMatch((words ?? "").Trim(), @"^(?:what(?:'s| is) (?:this|that)(?: object| thing)?|(?:can you see|do you see|is there) (?:a |the |this |that )?(?:cup|mug|bottle|bowl)(?: (?:here|on (?:my|the) (?:desk|table)))?|이거\s*뭐야|(?:여기\s*)?(?:컵|머그컵)\s*(?:보여|있어))[\s?!.]*$", RegexOptions.IgnoreCase);
+
+    public static bool WantsModelFile(string said) =>
+        Regex.IsMatch(said ?? "", @"\bglb\b|\b3d (file|model file)\b|3[d디]\s*파일", RegexOptions.IgnoreCase) &&
+        Regex.IsMatch(said ?? "", @"\b(export|save|download|send|copy|give|bring|get)\b|저장|내보내|보내|받고|가져", RegexOptions.IgnoreCase);
+
+    public static WorldCommand BagCommand(IEnumerable<ItemDef> inventory, string words)
+    {
+        string text = (words ?? "").Trim().TrimEnd('.', '?', '!').Trim();
+        var place = Regex.Match(text, @"^(?:(?:put|place|bring) (.+?) (?:on(?:to)? (?:my|the) (?:desk|table)|(?:in|into) (?:my|the) room)|summon (.+?))$", RegexOptions.IgnoreCase);
+        var store = Regex.Match(text, @"^(?:put|store) (.+?) (?:away|(?:back )?in(?:to)? (?:my|the|your) bag)$", RegexOptions.IgnoreCase);
+        if (!place.Success && !store.Success) return null;
+        string name = store.Success ? store.Groups[1].Value : place.Groups[1].Success ? place.Groups[1].Value : place.Groups[2].Value;
+        var item = ExportTarget(inventory, name);
+        return item == null ? null : new WorldCommand { cmd = store.Success ? "store" : "place", id = item.id };
+    }
+
+    public static ItemDef ExportTarget(IEnumerable<ItemDef> inventory, string words)
+    {
+        var models = inventory.Where(i => i != null && i.status == "ready" && (!string.IsNullOrEmpty(i.model) || i.parts?.Count > 0)).Reverse().ToList();
+        var named = WorldRules.FindItem(models, words);
+        if (named != null) return named;
+        string target = Regex.Replace(words ?? "", @"\b(hey|nilo|please|can|could|would|you|i|want|like|to|get|give|me|my|your|export|save|send|copy|bring|download|the|this|that|last|latest|it|as|a|an|3d|glb|file|object|model|on|computer|pc|mac)\b", "", RegexOptions.IgnoreCase);
+        if (Flat(target).Length == 0 || Regex.IsMatch(Flat(words), @"^(그거|이거|방금만든|마지막|3d파일|glb파일)")) return models.FirstOrDefault();
         return null;
     }
 
     /// <summary>What the conversation's prompt says about the two actions.</summary>
     public static string PromptSection(bool canSee) =>
-        "makeFromSight = the user HOLDS UP or SHOWS you a real object and wants you to make it, without saying what it is (\"이거 만들어 줘\", \"이거 3D로 만들어 줘\", \"내가 들고 있는 거 만들어 줘\", \"이거랑 똑같은 거 만들어 줘\", \"make this\", \"make what I'm holding\"): you LOOK at it through the headset's camera, sculpt it, put it on the desk and carry its 3D file into their computer. thing = \"\" (what they call it, if they do). " +
+        "makeFromSight = the user HOLDS UP or SHOWS you a real object and wants you to make it, without saying what it is (\"이거 만들어 줘\", \"이거 3D로 만들어 줘\", \"내가 들고 있는 거 만들어 줘\", \"이거랑 똑같은 거 만들어 줘\", \"make this\", \"make what I'm holding\"): you use the headset photo to make a 3D model and save it in their bag. placeItem brings it into the room. Only export the file when asked. thing = \"\" (what they call it, if they do). " +
         "When they NAME what to make and show nothing (\"의자 만들어 줘\") that is makeItem; a design on a SCREEN they point at is makeDesigns; a game or tool is makeModule. " +
         "exportThing = carry one of YOUR THINGS into the user's computer as a real 3D file (\"이 의자 PC로 가져가 줘\", \"머그컵 컴퓨터에 넣어 줘\", \"그거 3D 파일로 저장해 줘\", \"put the mug on my PC\"): thing = that thing's name exactly as listed under Your things (\"\" = the one made last). A document (PDF, designs) is deliverDoc instead." +
         (canSee ? "" : " (Right now no headset is connected: you cannot see anything; makeFromSight will say so.)") + "\n";
@@ -111,7 +142,10 @@ Fill in:
     // ------------------------------------------------------------------ what the partner says
     public static string Line(string what, bool ko, string a = "") => what switch
     {
-        "look" => ko ? "어디 보자! 잘 보이게 들고 있어 줘." : "Let me see! Hold it up where I can see it.",
+        "look" => ko ? "만들 물건을 보거나 가리켜 줘." : "Look at the object, or point to it.",
+        "bagged" => ko ? $"{a} 가방에 넣었어." : $"I saved {a} in your bag.",
+        "noTripo" => "Connect a Tripo API key on your computer to copy a real object.",
+        "tripoFailed" => "I couldn’t make the 3D model from that photo. Check the workshop for the reason.",
         "noKey" => ko ? "보고 만드는 건 PC에 AI 키가 있어야 해." : "Looking and making needs an AI key on the PC.",
         "noHeadset" => ko ? "나는 헤드셋으로만 볼 수 있어. 뭔지 말로 알려 주면 만들어 줄게!" : "I can only see through the headset. Tell me what it is and I'll make it!",
         "busy" => ko ? "하나씩 하자! 지금 만들고 있는 게 있어." : "One at a time! I'm still making something.",
@@ -132,5 +166,5 @@ Fill in:
     };
 
     /// <summary>The job's steps as the work queue shows them (English, honest: each is said when that is what is being done).</summary>
-    public const string StepLook = "Looking at what you are holding", StepSee = "Working out what it is", StepShape = "Shaping it", StepColour = "Colouring it and taking its picture", StepFile = "Writing the 3D file";
+    public const string StepLook = "Looking for the object in the room", StepSee = "Working out what it is", StepShape = "Shaping it", StepColour = "Colouring it and taking its picture", StepFile = "Writing the 3D file";
 }

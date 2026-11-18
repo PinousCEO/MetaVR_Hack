@@ -43,6 +43,68 @@ public class SightTests
         Part("capsule", 0.1f, 1.0f, 0.1f, 0.06f, 0.2f, 0.06f, "#8C6A5D", 0, 0, 30f, -25f),
     }, out _);
 
+    static byte[] CoffeeOnTable() => File.ReadAllBytes(Path.Combine(AppContext.BaseDirectory, "Fixtures", "coffee.jpg"));
+
+    [Fact]
+    public void Recognizes_a_cup_on_a_table_away_from_the_aim_and_rejects_an_absent_bottle()
+    {
+        var photo = CoffeeOnTable();
+        var cup = RoomObjects.Locate(photo, "Copy the cup on my desk", .95f, .05f, default);
+        Assert.Equal("cup", cup.Label);
+        Assert.InRange(cup.Score, .35f, 1f);
+        Assert.InRange(cup.Bounds.Width * cup.Bounds.Height, .015f, .9f);
+        Assert.Throws<RoomObjects.Unclear>(() => RoomObjects.Locate(photo, "Copy this bottle", .5f, .5f, default));
+        var two = new[] { new RoomObjects.Detection("cup",new(.05f,.3f,.30f,.75f),.91f),
+            new RoomObjects.Detection("cup",new(.67f,.3f,.85f,.75f),.65f) };
+        Assert.Same(two[1], RoomObjects.Select(two, "cup", .72f, .4f));
+        Assert.Throws<RoomObjects.Unclear>(() => RoomObjects.Select(two, "cup", .48f,.2f));
+    }
+
+    sealed class Recorder(Func<HttpRequestMessage, Task<HttpResponseMessage>> respond) : HttpMessageHandler
+    {
+        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken token) => respond(request);
+    }
+
+    [Fact]
+    public async Task The_selected_cup_region_drives_one_Tripo_task_and_preserves_its_GLB()
+    {
+        byte[] frame = CoffeeOnTable();
+        var cup = RoomObjects.Locate(frame, "copy this cup", .5f, .5f, default);
+        var source = GlbWriter.Write(PartMesh.Build(Mug()), "Mug", .1f);
+        var calls = new List<string>();
+        using var tripo = new TripoClient("test-key", api: new Recorder(async r =>
+        {
+            string path = r.RequestUri.AbsolutePath;
+            calls.Add(path);
+            Assert.Equal("Bearer", r.Headers.Authorization?.Scheme);
+            string data;
+            if (path == "/v3/files")
+            {
+                var file = Assert.Single(Assert.IsType<MultipartFormDataContent>(r.Content));
+                Assert.Equal("file", file.Headers.ContentDisposition.Name.Trim('"'));
+                Assert.Equal(cup.Crop, await file.ReadAsByteArrayAsync());
+                Assert.False(frame.SequenceEqual(cup.Crop));
+                data = "{'file_token':'file_cup'}";
+            }
+            else if (path == "/v3/generation/image-to-model")
+            {
+                var request = JObject.Parse(await r.Content.ReadAsStringAsync());
+                Assert.Equal("file_cup", (string)request["input"]);
+                Assert.Null(request["prompt"]);
+                Assert.True((bool)request["texture"]);
+                data = "{'task_id':'one'}";
+            }
+            else { Assert.Equal("/v3/tasks/one", path); data = "{'status':'success','output':{'model_url':'https://example.test/cup.glb'}}"; }
+            return new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new StringContent("{'code':0,'data':" + data + "}") };
+        }), downloads: new Recorder(r =>
+        {
+            Assert.Null(r.Headers.Authorization);
+            return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK) { Content = new ByteArrayContent(source) });
+        }));
+        Assert.Equal(source, await tripo.ImageToModelAsync(cup.Crop, null, default));
+        Assert.Equal(new[] { "/v3/files", "/v3/generation/image-to-model", "/v3/tasks/one" }, calls);
+    }
+
     static (float[] lo, float[] hi) Bounds(float[] p)
     {
         var lo = new[] { float.MaxValue, float.MaxValue, float.MaxValue }; var hi = new[] { float.MinValue, float.MinValue, float.MinValue };
@@ -361,6 +423,10 @@ public class SightTests
     [InlineData("이 물건 3D 모델로 만들어 줘")]
     [InlineData("make this")]
     [InlineData("Can you make this in 3D?")]
+    [InlineData("copy the cup on my desk")]
+    [InlineData("make this cup")]
+    [InlineData("책상 위에 있는 컵을 만들어줘")]
+    [InlineData("이 오브젝트를 만들어줘")]
     [InlineData("make what I'm holding")]
     public void Showing_a_thing_and_asking_for_it_is_understood_plainly(string said) => Assert.Equal(SightRules.Make, SightRules.Plain(said));
 

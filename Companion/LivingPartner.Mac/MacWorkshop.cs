@@ -20,18 +20,26 @@ sealed partial class Stage
         get
         {
             if (contentModel != null) return contentModel;
-            string key = Environment.GetEnvironmentVariable("OPENAI_API_KEY");
-            if (string.IsNullOrWhiteSpace(key) && OperatingSystem.IsMacOS())
-            {
-                var start = new ProcessStartInfo("/usr/bin/security") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
-                foreach (var arg in new[] { "find-generic-password", "-s", "LivingPartner.OpenAI", "-w" }) start.ArgumentList.Add(arg);
-                using var p = Process.Start(start);
-                if (p != null && p.WaitForExit(1200) && p.ExitCode == 0) key = p.StandardOutput.ReadToEnd().Trim();
-                else if (p != null && !p.HasExited) p.Kill();
-            }
+            string key = ServiceKey("OPENAI_API_KEY", "LivingPartner.OpenAI");
             return string.IsNullOrWhiteSpace(key) ? null : contentModel = new OpenAiClient(key.Trim());
         }
     }
+
+    static string ServiceKey(string variable, string service)
+    {
+        string key = Environment.GetEnvironmentVariable(variable);
+        if (string.IsNullOrWhiteSpace(key) && OperatingSystem.IsMacOS())
+        {
+            var start = new ProcessStartInfo("/usr/bin/security") { UseShellExecute = false, RedirectStandardOutput = true, RedirectStandardError = true };
+            foreach (var arg in new[] { "find-generic-password", "-s", service, "-w" }) start.ArgumentList.Add(arg);
+            using var p = Process.Start(start);
+            if (p != null && p.WaitForExit(1200) && p.ExitCode == 0) key = p.StandardOutput.ReadToEnd().Trim();
+            else if (p != null && !p.HasExited) p.Kill();
+        }
+        return key?.Trim();
+    }
+
+    sealed class PhotoError(string message) : Exception(message);
 
     void InitWorkshop() { snap.work = new WorkView(); snap.docs = documents.View; }
 
@@ -104,7 +112,13 @@ sealed partial class Stage
         catch (Exception e)
         {
             // Provider replies can include request details. Only local user-facing errors enter snapshots.
-            lock (Sync) { j.status = "failed"; j.step = j.note = e is InvalidOperationException && e.Message.Any(c => c >= '가' && c <= '힣') ? e.Message : "The job could not finish. Check the connection and creation settings."; }
+            lock (Sync)
+            {
+                j.status = "failed";
+                j.step = j.note = e is PhotoError || e is InvalidOperationException && e.Message.Any(c => c >= '가' && c <= '힣')
+                    ? e.Message : "The job could not finish. Check the connection and creation settings.";
+                if (e is PhotoError) Say(j.note);
+            }
         }
         finally
         {

@@ -18,8 +18,7 @@ namespace LivingPartner.MR
     ///    system's question the app is paused; when it comes back the picture is taken.
     ///  - While a picture is wanted a small sign "Nilo is looking" stands beside the partner, with a light that
     ///    pulses. It goes out as soon as the one picture is taken, and no further picture is read for this.
-    ///  - The picture is cut round the user's hands when they are seen by the camera (the thing they hold is there),
-    ///    else to the middle of the view; its longest side is at most what the host asked for (1280).
+    ///  - The full camera view travels with the projected finger or head ray; its longest side is at most what the host asked for (1280).
     ///  - No camera (not allowed, an older system, no pictures, the desktop simulator): the host is told why, and the
     ///    partner says so and asks the user to describe the thing instead.
     /// The device log shows every step as "[MR] eyes: ...".
@@ -55,7 +54,7 @@ namespace LivingPartner.MR
         static bool EyeAllowed()
         {
 #if UNITY_ANDROID && !UNITY_EDITOR
-            return UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeCameraPermission);
+            return UnityEngine.Android.Permission.HasUserAuthorizedPermission(EyeCameraPermission) || UnityEngine.Android.Permission.HasUserAuthorizedPermission(UnityEngine.Android.Permission.Camera);
 #else
             return true;
 #endif
@@ -110,20 +109,32 @@ namespace LivingPartner.MR
             _link.Send(Msg.EyeFrame, new EyeFrame { id = ask.id, ok = false, why = why });
         }
 
-        /// <summary>The one picture: cut round the hands, made a JPEG on another thread (the frame rate must not notice), sent from Update.</summary>
+        /// <summary>The one picture: the room view and target ray, encoded on another thread (the frame rate must not notice), sent from Update.</summary>
         void EyeTake(CameraShot shot)
         {
             var ask = _eyeAsk; _eyeAsk = null;
-            // where the user's hands are in the picture: what they hold up is there
-            var box = new EyeMath.Box(); int hands = 0;
-            Quaternion inv = Quaternion.Inverse(shot.rotation);
-            hands += EyeHand(Input.Left, shot, inv, ref box);
-            hands += EyeHand(Input.Right, shot, inv, ref box);
-            EyeMath.Crop(shot.width, shot.height, box, out int x, out int y, out int w, out int h);
+            Vector3 origin = Input.HeadPos, direction = Input.HeadRot * Vector3.forward;
+            bool pointed = false;
+            for (int i = 0; i < 2; i++)
+            {
+                var hand = i == 0 ? Input.Right : Input.Left;
+                if (!hand.tracked || hand.rayKind != 1 || hand.rayDir.sqrMagnitude < .5f) continue;
+                origin = hand.rayOrigin; direction = hand.rayDir.normalized;
+                pointed = true;
+                break;
+            }
+            if (!Input.RaycastEnvironment(origin, direction, 5f, out Vector3 hit))
+                hit = origin + direction * (pointed ? .8f : 1.5f);
+            Vector3 local = Quaternion.Inverse(shot.rotation) * (hit - shot.position);
+            float aimX = .5f, aimY = .5f;
+            if (EyeMath.Project(local.x, local.y, local.z, shot.fx, shot.fy, shot.cx, shot.cy, out float px, out float py))
+            {
+                aimX = Mathf.Clamp01(px / shot.width); aimY = Mathf.Clamp01(py / shot.height);
+            }
             int maxSide = Mathf.Clamp(ask.maxSide, 256, 1280), iw = shot.width, ih = shot.height;
             byte[] rgba = _eyeBuf; _eyeBuf = null;      // (handed to the other thread: the next look takes a buffer of its own)
             float took = Time.time - _eyeSince;
-            string id = ask.id; bool cropped = box.Any;
+            string id = ask.id;
             _eyeEncoding = true;
             Sfx2D("select", 0.5f, 1.3f);
             Task.Run(() =>
@@ -131,37 +142,18 @@ namespace LivingPartner.MR
                 EyeFrame f; string log;
                 try
                 {
-                    byte[] cut = EyeMath.Cut(rgba, iw, ih, x, y, w, h, maxSide, out int cw, out int ch);
+                    byte[] cut = EyeMath.Cut(rgba, iw, ih, 0, 0, iw, ih, maxSide, out int cw, out int ch);
                     byte[] jpg = cut == null ? null : ImageConversion.EncodeArrayToJPG(cut, UnityEngine.Experimental.Rendering.GraphicsFormat.R8G8B8A8_SRGB, (uint)cw, (uint)ch, 0, 82);
                     if (jpg == null || jpg.Length < 200) { f = new EyeFrame { id = id, ok = false, why = "nocamera" }; log = "the picture could not be made a JPEG"; }
                     else
                     {
-                        f = new EyeFrame { id = id, ok = true, jpeg = Convert.ToBase64String(jpg), width = cw, height = ch, cropped = cropped };
-                        log = $"picture {iw}x{ih} taken after {took:0.0} s -> cut {cw}x{ch} at ({x}, {y}) {(cropped ? $"round the hands ({hands} seen, {box.points} points)" : "from the middle (no hand seen)")}, JPEG {jpg.Length / 1024} KB";
+                        f = new EyeFrame { id = id, ok = true, jpeg = Convert.ToBase64String(jpg), width = cw, height = ch, aimX = aimX, aimY = aimY, pointed = pointed };
+                        log = $"room view {iw}x{ih} -> {cw}x{ch}; {(pointed ? "finger" : "head")} target ({aimX:F2},{aimY:F2}); JPEG {jpg.Length / 1024} KB";
                     }
                 }
                 catch (Exception e) { f = new EyeFrame { id = id, ok = false, why = "nocamera" }; log = "the picture could not be made a JPEG: " + e.Message; }
                 lock (_eyeLock) { _eyeReady = f; _eyeReadyLog = log; }
             });
-        }
-
-        /// <summary>Adds the points of one hand that the camera sees (in front of it, within arm's reach, inside the picture). Returns 1 when any was.</summary>
-        static int EyeHand(HandState hand, CameraShot shot, Quaternion inv, ref EyeMath.Box box)
-        {
-            if (!hand.tracked) return 0;
-            int before = box.points;
-            EyePoint(hand.palmPos, shot, inv, ref box); EyePoint(hand.indexTip, shot, inv, ref box); EyePoint(hand.thumbTip, shot, inv, ref box); EyePoint(hand.wrist, shot, inv, ref box);
-            if (hand.middleTip != Vector3.zero) EyePoint(hand.middleTip, shot, inv, ref box);
-            return box.points > before ? 1 : 0;
-        }
-
-        static void EyePoint(Vector3 world, CameraShot shot, Quaternion inv, ref EyeMath.Box box)
-        {
-            Vector3 l = inv * (world - shot.position);
-            if (l.z > 0.9f) return;
-            if (!EyeMath.Project(l.x, l.y, l.z, shot.fx, shot.fy, shot.cx, shot.cy, out float px, out float py)) return;
-            if (px < 0f || py < 0f || px > shot.width - 1 || py > shot.height - 1) return;
-            box.Add(px, py);
         }
 
         /// <summary>The sign beside the partner (in front of the user when the partner is inside the PC) for as long as a picture is wanted: "Nilo is looking" and a pulsing light.</summary>

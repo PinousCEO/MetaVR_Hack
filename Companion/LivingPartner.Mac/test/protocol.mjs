@@ -1,7 +1,7 @@
 // Exercises the Mac host with the same Quest wire messages on any .NET 8 desktop.
 import assert from "node:assert/strict";
 import {spawn} from "node:child_process";
-import {mkdtemp,readFile,rm} from "node:fs/promises";
+import {mkdtemp,readFile,readdir,rm} from "node:fs/promises";
 import {createServer} from "node:net";
 import {createSocket} from "node:dgram";
 import {tmpdir} from "node:os";
@@ -19,7 +19,7 @@ const discovery=createSocket("udp4");
 await new Promise(done=>discovery.bind(0,"127.0.0.1",done));
 let beacon="";
 discovery.on("message",buf=>{beacon=buf.toString();});
-const env={...process.env};
+const env={...process.env,LP_MAC_DOCUMENTS:join(stateDir,"documents")};
 if(process.argv[3]) env.LP_MAC_VOICE_MODEL=resolve(process.argv[3]);
 const child=spawn("dotnet",[dll,"--port",String(port),"--state-dir",stateDir,"--no-browser","--quest-ip","127.0.0.1","--discovery-port",String(discovery.address().port)],{env,windowsHide:true,stdio:["ignore","pipe","pipe"]});
 let errors="";
@@ -132,6 +132,29 @@ try {
   assert.equal((await state()).speak,false);
   written("utterance",{text:"Hey, Nilo, open the star garden."}); await take("intent.result",a=>a.kind==="gardenOpen");
   written("utterance",{text:"Hey, Nilo, close the garden."}); await take("intent.result",a=>a.kind==="gardenClose");
+  const cupPhoto = await readFile(new URL("../../LivingPartner.Tests/Fixtures/coffee.jpg",import.meta.url));
+  written("utterance",{text:"Hey, Nilo, do you see a cup on my desk?"});
+  const eye = await take("eye.request");
+  written("eye.frame",{id:eye.id,ok:true,width:600,height:400,jpeg:cupPhoto.toString("base64"),aimX:.95,aimY:.05});
+  await take("character.say",a=>a.text==="I see a cup.",25000);
+  console.log("PASS room recognition on an actual table scene through the Quest camera protocol");
+
+  written("utterance",{text:"Hey, Nilo, make firewood"});
+  const inventory = await take("state.snapshot",a=>a.world?.items?.some(i=>i.name==="Firewood" && i.model),15000);
+  const item = inventory.world.items.find(i=>i.name==="Firewood" && i.model);
+  assert.equal(item.inRoom,false);
+  const original = Buffer.from(await (await fetch(origin+"/world/"+item.model)).arrayBuffer());
+  assert.equal(original.toString("ascii",0,4),"glTF");
+  written("utterance",{text:"Hey, Nilo, put the firewood on my desk"});
+  await take("state.snapshot",a=>a.world?.items?.some(i=>i.id===item.id && i.inRoom && i.model===item.model));
+  written("world.command",{cmd:"store",id:item.id});
+  await take("state.snapshot",a=>a.world?.items?.some(i=>i.id===item.id && !i.inRoom && i.model===item.model));
+  written("utterance",{text:"Hey, Nilo, export the firewood as a GLB"});
+  await take("character.say",a=>a.text.includes("saved to your Models folder"));
+  const models = join(env.LP_MAC_DOCUMENTS,"Models");
+  const [folder] = await readdir(models);
+  assert.deepEqual(await readFile(join(models,folder,"Firewood.glb")),original);
+  console.log("PASS bag, voice placement, storage and byte-identical file export");
   if(process.argv[4]) {
     await put("/action/speech-on");
     const r=await readFile(process.argv[4]);

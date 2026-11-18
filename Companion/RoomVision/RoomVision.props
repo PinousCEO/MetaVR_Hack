@@ -1,0 +1,9 @@
+<Project>
+  <ItemGroup>
+    <PackageReference Include="Microsoft.ML.OnnxRuntime" Version="1.22.1" />
+    <PackageReference Include="SkiaSharp" Version="3.119.4" />
+    <Compile Include="$(MSBuildThisFileDirectory)RoomObjects.cs" Link="RoomVision/RoomObjects.cs" />
+    <Content Include="$(MSBuildThisFileDirectory)yolox.onnx" Link="Models/room-yolox.onnx" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+    <Content Include="$(MSBuildThisFileDirectory)LICENSE-YOLOX.txt;$(MSBuildThisFileDirectory)NOTICE.txt" Link="Licenses/RoomVision/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
+  </ItemGroup>
+</Project>

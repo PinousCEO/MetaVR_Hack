@@ -7,7 +7,7 @@
 # Needs: the headset in developer mode on a USB data cable, "allow USB debugging" accepted in the headset.
 param([switch]$Install, [int]$WaitWorn = 600, [int]$Watch = 0, [string]$Out = "")
 $root = Split-Path -Parent $PSScriptRoot
-$dist = if (Test-Path (Join-Path $root 'dist\LivingAIPartner-Host')) { Join-Path $root 'dist' } else { $root }
+$dist = if (Test-Path (Join-Path $root 'dist\Yonder\LivingAIPartner-Host\LivingPartner.Host.exe')) { Join-Path $root 'dist\Yonder' } elseif (Test-Path (Join-Path $root 'dist\LivingAIPartner-Host')) { Join-Path $root 'dist' } else { $root }
 Set-Location $root
 $pkg = "com.livingaipartner.quest"; $port = 47610
 $adb = (Get-Command adb -ErrorAction SilentlyContinue).Source
@@ -36,7 +36,7 @@ if ($null -eq $companion -or $null -eq $companion.PSObject.Properties["clients"]
     $hostExe = Join-Path $dist "LivingAIPartner-Host\LivingPartner.Host.exe"
     if (-not (Test-Path $hostExe)) { $hostExe = Join-Path $root "Companion\LivingPartner.Host\bin\Release\net8.0-windows\LivingPartner.Host.exe" }
     $client = Join-Path $dist "LivingAIPartner-Windows\LivingAIPartner.exe"
-    Start-Process -FilePath $hostExe -ArgumentList "--client", "`"$client`"", "--loopback-only", "--usb-dev" | Out-Null
+    Start-Process -FilePath $hostExe -ArgumentList "--client", "`"$client`"", "--loopback-only", "--usb-dev" -WindowStyle Hidden | Out-Null
     Start-Sleep -Seconds 6
     Say "host started (this PC only, --usb-dev)"
 } else { Say "host already running (it must have been started with --usb-dev for the cable connection to be accepted without pairing)" }

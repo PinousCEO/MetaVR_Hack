@@ -16,6 +16,12 @@ sealed partial class Stage
     bool TryWorkSpoken(string words,out string reply)
     {
         string ask = NameRules.Strip(words).Trim();
+        if (SightRules.BagCommand(bag.World.items, ask) is { } placement)
+        {
+            bag.Handle(Msg.World, placement);
+            reply = placement.cmd == "place" ? "It’s on your desk." : "It’s back in your bag.";
+            return true;
+        }
         if (TryExportModel(ask, out reply)) return true;
         var meant = documents.Meant();
         var action = DocsRules.Plain(ask,meant != null, documents.Open != null,meant?.kind == DocsRules.Designs);

@@ -818,14 +818,14 @@ Fill in:
         return opened.Count > 0 ? $"A {item.name}! Now I can {opened[0].line}." : $"A {item.name}! Thank you, I'll take good care of it.";
     }
 
-    TripoClient Tripo()
+    internal TripoClient Tripo()
     {
         if (_tripo != null) return _tripo;
         // looked for each time until there is one: a key stored with tools\Set-TripoKey.ps1 while the host runs is found by the next request
         string key = TripoKey.Load(out string source);
         if (key == null) { _tripoNote = "no key (things keep their built-in shapes)"; return null; }
         // the client's own error is written so that it never quotes the key
-        try { _tripo = new TripoClient(key); _tripoNote = $"key found ({source})"; Log.Info($"world: Tripo key found ({source}); model={_tripo.Model}"); }
+        try { _tripo = new TripoClient(key, message => Log.Info(message)); _tripoNote = $"key found ({source})"; Log.Info($"world: Tripo key found ({source}); model={_tripo.Model}"); }
         catch (Exception e) { _tripoNote = "the key cannot be used"; Log.Warn("world: the Tripo key cannot be used: " + e.Message); }
         return _tripo;
     }

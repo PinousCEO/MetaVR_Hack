@@ -1,6 +1,6 @@
-# Stores the Tripo API key the Companion Host uses to make 3D models from a description (text to model).
+# Stores the Tripo API key the Companion Host uses to make 3D models from a headset photo or description.
 # The key is encrypted for the current Windows user (DPAPI) and written to %LOCALAPPDATA%\LivingAIPartner\tripo.key.dpapi.
-# It is never written to the repository or to a log. Restart the host afterwards.
+# It is never written to the repository or to a log. The host checks for the key on the next creation request.
 # (The host also accepts the key from the environment variables LP_TRIPO_KEY or TRIPO_API_KEY; those win over the file.)
 #   .\tools\Set-TripoKey.ps1            asks for the key (input is hidden)
 #   .\tools\Set-TripoKey.ps1 -Remove    deletes the stored key
@@ -26,4 +26,4 @@ try { $key = [Runtime.InteropServices.Marshal]::PtrToStringBSTR($ptr) } finally 
 if ([string]::IsNullOrWhiteSpace($key)) { "nothing entered; nothing changed"; exit 1 }
 New-Item -ItemType Directory -Force $dir | Out-Null
 [IO.File]::WriteAllBytes($file, [Security.Cryptography.ProtectedData]::Protect([Text.Encoding]::UTF8.GetBytes($key.Trim()), $null, 'CurrentUser'))
-"key stored for this Windows user. Restart the Companion Host to use it."
+"key stored for this Windows user. Ready for the next 3D creation request."

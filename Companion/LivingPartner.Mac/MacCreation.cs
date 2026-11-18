@@ -34,10 +34,11 @@ sealed partial class Stage
     {
         response = "";
         string words = WorldRules.TypedText(NameRules.Strip(said ?? ""));
-        if (SightRules.Plain(words) == SightRules.Make)
+        bool identify = SightRules.WantsIdentification(words);
+        if (identify || SightRules.Plain(words) == SightRules.Make)
         {
             response = headset == null ? "Connect your headset to show me an object." :
-                QueueWork("model", "3D model from sight", words, (job, ct) => MakeSculpture(job, words, ct, true));
+                QueueWork(identify ? "look" : "model", identify ? "Identify room object" : "Copy room object", words, (job, ct) => CopyShownObject(job, words, identify, ct));
             return true;
         }
         if (Matches(words, @"(?:방금|지금|아까)\s*만든.*(?:게임.*(?:하자|할래|시작|켜)|플레이|해\s*보자)|play (?:my|the) (?:new|last|latest) game"))
@@ -138,34 +139,13 @@ sealed partial class Stage
             ("seat", SchemaType("number")), ("top", SchemaType("number")));
     }
 
-    async Task<Action> MakeSculpture(WorkJob job, string words, CancellationToken ct, bool fromSight = false)
+    async Task<Action> MakeSculpture(WorkJob job, string words, CancellationToken ct)
     {
         var kind = ItemKinds.Guess(words);
         string name = WorldRules.RoughName(words, kind);
         var model = Model;
-        ItemIdea seen = null;
         JObject answer;
-        if (fromSight)
-        {
-            if (model == null) throw new InvalidOperationException("Set an OpenAI key on your Mac for object recognition.");
-            WorkStep(job, "Taking one picture of the object", .08f);
-            var photo = await TakeObjectPhoto(job.id, ct);
-            var attachments = new[] { ("image/jpeg", photo, "held-object.jpg") };
-            WorkStep(job, "Checking shape and scale", .24f);
-            string[] kinds = ItemKinds.All.Select(k => k.id).ToArray();
-            var found = await model.AskJsonAsync(SightRules.SeeSystem,
-                SightRules.SeeAsk(words, Matches(words, "[가-힣]") ? "Korean" : "English", kinds, ItemUses.All),
-                attachments, SightRules.SeeShape(kinds, ItemUses.All), 1600, ct);
-            string what = WorldRules.Text(found["what"], 80);
-            if ((bool?)found["found"] != true || what.Length == 0) throw new InvalidOperationException("I couldn’t identify it. Hold it in the middle of your view and try again.");
-            seen = WorldRules.Item(found, ItemKinds.Guess(what));
-            kind = ItemKinds.Find(seen.kind);
-            name = SightRules.Title(seen.name, what);
-            WorkStep(job, "Sculpting from the photo", .39f);
-            answer = await model.AskJsonAsync(SculptureDesign.Brief + "\nInclude a short object title in the user's language.",
-                SightRules.SculptNote(what, seen.modelPrompt), attachments, ShapeSchema(), 12000, ct);
-        }
-        else if (WorldRules.IsFirewood(name) || WorldRules.IsFirewood(words))
+        if (WorldRules.IsFirewood(name) || WorldRules.IsFirewood(words))
         {
             name = "Firewood";
             answer = WorldRules.FirewoodShape();
@@ -190,22 +170,13 @@ sealed partial class Stage
         WorldRules.Join(sculpture);
         if (sculpture.loose.Count != 0) throw new InvalidDataException("Some parts are disconnected.");
         string id = CreationId("item");
-        var item = new ItemDef { id = id, name = name, asked = words, kind = kind.id, uses = seen?.uses ?? kind.uses, sizeM = seen?.sizeM ?? Math.Max(WorldRules.MadeSizeMin, kind.sizeM),
-            color = seen?.color ?? kind.color, note = seen?.note ?? "", status = "ready", progress = 1, model = id + ".glb", parts = sculpture.parts, seat = sculpture.seat, top = sculpture.top,
+        var item = new ItemDef { id = id, name = name, asked = words, kind = kind.id, uses = kind.uses, sizeM = Math.Max(WorldRules.MadeSizeMin, kind.sizeM),
+            color = kind.color, note = "", status = "ready", progress = 1, model = id + ".glb", parts = sculpture.parts, seat = sculpture.seat, top = sculpture.top,
             madeUnixMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds(), script = RoomScriptExamples.ForKind(kind.id) ?? "" };
         WorkStep(job, "Checking mesh and materials", .81f);
-        var glb = GlbWriter.Write(PartMesh.Build(item.parts), item.name, seen == null ? item.sizeM : SightRules.Metres(seen.realCm));
+        var glb = GlbWriter.Write(PartMesh.Build(item.parts), item.name, item.sizeM);
         if (GlbWriter.Check(glb, out why) == null) throw new InvalidDataException(why);
-        return () =>
-        {
-            SaveCreation(new Creation { item = item }, glb, job, ct);
-            if (fromSight)
-            {
-                try { job.note = Path.GetRelativePath(DocumentRoot, ExportToDocuments(item, GeneratedModelFile(item.id))); }
-                catch (Exception e) when (e is IOException or UnauthorizedAccessException)
-                { job.note = "Saved to your bag. Download the GLB from the queue."; }
-            }
-        };
+        return () => SaveCreation(new Creation { item = item }, glb, job, ct);
     }
 
     static string CreationId(string prefix) => prefix + "-" + Guid.NewGuid().ToString("N")[..12];

@@ -15,13 +15,13 @@ sealed partial class Stage
         return photoPeer == peer && pendingPhoto != null ? (SightRules.MaxPictureBytes + 2) / 3 * 4 + 8192 : 2 * 1024 * 1024;
     }
 
-    async Task<byte[]> TakeObjectPhoto(string id, CancellationToken ct)
+    async Task<(byte[] bytes, EyeFrame frame)> TakeObjectPhoto(string id, CancellationToken ct)
     {
         var pending = new TaskCompletionSource<EyeFrame>(TaskCreationOptions.RunContinuationsAsynchronously);
         lock (Sync)
         {
             ct.ThrowIfCancellationRequested();
-            if (headset == null) throw new InvalidOperationException("The headset is disconnected.");
+            if (headset == null) throw new PhotoError("The headset is disconnected.");
             photoPeer = headset; pendingPhoto = pending; photoId = id;
             Send(headset, Msg.EyeRequest, new EyeRequest { id = id, maxSide = 1280 });
         }
@@ -29,21 +29,44 @@ sealed partial class Stage
         {
             EyeFrame frame;
             try { frame = await pending.Task.WaitAsync(TimeSpan.FromSeconds(SightRules.FrameSeconds), ct); }
-            catch (TimeoutException) { throw new InvalidOperationException("No picture arrived. Check headset camera access."); }
-            if (!frame.ok) throw new InvalidOperationException(frame.why == "denied" ? "Enable the headset camera to show me an object." : "The headset could not send a photo.");
+            catch (TimeoutException) { throw new PhotoError("No picture arrived. Check headset camera access."); }
+            if (!frame.ok) throw new PhotoError(frame.why == "denied" ? "Enable the headset camera to show me an object." : "The headset could not send a photo.");
             if (string.IsNullOrEmpty(frame.jpeg) || frame.jpeg.Length > (SightRules.MaxPictureBytes + 2) / 3 * 4 ||
-                frame.width is < 1 or > 1280 || frame.height is < 1 or > 1280) throw new InvalidOperationException("Unable to read the image dimensions.");
+                frame.width is < 1 or > 1280 || frame.height is < 1 or > 1280) throw new PhotoError("Unable to read the image dimensions.");
             byte[] bytes;
             try { bytes = Convert.FromBase64String(frame.jpeg); }
-            catch (FormatException) { throw new InvalidOperationException("Unable to read the camera image."); }
+            catch (FormatException) { throw new PhotoError("Unable to read the camera image."); }
             if (bytes.Length is < 200 or > SightRules.MaxPictureBytes || bytes[0] != 0xff || bytes[1] != 0xd8 ||
-                bytes[^2] != 0xff || bytes[^1] != 0xd9) throw new InvalidOperationException("Unable to read the JPEG.");
-            return bytes;
+                bytes[^2] != 0xff || bytes[^1] != 0xd9) throw new PhotoError("Unable to read the JPEG.");
+            return (bytes, frame);
         }
         finally
         {
             lock (Sync) if (pendingPhoto == pending) { photoId = null; photoPeer = null; pendingPhoto = null; }
         }
+    }
+
+    async Task<Action> CopyShownObject(WorkJob job, string words, bool identify, CancellationToken ct)
+    {
+        WorkStep(job, "Looking for the object in the room", .07f);
+        var (photo, frame) = await TakeObjectPhoto(job.id, ct);
+        try
+        {
+            var target = await PhotoObject.LocateAsync(Model, photo, words, frame, ct);
+            if (identify) return () => { job.note = $"I see a {target.Label}."; Say(job.note); };
+            string key = Environment.GetEnvironmentVariable("LP_TRIPO_KEY");
+            if (string.IsNullOrWhiteSpace(key)) key = ServiceKey("TRIPO_API_KEY", "LivingPartner.Tripo");
+            if (string.IsNullOrWhiteSpace(key)) throw new PhotoError($"I see a {target.Label}. Connect a Tripo key to make its 3D copy.");
+            using var tripo = new TripoClient(key);
+            var (item, glb) = await PhotoObject.CopyAsync(tripo, CreationId("item"), target, words, (p, step) => WorkStep(job, step, p), ct);
+            return () =>
+            {
+                SaveCreation(new Creation { item = item }, glb, job, ct);
+                job.title = item.name;
+                Say(SightRules.Line("bagged", false, item.name));
+            };
+        }
+        catch (RoomObjects.Unclear e) { throw new PhotoError(e.Message); }
     }
 
     void GotPhoto(Peer peer, EyeFrame frame)
@@ -53,20 +76,18 @@ sealed partial class Stage
 
     void CameraDisconnected(Peer peer)
     {
-        if (peer == photoPeer) pendingPhoto?.TrySetException(new InvalidOperationException("The headset disconnected during capture."));
+        if (peer == photoPeer) pendingPhoto?.TrySetException(new PhotoError("The headset disconnected during capture."));
     }
 
     bool TryExportModel(string words, out string reply)
     {
         reply = "";
         if (Matches(words, @"pdf|png|그림|문서|보고서|이미지|아이콘")) return false;
-        bool file = Matches(words, @"glb|3\s*[d디]\s*(모델|오브젝트|물건)?\s*(파일|저장|내보)|\b3d (file|model)\b");
+        bool file = SightRules.WantsModelFile(words) || Matches(words, @"glb|3\s*[d디]\s*(모델|오브젝트|물건)?\s*(파일|저장|내보)|\b3d (file|model)\b");
         if (!file && !Matches(words, @"맥북|맥으로|맥에|컴퓨터|바탕화면|데스크톱|pc|desktop|macbook|my mac")) return false;
-        if (!Matches(words, @"저장|내보내|보내|옮겨|가져|넣어|\b(export|save|send|carry|put|copy|bring)\b")) return false;
-        var made = bag.World.items.Where(i => IsCreationId(i.id, "item")).Reverse().ToArray();
-        var named = made.FirstOrDefault(i => words.Contains(i.name, StringComparison.OrdinalIgnoreCase));
-        if (!file && named == null && !Matches(words, @"방금\s*만든\s*(물건|모델|오브젝트)|(?:this|that|last) (object|shape|model)")) return false;
-        var item = named ?? made.FirstOrDefault();
+        if (!Matches(words, @"저장|내보내|보내|옮겨|가져|넣어|\b(export|save|send|carry|put|copy|bring|download|get|give)\b")) return false;
+        var item = SightRules.ExportTarget(bag.World.items.Where(i => IsCreationId(i.id, "item")), words);
+        if (!file && item == null && !Matches(words, @"방금\s*만든\s*(물건|모델|오브젝트)|(?:this|that|last) (object|shape|model)")) return false;
         if (item == null || GeneratedModelFile(item.id) is not {} src) { reply = "Make a 3D object first."; return true; }
         reply = QueueWork("task", item.name + " GLB export", words, (job, ct) =>
         {
@@ -76,7 +97,7 @@ sealed partial class Stage
                 ct.ThrowIfCancellationRequested();
                 string target = ExportToDocuments(item, src);
                 job.resultKind = "file"; job.resultId = target; job.note = Path.GetRelativePath(DocumentRoot, target);
-                Say(item.name + " saved to Documents/Yonder/Models.");
+                Say(item.name + " saved to your Models folder.");
             });
         });
         return true;
@@ -87,7 +108,7 @@ sealed partial class Stage
         string root = Path.Combine(DocumentRoot, "Models");
         Directory.CreateDirectory(root);
         string name = SightRules.FolderName(DateTime.Now, item.name, n => Path.Exists(Path.Combine(root, n)));
-        string pending = Path.Combine(root, ".bambi-" + Guid.NewGuid().ToString("N"));
+        string pending = Path.Combine(root, ".new-" + Guid.NewGuid().ToString("N"));
         Directory.CreateDirectory(pending);
         try
         {

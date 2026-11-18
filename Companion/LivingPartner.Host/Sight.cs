@@ -8,25 +8,7 @@ using Newtonsoft.Json.Linq;
 
 namespace LivingPartner.Host;
 
-/// <summary>
-/// "3D making: when I SHOW some real object in the MR environment, Nilo makes it and brings it into the PC."
-///   1. "이거 만들어 줘" (action makeFromSight; the rules and wordings: SightRules.cs) - a job in the work queue begins
-///      ("Looking at what you are holding") and the headset is asked for ONE picture (Msg.EyeRequest; MR/MrEyes.cs asks
-///      for its camera only then and shows that the partner is looking).
-///   2. The picture comes back (Msg.EyeFrame) - or not: the camera is not allowed, there is none, the desktop simulator.
-///      Then the partner says so and asks the user to describe the thing instead. (For checks without a headset the
-///      environment variable LP_EYE_TEST_IMAGE names a stand-in picture; never a camera of this PC.)
-///   3. The vision model says what the object is (name, size, colours, parts); the sculptor - the same that makes every
-///      thing out of simple solids - is given the PICTURE and sculpts that object ("Shaping it").
-///   4. The thing stands on the desk as an ordinary thing (ItemDef with parts: grab, place, put away), with its own
-///      rendered picture as its icon.
-///   5. Its shape is written as a real 3D file, Documents\Nilo\Models\<date> <name>\<name>.glb (GlbWriter: the very
-///      triangles the headset draws, PartMesh) with a PNG preview next to it, and the partner CARRIES it into the PC the
-///      way it carries documents (DocsHost: the show of kind "file", a copy on the Desktop, a click on it reveals the file).
-///      "의자 PC로 가져가 줘" (exportThing) does the same for any thing it sculpted earlier.
-/// The picture of the user's surroundings is held in memory for the two model calls and nowhere else: it is not written
-/// to disk and not kept. State is touched on the core thread only; the model calls run on the thread pool and post back.
-/// </summary>
+/// <summary>Captures a held object, stores its Tripo GLB with the inventory and exports the same file on request.</summary>
 public sealed class SightHost
 {
     readonly Core _core;
@@ -35,13 +17,14 @@ public sealed class SightHost
     {
         public string id = "", asked = "";
         public WorkJob job;
+        public TripoClient tripo;
+        public bool identify;
         public double deadline;
         public bool working;                    // the picture is here: the models are at it
         public CancellationTokenSource cts;
         public float sent;                      // the progress last told to the queue
     }
     Look _look;                                 // one at a time
-    string _carryDoc = ""; double _carryAt;     // the model whose file is carried into the PC in a moment
     readonly Dictionary<string, string> _docOf = new();      // thing -> the document (kind "model") its file is, this sitting
     int _asked, _made, _exported; string _last = "";
 
@@ -51,13 +34,10 @@ public sealed class SightHost
         core.Work.Cancelled += j => { if (_look != null && _look.job == j) Stop(_look, "", cancelled: true); };
     }
 
-    public object Diagnostics => new { asked = _asked, made = _made, exported = _exported, looking = _look != null, last = _last, effort = Effort, standIn = TestImage != null };
+    public object Diagnostics => new { asked = _asked, made = _made, exported = _exported, looking = _look != null, last = _last, provider = "Tripo image to 3D", standIn = TestImage != null };
 
     WorldState W => _core.State.world;
     bool Ko => _core.Talk.LastLanguage == "Korean";
-    bool Enabled => _core.Talk.Enabled;
-    /// <summary>How long the sculptor thinks with the photo in front of it (none | low | medium | high): LP_OPENAI_SIGHT_EFFORT. A likeness takes more looking than a thing made up from a word.</summary>
-    internal static string Effort => Environment.GetEnvironmentVariable("LP_OPENAI_SIGHT_EFFORT") is { Length: > 0 } e ? e : "medium";
     /// <summary>A stand-in picture for checks without a headset camera (the simulator, a test): the file LP_EYE_TEST_IMAGE names, when it is there.</summary>
     static string TestImage => (_testImage.Length > 0 ? _testImage : Environment.GetEnvironmentVariable("LP_EYE_TEST_IMAGE")) is { Length: > 0 } p && File.Exists(p) ? p : null;
     static string _testImage = "";
@@ -82,21 +62,21 @@ public sealed class SightHost
     public string Act(Client c, string action, string thing, Utterance u)
     {
         Log.Info($"sight: asked: {action} '{WorldRules.Short(thing, 40)}' ('{WorldRules.Short(u?.text, 70)}')");
-        return action == SightRules.Export ? Export(thing ?? "") : Make(u?.text ?? thing ?? "");
+        return action == SightRules.Export ? Export(thing ?? "") : Make(u?.text ?? thing ?? "", action == SightRules.Identify);
     }
 
     // ------------------------------------------------------------------ 1. asked: the headset is asked for a picture
-    string Make(string asked)
+    string Make(string asked, bool identify)
     {
         _asked++;
-        if (!Enabled) return Tell("noKey", "worried", 5);
+        var tripo = identify ? null : _core.World.Tripo();
         if (_look != null || _core.World.Making) return Tell("busy", "neutral");
-        if (W.items.Count >= WorldRules.MaxItems) return Tell("full", "worried", 5);
+        if (!identify && W.items.Count >= WorldRules.MaxItems) return Tell("full", "worried", 5);
         string standIn = TestImage;
         if (!_core.HasMr && standIn == null) { _last = "no headset"; return Tell("noHeadset", "curious", 6); }
 
-        var look = _look = new Look { id = "eye-" + Maker.NewId(), asked = asked.Trim(), deadline = HostClock.Now + SightRules.FrameSeconds, cts = new CancellationTokenSource(TimeSpan.FromMinutes(7)) };
-        look.job = _core.Work.Begin("model", "3D model of what you showed", look.asked, "mr", "sculptor " + Sculptor.Model(_core.Talk.Ai));
+        var look = _look = new Look { identify = identify, tripo = tripo, id = "eye-" + Maker.NewId(), asked = asked.Trim(), deadline = HostClock.Now + SightRules.FrameSeconds, cts = new CancellationTokenSource(TimeSpan.FromMinutes(7)) };
+        look.job = _core.Work.Begin(identify || tripo == null ? "look" : "model", identify ? "Identify room object" : "Copy room object", look.asked, "mr", "Room object detection");
         _core.Work.Step(look.job, SightRules.StepLook, 0.04f);
         if (_core.HasMr)
         {
@@ -127,7 +107,7 @@ public sealed class SightHost
                 return;
             }
             Log.Info($"sight: {look.id}: picture from the headset: {f.width}x{f.height}, {jpeg.Length / 1024} KB, {(f.cropped ? "cut round the hands" : "the middle of the view")}");
-            Begin(look, jpeg);
+            Begin(look, jpeg, f);
             return;
         }
         string why = f.why is "denied" or "nocamera" or "simulator" ? f.why : "nocamera";
@@ -152,7 +132,7 @@ public sealed class SightHost
     }
 
     /// <summary>Over without a thing: the job ends, the partner says why (and what the user can do instead).</summary>
-    void Stop(Look look, string why, bool cancelled = false)
+    void Stop(Look look, string why, bool cancelled = false, string detail = null)
     {
         if (_look != look) return;
         _look = null;
@@ -163,10 +143,11 @@ public sealed class SightHost
             "denied" => "The headset's camera is not allowed", "nocamera" => "The headset's camera gave no picture", "timeout" => "No picture arrived from the headset",
             "notFound" => "Nothing to copy could be made out in the picture", _ => cancelled ? "" : "It could not be sculpted",
         };
-        _core.Work.End(look.job, false, "", "", note, cancelled);
+        _core.Work.End(look.job, false, "", "", detail ?? note, cancelled);
         Log.Info($"sight: {look.id}: over without a thing ({(cancelled ? "cancelled" : why)})");
         if (cancelled) return;
-        string line = Tell(why, why == "notFound" ? "curious" : "worried", 7);
+        string line = why == "notFound" && detail != null ? detail : Tell(why, "worried", 7);
+        if (why == "notFound" && detail != null) _core.Say(line, "curious", 5, "room object unclear");
         // (so that "it's a mug" a moment later is understood as the thing to make)
         _core.Talk.Remember($"The user held something up and asked you to make it, but you could not see it ({note.ToLowerInvariant()}). You said: \"{line}\" If they now say what it is, make it with makeItem.");
     }
@@ -178,21 +159,16 @@ public sealed class SightHost
             Log.Info($"sight: {look.id}: no answer from the headset in {SightRules.FrameSeconds:0} s");
             if (!StandIn(look, "no answer from the headset")) Stop(look, "timeout");
         }
-        if (_carryDoc.Length > 0 && now >= _carryAt)
-        {
-            string id = _carryDoc; _carryDoc = "";
-            _core.Docs.DeliverModel(id);
-        }
     }
 
     // ------------------------------------------------------------------ 3. seen and sculpted
-    void Begin(Look look, byte[] picture)
+    void Begin(Look look, byte[] picture, EyeFrame frame = null)
     {
         look.working = true;
         _core.Work.Step(look.job, SightRules.StepSee, 0.10f);
-        var ai = _core.Talk.Ai;
-        string lang = _core.Talk.LastLanguage;
-        _ = Task.Run(() => Build(look, picture, ai, lang));
+        var ai = _core.Talk.Enabled ? _core.Talk.Ai : null;
+        var ct = look.cts.Token;
+        _ = Task.Run(() => Build(look, picture, ai, frame, ct));
     }
 
     void Progress(Look look, string step, float p)
@@ -203,55 +179,48 @@ public sealed class SightHost
         _core.Work.Step(look.job, step, p);
     }
 
-    async Task Build(Look look, byte[] picture, OpenAiClient ai, string lang)
+    async Task Build(Look look, byte[] picture, OpenAiClient ai, EyeFrame frame, CancellationToken ct)
     {
-        var ct = look.cts.Token;
+        string id = "item-" + Maker.NewId();
+        string pending = Path.Combine(HostPaths.World, id + ".pending");
         try
         {
-            var seen = await SeeAsync(ai, picture, look.asked, lang, ct);
-            if (!seen.found) { _core.Post(() => Stop(look, "notFound")); return; }
-            string title = SightRules.Title(seen.what);
-            _core.Post(() =>
+            var target = await PhotoObject.LocateAsync(ai, picture, look.asked, frame, ct);
+            if (look.identify || look.tripo == null)
             {
-                if (_look != look) return;
-                _core.Work.Rename(look.job, "3D model: " + title);
-                Progress(look, SightRules.StepShape, 0.22f);
-                Tell("seen", "happy", 4, seen.idea.name);
-            });
-            string id = "item-" + Maker.NewId();
-            var s = await ShapeAsync(ai, id, seen, picture, look.asked, ct, p => _core.Post(() => Progress(look, "", 0.22f + 0.62f * p)));
-            if (s == null) { _core.Post(() => Stop(look, "failed")); return; }
-            _core.Post(() => Progress(look, SightRules.StepColour, 0.88f));
-            var made = Files(s.parts, title, SightRules.Metres(seen.idea.realCm));
-            _core.Post(() => Finish(look, id, seen, s, title, made));
+                _core.Post(() =>
+                {
+                    if (_look != look) return;
+                    _look = null; look.cts.Dispose();
+                    _last = target.Label;
+                    string line = $"I see a {target.Label}." + (look.identify ? "" : " Connect a Tripo key to make its 3D copy.");
+                    _core.Work.End(look.job, look.identify, "", "", line);
+                    _core.Say(line, "happy", 5, "room object recognized");
+                });
+                return;
+            }
+            var (item, glb) = await PhotoObject.CopyAsync(look.tripo, id, target, look.asked,
+                (p, step) => _core.Post(() => Progress(look, step, p)), ct);
+            Directory.CreateDirectory(HostPaths.World);
+            await File.WriteAllBytesAsync(pending, glb, ct);
+            ct.ThrowIfCancellationRequested();
+            _core.Post(() => Finish(look, item, pending, ct));
         }
-        catch (OperationCanceledException) { _core.Post(() => Stop(look, "failed")); }
-        catch (Exception e) { Log.Warn($"sight: {look.id}: {e.Message}"); _core.Post(() => Stop(look, "failed")); }
-    }
-
-    internal sealed class Seen { public bool found; public string what = ""; public ItemIdea idea = new(); public JObject raw; public long ms; }
-
-    /// <summary>What is the object in the picture? (the vision model, one call)</summary>
-    internal static async Task<Seen> SeeAsync(OpenAiClient ai, byte[] picture, string asked, string lang, CancellationToken ct)
-    {
-        var sw = Stopwatch.StartNew();
-        var kinds = ItemKinds.All.Select(k => k.id).ToList();
-        var json = await ai.AskJsonAsync(SightRules.SeeSystem, SightRules.SeeAsk(asked, lang, kinds, ItemUses.All), new[] { (Mime(picture), picture, "held.jpg") }, SightRules.SeeShape(kinds, ItemUses.All), 1800, ct, ai.VisionModel, "low");
-        string what = WorldRules.Text(json["what"], 60).Trim();
-        var seen = new Seen { found = (bool?)json["found"] == true && what.Length > 0, what = what, raw = json, ms = sw.ElapsedMilliseconds };
-        if (seen.found)
+        catch (Exception e)
         {
-            seen.idea = WorldRules.Item(json, ItemKinds.Guess(what));
-            if (seen.idea.name.Length == 0) seen.idea.name = SightRules.Title(what);
+            Discard(pending);
+            string reason = e is RoomObjects.Unclear ? "notFound" : "tripoFailed";
+            if (e is not OperationCanceledException) Log.Warn($"sight: {look.id}: {e.Message}");
+            _core.Post(() => Stop(look, reason, detail: e.Message));
         }
-        Log.Info($"sight: seen in {seen.ms} ms: {(seen.found ? $"'{what}' ('{seen.idea.name}', kind={seen.idea.kind}, {seen.idea.realCm:0} cm, {seen.idea.color})" : "nothing to copy")}");
-        return seen;
     }
 
-    /// <summary>The sculptor with the picture in front of it.</summary>
-    internal static Task<Sculpture> ShapeAsync(OpenAiClient ai, string id, Seen seen, byte[] picture, string asked, CancellationToken ct, Action<float> progress = null, Action<JObject> answer = null, string effort = null) =>
-        Sculptor.SculptAsync(ai, id, seen.idea, asked.Length > 0 ? asked : seen.what, ct, progress, answer,
-            new[] { (Mime(picture), picture, "held.jpg") }, SightRules.SculptNote(seen.what, seen.idea.modelPrompt), string.IsNullOrEmpty(effort) ? Effort : effort);
+    static void Discard(string path)
+    {
+        try { File.Delete(path); }
+        catch (IOException e) { Log.Warn("sight: pending model cleanup: " + e.Message); }
+        catch (UnauthorizedAccessException e) { Log.Warn("sight: pending model cleanup: " + e.Message); }
+    }
 
     internal static string Mime(byte[] b) =>
         b != null && b.Length >= 3 && b[0] == 0xFF && b[1] == 0xD8 && b[2] == 0xFF ? "image/jpeg" : b != null && b.Length >= 8 && b[0] == 0x89 && b[1] == 0x50 && b[2] == 0x4E && b[3] == 0x47 ? "image/png" : "";
@@ -303,7 +272,7 @@ public sealed class SightHost
         string stem = SightRules.FileStem(title), glb = Path.Combine(folder, stem + ".glb"), png = Path.Combine(folder, stem + ".png");
         File.WriteAllBytes(glb, made.glb);
         if (made.png != null) File.WriteAllBytes(png, made.png);
-        return (folder, glb, png);
+        return (folder, glb, made.png == null ? "" : png);
     }
 
     /// <summary>The thing's file joins the documents of this sitting (kind "model"), so that it is carried, placed and revealed like one. "" when it could not be written.</summary>
@@ -316,59 +285,55 @@ public sealed class SightHost
             string doc = _core.Docs.AddModel(title, asked, folder, glb, png, made.png);
             _docOf[item.id] = doc;
             _exported++;
-            Log.Info($"sight: {item.id}: 3D file written: {glb} ({made.glb.Length / 1024} KB, {made.facts.triangles} triangles, {made.facts.primitives} colours, {made.facts.max[0] - made.facts.min[0]:0.000} x {made.facts.max[1] - made.facts.min[1]:0.000} x {made.facts.max[2] - made.facts.min[2]:0.000} m) - document {doc}");
+            Log.Info($"sight: {item.id}: exported {made.glb.Length} bytes to {glb} ({doc})");
             return doc;
         }
         catch (Exception e) { Log.Warn($"sight: {item.id}: the 3D file could not be written: {e.Message}"); return ""; }
     }
 
-    // ------------------------------------------------------------------ 4. the thing stands on the desk
-    void Finish(Look look, string id, Seen seen, Sculpture s, string title, Made made)
+    void Finish(Look look, ItemDef item, string pending, CancellationToken ct)
     {
-        if (_look != look) return;      // cancelled meanwhile
-        _look = null;
-        try { look.cts.Dispose(); } catch { }
-        var idea = seen.idea;
-        var item = new ItemDef
+        try
         {
-            id = id, name = idea.name, asked = look.asked.Length > 0 ? look.asked : seen.what, kind = idea.kind, uses = idea.uses, sizeM = idea.sizeM, color = idea.color, note = idea.note,
-            status = "ready", progress = 1, inRoom = true, madeUnixMs = HostClock.UnixMs, parts = s.parts, seat = s.seat, top = s.top,
-        };
-        W.items.Add(item);
-        Activities.Arrange(W.items, item);
-        // its icon: the thing itself as it was sculpted, cut out (nothing is drawn by an image model for it)
-        if (made.icon != null)
-            try { File.WriteAllBytes(Path.Combine(HostPaths.World, id + ".png"), made.icon); item.icon = id + ".png"; }
-            catch (Exception e) { Log.Warn($"sight: {id}: its icon could not be written: {e.Message}"); }
-        _core.World.Changed();
-        _made++; _last = seen.what;
+            if (_look != look) return;
+            if (ct.IsCancellationRequested) { Stop(look, "tripoFailed"); return; }
+            if (W.items.Count >= WorldRules.MaxItems) { Stop(look, "full"); return; }
+            File.Move(pending, Path.Combine(HostPaths.World, item.model));
+        }
+        catch (Exception e) { Stop(look, "tripoFailed", detail: e.Message); return; }
+        finally { Discard(pending); }
 
-        _core.Work.Step(look.job, SightRules.StepFile, 0.95f);
-        string doc = Register(item, made, title, item.asked);
-        _core.Work.End(look.job, true, "item", item.id, doc.Length > 0 ? "It is on the desk; its 3D file goes into your computer" : "It is on the desk");
-        string line = ((item.note.Length > 0 ? item.note + " " : "") + SightRules.Line(doc.Length > 0 ? "done" : "doneNoFile", Ko)).Trim();
-        _core.Say(line, "happy", 6, "sight: made");
-        _core.Talk.Remember($"The user held up a real object ({seen.what}) and you sculpted a copy of it: \"{item.name}\". It stands on the desk; it is for: {string.Join(", ", item.uses)}." +
-                            (doc.Length > 0 ? " Its 3D file (.glb) is saved on their computer and you are carrying it in (exportThing carries a thing's 3D file into the computer again)." : ""));
-        Log.Info($"sight: {id} '{item.name}' ({seen.what}) is on the desk: {s.parts.Count} parts, height {s.height:0.00}{(doc.Length > 0 ? "; its file is carried into the PC in a moment" : "")}");
-        if (doc.Length > 0) { _carryDoc = doc; _carryAt = HostClock.Now + SightRules.CarryAfterSeconds; }
+        W.items.Add(item);
+        _core.World.Changed();
+        _made++; _last = item.name;
+        _look = null;
+        look.cts.Dispose();
+        _core.Work.Rename(look.job, item.name);
+        _core.Work.End(look.job, true, "item", item.id, "Saved to your bag");
+        Tell("bagged", "happy", 5, item.name);
+        _core.Talk.Remember($"You made a 3D copy of the object the user showed. Its name is {item.name}. It is in the bag and can be placed or exported.");
     }
 
-    // ------------------------------------------------------------------ "PC로 가져가 줘": a thing sculpted earlier
     string Export(string thing)
     {
-        var sculpted = W.items.Where(i => i.status == "ready" && i.parts != null && i.parts.Count > 0).ToList();
-        var item = thing.Trim().Length > 0 ? WorldRules.FindItem(W.items, thing) : sculpted.LastOrDefault();
+        var item = SightRules.ExportTarget(W.items, thing);
         if (item == null) return Tell("noThing", "curious", 5);
-        if (item.parts == null || item.parts.Count == 0) return Tell("noShape", "neutral", 5, item.name);
         if (!_docOf.TryGetValue(item.id, out string doc) || !_core.Docs.Has(doc))
         {
-            // (its English name when it has one: the file is for any program on the PC)
             string title = SightRules.Title(item.name);
-            doc = Register(item, Files(item.parts, title, SightRules.Metres(0)), title, item.asked);
+            Made made;
+            if (!string.IsNullOrEmpty(item.model))
+            {
+                if (!item.model.EndsWith(".glb", StringComparison.OrdinalIgnoreCase) || !Maker.Exists(item.model))
+                    return Tell("notWritten", "worried", 5);
+                try { made = new Made { glb = File.ReadAllBytes(Path.Combine(HostPaths.World, item.model)) }; }
+                catch (IOException) { return Tell("notWritten", "worried", 5); }
+                catch (UnauthorizedAccessException) { return Tell("notWritten", "worried", 5); }
+            }
+            else made = Files(item.parts, title, SightRules.Metres(0));
+            doc = Register(item, made, title, item.asked);
             if (doc.Length == 0) return Tell("notWritten", "worried", 5);
         }
-        _carryDoc = "";
         return _core.Docs.DeliverModel(doc);
     }
 
@@ -378,63 +343,34 @@ public sealed class SightHost
         try
         {
             byte[] glb = File.ReadAllBytes(path);
-            var facts = GlbWriter.Check(glb, out string why);
-            if (facts == null) { Console.WriteLine($"NOT VALID: {Path.GetFileName(path)}: {why}"); return 1; }
             var model = GlbReader.Read(glb, out string unreadable);
             if (model == null) { Console.WriteLine($"NOT READABLE: {Path.GetFileName(path)}: {unreadable}"); return 1; }
-            Console.WriteLine($"OK: {Path.GetFileName(path)}: {glb.Length} bytes, glTF 2.0, '{facts.name}', {facts.primitives} primitives / {facts.materials} materials, {facts.vertices} vertices, {facts.triangles} triangles, " +
-                              $"size {facts.max[0] - facts.min[0]:0.000} x {facts.max[1] - facts.min[1]:0.000} x {facts.max[2] - facts.min[2]:0.000} m, stands on y = {facts.min[1]:0.000}; GlbReader: {model.indices.Length / 3} triangles in {model.primitives} primitives");
+            Console.WriteLine($"OK: {Path.GetFileName(path)}, {glb.Length} bytes, {model.indices.Length / 3} triangles in {model.primitives} primitives");
             return 0;
         }
         catch (Exception e) { Console.WriteLine("check-glb: " + e.Message); return 2; }
     }
 
-    // ------------------------------------------------------------------ the command line: trying it on a photo
-    /// <summary>
-    /// `--sculpt-photo <picture> [--say "words"] [--effort low|medium|high] --out <folder>`: looks at a picture as the
-    /// host does for "이거 만들어 줘", sculpts what it shows and writes into the folder: the thing (item.json), what the
-    /// models answered (raw.json), the 3D file and its preview. Starts nothing else. 0 = made, 1 = seen but not
-    /// sculpted, 2 = nothing could be done.
-    /// </summary>
+    /// <summary>Runs the same photo pipeline as a headset request and writes the bag entry and original GLB.</summary>
     public static async Task<int> RunAsync(string picturePath, string words, string effort, string outFolder)
     {
-        var report = new JObject { ["picture"] = Path.GetFileName(picturePath), ["asked"] = words };
-        int code = 2;
-        string folder = Path.GetFullPath(outFolder);
-        Directory.CreateDirectory(folder);
         try
         {
-            string key = AiKey.Load(out _);
-            if (key == null) throw new Exception("there is no OpenAI key");
-            var ai = new OpenAiClient(key);
-            byte[] picture = File.ReadAllBytes(picturePath);
-            if (Mime(picture).Length == 0) throw new Exception("the picture is neither a JPEG nor a PNG");
-            using var cts = new CancellationTokenSource(TimeSpan.FromMinutes(8));
-            bool korean = words.Any(ch => ch >= 0xAC00 && ch <= 0xD7A3);
-            var seen = await SeeAsync(ai, picture, words, korean ? "Korean" : "English", cts.Token);
-            report["seen"] = seen.raw; report["seenMs"] = seen.ms;
-            if (!seen.found) throw new Exception("nothing to copy was made out in the picture");
-            string title = SightRules.Title(seen.what), id = "item-" + Maker.NewId();
-            var answers = new JArray();
-            var sw = Stopwatch.StartNew();
-            var s = await ShapeAsync(ai, id, seen, picture, words, cts.Token, null, a => answers.Add(a), effort);
-            report["model"] = Sculptor.Model(ai); report["effort"] = string.IsNullOrEmpty(effort) ? Effort : effort; report["sculptMs"] = sw.ElapsedMilliseconds; report["answers"] = answers;
-            code = 1;
-            if (s == null) throw new Exception("it was seen but could not be sculpted");
-            var item = new ItemDef { id = id, name = seen.idea.name, asked = words, kind = seen.idea.kind, uses = seen.idea.uses, sizeM = seen.idea.sizeM, color = seen.idea.color, note = seen.idea.note, status = "ready", progress = 1, inRoom = true, parts = s.parts, seat = s.seat, top = s.top };
-            File.WriteAllText(Path.Combine(folder, "item.json"), Proto.ToJson(item, true), new UTF8Encoding(false));
-            var made = Files(s.parts, title, SightRules.Metres(seen.idea.realCm));
-            if (!made.Ok) throw new Exception("no 3D file: " + made.why);
-            string stem = SightRules.FileStem(title);
-            File.WriteAllBytes(Path.Combine(folder, stem + ".glb"), made.glb);
-            File.WriteAllBytes(Path.Combine(folder, stem + ".png"), made.png);
-            File.WriteAllBytes(Path.Combine(folder, stem + ".icon.png"), made.icon);
-            report["file"] = stem + ".glb"; report["triangles"] = made.facts.triangles; report["colours"] = made.facts.primitives;
-            code = 0;
-            Console.WriteLine($"{seen.what}: {s.parts.Count} parts, height {s.height:0.00}, {made.facts.triangles} triangles in {sw.Elapsed.TotalSeconds:0.0} s -> {Path.Combine(folder, stem + ".glb")}");
+            string key = TripoKey.Load(out _) ?? throw new InvalidOperationException("No Tripo API key is configured.");
+            using var tripo = new TripoClient(key, Log.Info);
+            var visionKey = AiKey.Load(out _);
+            var ai = string.IsNullOrEmpty(visionKey) ? null : new OpenAiClient(visionKey);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromMinutes(8));
+            var target = await PhotoObject.LocateAsync(ai, await File.ReadAllBytesAsync(picturePath), words, null, timeout.Token);
+            var result = await PhotoObject.CopyAsync(tripo, "item-" + Maker.NewId(), target, words,
+                (p, step) => Console.WriteLine($"{p:P0} {step}"), timeout.Token);
+            Directory.CreateDirectory(outFolder);
+            File.WriteAllBytes(Path.Combine(outFolder, result.item.model), result.glb);
+            File.WriteAllText(Path.Combine(outFolder, "item.json"), Proto.ToJson(result.item, true));
+            Console.WriteLine(Path.Combine(outFolder, result.item.model));
+            return 0;
         }
-        catch (Exception e) { report["error"] = e.Message; Console.WriteLine("sculpt-photo: " + e.Message); }
-        try { report["log"] = new JArray(Log.Recent.ToArray()); File.WriteAllText(Path.Combine(folder, "raw.json"), report.ToString(), new UTF8Encoding(false)); } catch { }
-        return code;
+        catch (RoomObjects.Unclear) { Console.WriteLine("No held object could be identified."); return 1; }
+        catch (Exception e) { Console.WriteLine("sculpt-photo: " + e.Message); return 2; }
     }
 }

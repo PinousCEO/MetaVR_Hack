@@ -1,42 +1,9 @@
 using System.Globalization;
 using System.Net.Http.Headers;
-using System.Security.Cryptography;
 using System.Text;
 using Newtonsoft.Json.Linq;
 
 namespace LivingPartner.Host;
-
-/// <summary>
-/// Where the Tripo key comes from: the LP_TRIPO_KEY or TRIPO_API_KEY environment variable, or a file in the host's data
-/// folder that only this Windows user can decrypt (DPAPI). It is written by tools\Set-TripoKey.ps1. Like the OpenAI key
-/// it is never logged, never put in a snapshot and never stored in the repository.
-/// </summary>
-public static class TripoKey
-{
-    public static string File => Path.Combine(HostPaths.Root, "tripo.key.dpapi");
-
-    public static string Load(out string source)
-    {
-        source = "";
-        // our own name first, so that this app can be given a key of its own on a machine where another tool sets TRIPO_API_KEY
-        foreach (string name in new[] { "LP_TRIPO_KEY", "TRIPO_API_KEY" })
-        {
-            string env = Environment.GetEnvironmentVariable(name);
-            if (!string.IsNullOrWhiteSpace(env)) { source = "environment"; return env.Trim(); }
-        }
-        try
-        {
-            if (System.IO.File.Exists(File))
-            {
-                string key = Encoding.UTF8.GetString(ProtectedData.Unprotect(System.IO.File.ReadAllBytes(File), null, DataProtectionScope.CurrentUser)).Trim();
-                if (key.Length > 0) { source = "protected file"; return key; }
-            }
-        }
-        // only the kind of error is logged: the message of a decryption error says nothing useful and nothing of the key may leak
-        catch (Exception e) { Log.Warn("the stored Tripo key could not be read: " + e.GetType().Name); }
-        return null;
-    }
-}
 
 /// <summary>
 /// Text to a 3D model with Tripo's API, version 3 (https://developers.tripo3d.ai/en/docs): a task is created, asked
@@ -47,7 +14,7 @@ public static class TripoKey
 /// Errors come as { code, message, suggestion } with an HTTP status; code 2010 (HTTP 403) means there is not enough credit.
 /// Nothing here touches the rest of the host: it needs a key and gives back bytes.
 /// </summary>
-public sealed class TripoClient
+public sealed class TripoClient : IDisposable
 {
     /// <summary>The geometry model. v3.1 is the one the documentation recommends; "P1-20260311" and "P2-20260801" are Tripo's low-poly models.</summary>
     public readonly string Model = Setting("LP_TRIPO_MODEL") ?? "v3.1-20260211";
@@ -63,17 +30,21 @@ public sealed class TripoClient
 
     readonly HttpClient _http, _plain;
 
-    public TripoClient(string key)
+    readonly Action<string> log;
+    public void Dispose() { _http.Dispose(); _plain.Dispose(); }
+
+    public TripoClient(string key, Action<string> log = null, HttpMessageHandler api = null, HttpMessageHandler downloads = null)
     {
         if (string.IsNullOrWhiteSpace(key)) throw new ArgumentException("no Tripo key");
-        _http = new HttpClient { BaseAddress = new Uri("https://openapi.tripo3d.ai/v3/"), Timeout = TimeSpan.FromSeconds(30) };
+        this.log = log ?? (_ => { });
+        _http = new HttpClient(api ?? new HttpClientHandler()) { BaseAddress = new Uri("https://openapi.tripo3d.ai/v3/"), Timeout = TimeSpan.FromSeconds(30) };
         // a key with a line break or another character that cannot go into a header makes .NET throw an error whose
         // text QUOTES the value: that error must not travel on, so it is replaced by one that says nothing of the key
         try { _http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", key.Trim()); }
         catch (FormatException) { throw new ArgumentException("the Tripo key contains characters that cannot be sent (was something else pasted with it?)"); }
         // The finished file lies on a storage server, at an address that already carries its own permission. It is
         // fetched by a second client WITHOUT the Authorization header: the key is for Tripo's API and nobody else.
-        _plain = new HttpClient { Timeout = TimeSpan.FromSeconds(120), MaxResponseContentBufferSize = 96L * 1024 * 1024 };
+        _plain = new HttpClient(downloads ?? new HttpClientHandler()) { Timeout = TimeSpan.FromSeconds(120), MaxResponseContentBufferSize = 96L * 1024 * 1024 };
     }
 
     /// <summary>A failed call. Transient: the network, a rate limit or the server - asking again may work.</summary>
@@ -117,8 +88,34 @@ public sealed class TripoClient
     {
         prompt = (prompt ?? "").Trim();
         if (prompt.Length == 0) throw new Exception("Tripo: there is nothing to make (the description is empty)");
-        if (prompt.Length > MaxPrompt) { Log.Warn($"tripo: the description is {prompt.Length} characters long, cut to {MaxPrompt}"); prompt = prompt[..MaxPrompt]; }
+        if (prompt.Length > MaxPrompt) { log($"tripo: the description is {prompt.Length} characters long, cut to {MaxPrompt}"); prompt = prompt[..MaxPrompt]; }
 
+        return await Generate("generation/text-to-model", Request(prompt, faceLimit), progress, ct);
+    }
+
+    public async Task<byte[]> ImageToModelAsync(byte[] photo, Action<float, string> progress, CancellationToken ct)
+    {
+        string mime = photo is [0xff, 0xd8, 0xff, ..] ? "image/jpeg" :
+            photo is [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, ..] ? "image/png" : "";
+        if (mime.Length == 0 || photo.Length > 3 * 1024 * 1024)
+            throw new InvalidDataException("The object photo must be a JPEG or PNG up to 3 MB.");
+        var file = new ByteArrayContent(photo);
+        file.Headers.ContentType = new MediaTypeHeaderValue(mime);
+        using var form = new MultipartFormDataContent();
+        form.Add(file, "file", mime == "image/png" ? "object.png" : "object.jpg");
+        JToken uploaded = await Send(HttpMethod.Post, "files", form, "uploading the object photo", ct);
+        string token = Text(uploaded["file_token"]);
+        if (token.Length == 0) throw new InvalidDataException("Tripo did not return an image reference.");
+        var request = Request(null, 8000);
+        request["input"] = token;
+        byte[] glb = await Generate("generation/image-to-model", request, progress, ct);
+        if (LivingPartner.Shared.GlbReader.Read(glb, out string why) == null)
+            throw new InvalidDataException("The headset cannot open this model. " + why);
+        return glb;
+    }
+
+    async Task<byte[]> Generate(string endpoint, JObject request, Action<float, string> progress, CancellationToken ct)
+    {
         // one clock for the whole job (queue + making + download), on top of the caller's own cancellation
         using var limit = CancellationTokenSource.CreateLinkedTokenSource(ct);
         limit.CancelAfter(Limit);
@@ -131,7 +128,7 @@ public sealed class TripoClient
         void Report(float p, string text)
         {
             shown = Math.Clamp(Math.Max(p, shown), 0f, 1f);
-            try { progress?.Invoke(shown, text); } catch (Exception e) { Log.Warn("tripo: the progress callback failed: " + e.Message); }
+            try { progress?.Invoke(shown, text); } catch (Exception e) { log("tripo: the progress callback failed: " + e.Message); }
         }
 
         string taskId = "";
@@ -141,11 +138,11 @@ public sealed class TripoClient
             Report(0f, "asking Tripo for a model");
             // Not repeated when it fails: the task may have been created although the answer got lost, and a second
             // request would then be a second model on the bill.
-            JToken made = await Call(HttpMethod.Post, "generation/text-to-model", Request(prompt, faceLimit), "creating the task", t);
+            JToken made = await Call(HttpMethod.Post, endpoint, request, "creating the task", t);
             taskId = Text(made["task_id"]);
             if (taskId.Length == 0) taskId = Text(made["id"]);
             if (taskId.Length == 0) throw new Exception("Tripo: the request was accepted but no task id came back");
-            Log.Info($"tripo: task {taskId} created (model={Model} faces<={faceLimit} pbr={Pbr} texture={TextureQuality}) for '{prompt}'");
+            log($"tripo: task {taskId} created (model={Model} faces<={request["face_limit"]} pbr={Pbr} texture={TextureQuality}, endpoint={endpoint})");
             Report(0.02f, "waiting in Tripo's queue");
 
             JToken output = null;
@@ -162,12 +159,12 @@ public sealed class TripoClient
                 {
                     // one lost answer must not throw away a model that is being made (and paid for) at this moment
                     misses++;
-                    Log.Warn($"tripo: {p.Message} (asking again, {misses}/{MaxMisses})");
+                    log($"tripo: {p.Message} (asking again, {misses}/{MaxMisses})");
                     continue;
                 }
                 string status = Text(task["status"]).ToLowerInvariant();
                 int percent = Math.Clamp((int)Math.Round(Number(task["progress"]) ?? 0), 0, 100);
-                if (status != lastStatus) { Log.Info($"tripo: task {taskId} is {status} ({percent}%) after {sw.Elapsed.TotalSeconds:0} s"); lastStatus = status; }
+                if (status != lastStatus) { log($"tripo: task {taskId} is {status} ({percent}%) after {sw.Elapsed.TotalSeconds:0} s"); lastStatus = status; }
                 switch (status)
                 {
                     case "success":
@@ -199,7 +196,7 @@ public sealed class TripoClient
             Report(0.92f, "downloading the model");
             byte[] glb = await Download(url, t);
             string what = Inspect(glb);
-            Log.Info($"tripo: task {taskId} done in {sw.Elapsed.TotalSeconds:0} s: {glb.Length / 1024} KB from {new Uri(url).Host}, {what}{(cost == null ? "" : ", cost " + cost.Value.ToString("0.##", CultureInfo.InvariantCulture) + " credits")}");
+            log($"tripo: task {taskId} done in {sw.Elapsed.TotalSeconds:0} s: {glb.Length / 1024} KB from {new Uri(url).Host}, {what}{(cost == null ? "" : ", cost " + cost.Value.ToString("0.##", CultureInfo.InvariantCulture) + " credits")}");
             Report(1f, "done");
             return glb;
         }
@@ -219,7 +216,6 @@ public sealed class TripoClient
         bool v3 = Model.StartsWith("v3", StringComparison.OrdinalIgnoreCase);
         var body = new JObject
         {
-            ["prompt"] = prompt,
             ["model"] = Model,          // required in version 3 of the API; there is no default
             // texture = true: the model comes painted (false would be bare grey geometry)
             ["texture"] = true,
@@ -228,6 +224,7 @@ public sealed class TripoClient
             // several times larger. Careful: pbr = true would force texture = true as well.
             ["pbr"] = Pbr,
         };
+        if (prompt != null) body["prompt"] = prompt;
         // face_limit: the most triangles the mesh may have - what keeps it light enough for a headset. Left out, Tripo
         // decides by itself and gives hundreds of thousands. The low-poly models accept a narrower range than the others.
         if (faceLimit > 0)
@@ -296,7 +293,7 @@ public sealed class TripoClient
             }
             catch (OperationCanceledException) when (!ct.IsCancellationRequested) { last = new Exception($"Tripo: downloading the model took longer than {_plain.Timeout.TotalSeconds:0} s"); }
             catch (HttpRequestException e) { last = new Exception("Tripo: downloading the model failed: " + e.Message); }
-            Log.Warn($"tripo: {last.Message} (attempt {attempt}/3)");
+            log($"tripo: {last.Message} (attempt {attempt}/3)");
         }
         throw last;
     }
@@ -307,7 +304,7 @@ public sealed class TripoClient
     /// Draco- or meshopt-packed mesh would only fail later, in our reader, with a message nobody understands.
     /// Returns a few words for the log.
     /// </summary>
-    static string Inspect(byte[] glb)
+    string Inspect(byte[] glb)
     {
         const uint Magic = 0x46546C67, Json = 0x4E4F534A;       // "glTF" and "JSON", little endian, as the GLB container writes them
         if (glb == null || glb.Length < 20 || BitConverter.ToUInt32(glb, 0) != Magic)
@@ -326,7 +323,7 @@ public sealed class TripoClient
         // "required" = the file cannot be read without it. Merely "used" means a plain copy of the data is there as well.
         string packed = required.FirstOrDefault(x => x is "KHR_draco_mesh_compression" or "EXT_meshopt_compression");
         if (packed != null) throw new Exception($"Tripo: the model came back with a compressed mesh ({packed}), which this app cannot read");
-        if (used.Length > 0) Log.Info("tripo: the GLB uses " + string.Join(", ", used) + (required.Length > 0 ? " and requires " + string.Join(", ", required) : ""));
+        if (used.Length > 0) log("tripo: the GLB uses " + string.Join(", ", used) + (required.Length > 0 ? " and requires " + string.Join(", ", required) : ""));
         return $"{(doc["meshes"] as JArray)?.Count ?? 0} mesh(es), {(doc["images"] as JArray)?.Count ?? 0} picture(s)";
     }
 
@@ -336,10 +333,12 @@ public sealed class TripoClient
     /// { code, message, suggestion } with an HTTP status that says the same thing. Returns "data"; throws a Problem
     /// whose text can be shown to the user (never the key: neither the request nor Tripo's answers contain it).
     /// </summary>
-    async Task<JToken> Call(HttpMethod method, string path, JObject body, string what, CancellationToken ct)
+    Task<JToken> Call(HttpMethod method, string path, JObject body, string what, CancellationToken ct) =>
+        Send(method, path, body == null ? null : new StringContent(body.ToString(), Encoding.UTF8, "application/json"), what, ct);
+
+    async Task<JToken> Send(HttpMethod method, string path, HttpContent content, string what, CancellationToken ct)
     {
-        using var request = new HttpRequestMessage(method, path);
-        if (body != null) request.Content = new StringContent(body.ToString(), Encoding.UTF8, "application/json");
+        using var request = new HttpRequestMessage(method, path) { Content = content };
         HttpResponseMessage r;
         try { r = await _http.SendAsync(request, ct); }
         // HttpClient reports its OWN timeout as a cancellation too: that is told apart from the caller's by the token

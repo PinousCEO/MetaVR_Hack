@@ -392,7 +392,9 @@ namespace LivingPartner.Shared
         public string why = "";         // not ok: denied (the user did not allow the camera) | nocamera (no pictures arrive: an older system, a start-up fault) | simulator (the desktop simulator has no camera)
         public string jpeg = "";        // base64
         public int width, height;
-        public bool cropped;            // cut round the hands (else the middle of the view)
+        public bool cropped;            // older headsets sent only part of the view
+        public float aimX = .5f, aimY = .5f; // normalized coordinates from the top left of the encoded image
+        public bool pointed;            // an extended index finger supplied the ray; otherwise the head direction
     }
 
     public sealed class DebugCommand

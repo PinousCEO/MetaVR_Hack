@@ -1,4 +1,5 @@
 <Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="../RoomVision/RoomVision.props" />
 
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
@@ -10,7 +11,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <None Update="Fixtures/coffee.jpg" CopyToOutputDirectory="PreserveNewest" />
     <!-- Tests run against the SAME shared sources that the Unity clients and the host compile. -->
+    <Compile Include="../LivingPartner.Host/Tripo.cs" Link="Shared/Tripo.cs" />
     <Compile Include="..\..\MetaVRHack\Assets\LivingPartner\Shared\**\*.cs" LinkBase="Shared" />
     <Compile Include="..\..\MetaVRHack\Assets\LivingPartner\MR\LocalWorld.cs" Link="MR\LocalWorld.cs" />
     <!-- The rules a model-built song / surroundings / skill must pass (no host, network or disk in that file): tested from the host's own source. -->

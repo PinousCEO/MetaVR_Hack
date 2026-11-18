@@ -2,6 +2,8 @@
 
 Nilo is a personal AI partner that lives on your desk in mixed reality (Meta Quest 3 / 3S), passes its body through your **real monitor** at the spot you point to, works inside your real Windows desktop as an independent transparent character, and comes back out the same way.
 
+Look at a real cup on your desk and say **“Hey, Nilo, do you see a cup on my desk?”** Quest uses its passthrough camera and the companion identifies the cup locally. To make a textured 3D copy, connect your Tripo key and say **“Hey, Nilo, copy this cup.”** The copy goes into your bag. Say **“Put it on my desk”** to place it in your room or **“Export it as a GLB”** to save the same model on your computer. [Set the Windows Tripo key](tools/Set-TripoKey.ps1) · [Mac setup](Companion/LivingPartner.Mac/README.md)
+
 Say **“Hey, Nilo”** to get Nilo’s attention. To farm, say **“Hey, Nilo, open the star garden.”** Pinch soil to sow, pinch again to water, and harvest golden stars to install Rain Bell, Sun Dial and Twin Bloom in the garden.
 
 Entry for the Meta VR Start Developer Competition 2026 (Productivity). On Windows and Mac, **Demon Gate** is a solo desktop game with mouse controls, 3D demons and a choice of charms. **Gomoku** is a separate game for two people at one TV. The Quest wearer places black stones with a pinch, then looks toward the other player's outstretched finger as they select a white stone on the same board. Tennis and Goalkeeper send the ball between the room and the screen. On MacBook, the companion hosts these games and connects directly to Quest. [MacBook setup and play guide](Companion/LivingPartner.Mac/README.md)
