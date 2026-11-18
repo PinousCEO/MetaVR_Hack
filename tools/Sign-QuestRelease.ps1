@@ -46,6 +46,13 @@ try {
     if ($LASTEXITCODE) { throw 'APK v2 signature check failed.' }
     & "$($sdk.FullName)\zipalign.exe" -c 4 $staged
     if ($LASTEXITCODE) { throw 'APK alignment check failed.' }
+    $manifest = (& "$($sdk.FullName)\aapt.exe" dump xmltree $staged AndroidManifest.xml) -join "`n"
+    if ($LASTEXITCODE) { throw 'Could not inspect the signed Android manifest.' }
+    if ($manifest -notmatch '(?m)android:targetSdkVersion\([^)]*\)=\(type 0x10\)0x22\s*$') { throw 'Quest submission requires target SDK 34.' }
+    if ($manifest -notmatch '(?m)android:installLocation\([^)]*\)=\(type 0x10\)0x0\s*$') { throw 'Quest submission requires installLocation auto.' }
+    $activities = [regex]::Matches($manifest, '(?ms)^([ ]*)E: activity \(.*?(?=^\1E:|\z)')
+    $launcher = @($activities | Where-Object { $_.Value.Contains('android.intent.action.MAIN') -and $_.Value.Contains('com.oculus.intent.category.VR') })
+    if ($launcher.Count -ne 1 -or $launcher[0].Value -notmatch '(?m)android:screenOrientation\([^)]*\)=\(type 0x10\)0x0\s*$') { throw 'Quest VR launch activity requires landscape orientation.' }
     Move-Item -LiteralPath $staged -Destination $target -Force
 } finally {
     Remove-Item Env:\YONDER_KEYSTORE_PASS -ErrorAction SilentlyContinue

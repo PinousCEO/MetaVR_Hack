@@ -78,6 +78,9 @@ namespace LivingPartner.EditorTools
             CommonSettings();
             PlayerSettings.SetApplicationIdentifier(UnityEditor.Build.NamedBuildTarget.Android, "com.livingaipartner.quest");
             PlayerSettings.Android.minSdkVersion = AndroidSdkVersions.AndroidApiLevel32;
+            PlayerSettings.Android.targetSdkVersion = AndroidSdkVersions.AndroidApiLevel34;
+            PlayerSettings.Android.preferredInstallLocation = AndroidPreferredInstallLocation.Auto;
+            PlayerSettings.defaultInterfaceOrientation = UIOrientation.LandscapeLeft;
             PlayerSettings.SetScriptingBackend(UnityEditor.Build.NamedBuildTarget.Android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
             string outDir = Path.Combine(Distribution, "LivingAIPartner-Quest");
