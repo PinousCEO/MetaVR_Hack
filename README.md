@@ -1,30 +1,42 @@
 ﻿# Yonder
 
-**An AI teammate that moves between your desk and your screen and builds the tools you ask for.**
-
-<p align="center"><img src="reports/media/yonder-cover.jpg" width="650" alt="Nilo stepping through a glowing doorway in a real monitor toward an outstretched hand"></p>
-
-I built Yonder for the days I spend working alone. I can hold up my coffee mug so Nilo sees what I mean, ask him to make a 3D copy, and open that same model on my computer. When I need a new tool, I can describe it out loud and put it to work during the same session.
+Meet Nilo, an AI teammate who can see the mug on your desk, make a 3D copy and carry it into your computer.
 
 ## Download and play
 
-The demo uses **two apps**. The Quest app puts Nilo in your room. The Windows companion lets him cross onto your desktop and work with your files and windows.
+Install **Yonder on Quest**, then choose the **companion for your computer**.
 
-| Device | Download | Getting started |
-| --- | --- | --- |
-| **Meta Quest 3 or 3S** | [Download Yonder for Quest (.apk)](https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Quest.apk) | Install through the competition release channel if you have an invitation, or sideload this APK on a developer-enabled headset. |
-| **Windows x64 PC** | [Download Yonder Companion Setup (.exe)](https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Windows-Setup.exe) | Run the installer, then open **Yonder Companion** from the Windows Start menu. The package includes the host, desktop character and .NET runtime. |
+<p>
+  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Quest.apk"><img src="reports/media/download-quest.svg" width="188" alt="Download the APK for Meta Quest 3 or 3S"></a>
+  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Windows-Setup.exe"><img src="reports/media/download-windows.svg" width="188" alt="Download the Windows x64 installer"></a>
+  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Mac-Apple-Silicon.zip"><img src="reports/media/download-apple-silicon.svg" width="188" alt="Download the Apple Silicon Mac companion"></a>
+  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Mac-Intel.zip"><img src="reports/media/download-intel.svg" width="188" alt="Download the Intel Mac companion"></a>
+</p>
 
-[Release notes and SHA-256 checksums](https://github.com/PinousCEO/MetaVR_Hack/releases/tag/yonder-0.1.0) · [MacBook setup](Companion/LivingPartner.Mac/README.md)
+On a Mac, open **Apple menu → About This Mac**. Choose **Apple Silicon** for an Apple M-series chip or **Intel** for an Intel processor. Both Mac kits include the Quest APK.
 
-### Connect your desk
+[Windows setup](#windows-setup) · [Mac setup](#mac-setup) · [Release notes and checksums](https://github.com/PinousCEO/MetaVR_Hack/releases/tag/yonder-0.1.0)
 
-1. Put the PC and Quest on the same local network. Start **Yonder Companion** on the PC and allow it through Windows Firewall on your private network.
+<p align="center"><img src="reports/media/yonder-cover.jpg" width="580" alt="Nilo stepping through a glowing doorway in a real monitor toward an outstretched hand"></p>
+
+I built Yonder for the days I spend working alone. When I need a new tool, I can describe it out loud and put it to work during the same session.
+
+### Mac setup
+
+1. Extract the entire ZIP. In the **Yonder TV** folder, open **Start-Yonder.command**. Move the browser window to the Mac display or an HDMI-connected TV and choose **Use this display**.
+2. If Yonder is new to your headset, use **Install-Quest.command** to sideload the bundled APK by USB. After installation, disconnect the cable.
+3. Open **Yonder** on Quest while the Mac and headset are on the same Wi-Fi. Allow incoming connections on the Mac if prompted. Enter the six-digit code on Quest if asked, then look at the display to calibrate it. [Full Mac and TV guide](Companion/LivingPartner.Mac/README.md)
+
+### Windows setup
+
+1. Run **Yonder-Windows-Setup.exe**. Put the PC and Quest on the same local network. Open **Yonder Companion** from the Start menu and allow it through Windows Firewall on your private network.
 2. Open **Yonder** in the headset. For the first wireless connection, enter the six-digit code displayed by the PC companion. Give Yonder access to the headset camera for monitor and object recognition, and the microphone for voice.
 3. Glance at each monitor when it lights up so Yonder can locate the display in your room. After moving a screen, use **Calibrate** in the hand menu or say **“Hey, Nilo, find my screens.”**
 4. Point at a spot on the monitor and send Nilo inside. Watch his feet as he crosses the glass. Try a game of tennis and return his serve with your hand.
 
-**Sideloading by USB:** With Android platform tools installed and USB debugging authorized in the headset, run the following from the folder containing the APK. Once the app is installed, the two devices can pair over Wi-Fi.
+### Install the Quest APK
+
+Use the competition release channel if invited, or sideload on a developer-enabled Quest. With Android platform tools installed and USB debugging authorized in the headset, run the following from the folder containing the APK. Once the app is installed, the two devices can pair over Wi-Fi.
 
 ~~~powershell
 adb install -r Yonder-Quest.apk

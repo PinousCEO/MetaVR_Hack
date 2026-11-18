@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="212" height="76" viewBox="0 0 212 76">
+  <title>Download Windows for 64-bit</title>
+  <rect x="1" y="1" width="210" height="74" rx="16" fill="#c6d9ca" stroke="#443a42" stroke-width="1.5"/>
+  <g transform="translate(12 22)" stroke="#302933" color="#302933" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" fill="none"><path fill="currentColor" stroke="none" d="m3 7 11-1.5v10H3zm13-1.8L29 3.4v12.1H16zM3 17.5h11v10L3 26zm13 0h13v12.1L16 27.8z"/></g>
+  <g fill="#302933" font-family="system-ui, sans-serif">
+    <text x="55" y="34" font-size="20" font-weight="700">Windows</text>
+    <text x="55" y="55" font-size="12.5">64-bit · Installer</text>
+  </g>
+  <path d="M192 15v9m-3.5-3.5L192 24l3.5-3.5" fill="none" stroke="#50444d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

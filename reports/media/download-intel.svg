@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="212" height="76" viewBox="0 0 212 76">
+  <title>Download Mac for Intel</title>
+  <rect x="1" y="1" width="210" height="74" rx="16" fill="#dccfb0" stroke="#443a42" stroke-width="1.5"/>
+  <g transform="translate(12 22)" stroke="#302933" color="#302933" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round" fill="none"><rect x="5" y="5.5" width="22" height="16" rx="2"/><path d="M5 21.5 2 26h28l-3-4.5"/><path d="M12 13.5h8"/></g>
+  <g fill="#302933" font-family="system-ui, sans-serif">
+    <text x="55" y="34" font-size="20" font-weight="700">Mac</text>
+    <text x="55" y="55" font-size="12.5">Intel · ZIP</text>
+  </g>
+  <path d="M192 15v9m-3.5-3.5L192 24l3.5-3.5" fill="none" stroke="#50444d" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
