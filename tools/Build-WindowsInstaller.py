@@ -15,6 +15,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--makensis', default='makensis.exe')
     parser.add_argument('--build', type=Path, default=ROOT / 'dist/Yonder')
+    parser.add_argument('--host', type=Path, help='Separately published host, for packaging while the installed companion is running')
     parser.add_argument('--output', type=Path, default=ROOT / 'dist/Yonder/Release/Yonder-Windows-Setup.exe')
     args = parser.parse_args()
     build = args.build.resolve()
@@ -22,9 +23,10 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     files = {}
     for subtree in ('LivingAIPartner-Host', 'LivingAIPartner-Windows'):
-        for file in (build / subtree).rglob('*'):
+        source = args.host.resolve() if args.host and subtree == 'LivingAIPartner-Host' else build / subtree
+        for file in source.rglob('*'):
             if file.is_file() and not any('DoNotShip' in part for part in file.parts) and file.suffix.lower() not in ('.pdb', '.lib'):
-                files[file.relative_to(build)] = file
+                files[Path(subtree) / file.relative_to(source)] = file
     for name in ('Start-Yonder.cmd', 'Start-LivingPartner.ps1', 'Play-Demon-Gate.cmd'):
         files[Path(name)] = build / name
     for name in ('Set-OpenAiKey.ps1','Set-TripoKey.ps1'):

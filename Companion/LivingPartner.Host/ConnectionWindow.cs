@@ -24,6 +24,13 @@ sealed class ConnectionWindow : Form
         code.Font = new Font(Font.FontFamily,20,FontStyle.Bold);
         help.Margin = new Padding(3,6,3,12);
         panel.Controls.AddRange(new Control[]{device,code,help,scan});
+        var guide = new Button { Text = "First session guide", AutoSize = true };
+        guide.Click += (_,_) =>
+        {
+            try { System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo(Path.Combine(AppContext.BaseDirectory, "guide.html")) { UseShellExecute = true }); }
+            catch (Exception e) { MessageBox.Show(this, e.Message, "Could not open the guide"); }
+        };
+        panel.Controls.Add(guide);
         foreach (var (title,path) in new[]{("Demon Gate · Solo","/demon-gate/"),("Gomoku · Two players","/table/")})
         {
             var game = new Button { Text = title, AutoSize = true };

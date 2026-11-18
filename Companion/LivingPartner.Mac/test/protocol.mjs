@@ -43,6 +43,8 @@ try {
   await wait(()=>state().catch(()=>null));
   await wait(()=>beacon.startsWith("LIVING-AI-PARTNER/1 "+port+" "));
   assert((await fetch(origin+"/")).ok);
+  const guide=await fetch(origin+"/guide.html");
+  assert(guide.ok && (await guide.text()).includes("Your first session with Nilo"));
   assert.equal((await fetch(origin+"/action/scan",{method:"POST"})).status,403);
   await put("/display",{id:"mac-tv",width:1920,height:1080,inches:55,active:true});
   heartbeat=setInterval(()=>state().catch(()=>{}),800);
@@ -66,8 +68,11 @@ try {
   await take("state.snapshot",a=>a.calibrations[0]?.pixelW===1920);
   for(const direction of [0,1]) {
     const action=direction===0?"enter":"return", owner=direction===0?"pc":"mr";
+    written("pointer.sample",{valid:true,monitorId:"mac-tv",u:.2,v:.7});
+    written("ping",{c:804}); await take("pong",a=>a.c===804);
     assert.equal((await put(direction===0 ? "/action/game:game-keeper" : "/action/"+action)).status,204);
-    await take("intent.result",a=>a.kind===(direction===0?"enterPortal":"returnToMr"));
+    const intent=await take("intent.result",a=>a.kind===(direction===0?"enterPortal":"returnToMr"));
+    if(direction===0){assert.equal(intent.pointer.u,.2);assert.equal(intent.pointer.v,.7);}
     written("target.query",{queryId:"q"+direction,monitorId:"mac-tv",u:.6,v:.55,direction});
     const target=await take("target.result",a=>a.queryId==="q"+direction);
     assert(target.valid && target.metersPerPixel>0);

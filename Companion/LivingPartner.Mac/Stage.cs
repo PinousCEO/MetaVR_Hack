@@ -65,7 +65,7 @@ sealed partial class Stage
         screen = null; flash = null; snap.monitors.Clear(); snap.calibrations.Clear(); snap.calibratingMonitorId = "";
         snap.pc.monitorId = ""; ResetOwner();
     }
-    void ResetOwner() { machine.Restore(null); snap.character.owner = Env.Mr; snap.pc.overlayVisible = false; }
+    void ResetOwner() { lastSpot = null; machine.Restore(null); snap.character.owner = Env.Mr; snap.pc.overlayVisible = false; }
 
     public object View()
     {
@@ -109,8 +109,10 @@ sealed partial class Stage
         if (screen == null || snap.calibrations.Count == 0) return "Set the TV to fullscreen, then calibrate it from your headset.";
         if (machine.IsActive) return "Nilo is crossing the screen.";
         if ((cmd == "enter") != (T.owner == Env.Mr)) return "Nilo is already there.";
+        var pointer = cmd == "enter" && lastSpot?.monitorId == screen.id && Now - spotAt <= 8
+            ? lastSpot : new PointerSample { valid = true, monitorId = screen.id, u = .5f, v = .55f };
         Send(headset, Msg.IntentResult, new { kind = cmd == "enter" ? "enterPortal" : "returnToMr", text = "", alsoStart = false,
-            pointer = new PointerSample { valid = true, monitorId = screen.id, u = .5f, v = .55f } });
+            pointer });
         return "";
     }
     void Send(Peer p, string kind, object body) => p?.Queue(Proto.Pack(kind, body, seq: ++sequence, t: Now));

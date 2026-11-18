@@ -8,14 +8,14 @@ Install **Yonder on Quest**, then choose the **companion for your computer**.
 
 <p>
   <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Quest.apk"><img src="reports/media/download-quest.svg" width="188" alt="Download the APK for Meta Quest 3 or 3S"></a>
-  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Windows-Setup.exe"><img src="reports/media/download-windows.svg" width="188" alt="Download the Windows x64 installer"></a>
-  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Mac-Apple-Silicon.zip"><img src="reports/media/download-apple-silicon.svg" width="188" alt="Download the Apple Silicon Mac companion"></a>
-  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-0.1.0/Yonder-Mac-Intel.zip"><img src="reports/media/download-intel.svg" width="188" alt="Download the Intel Mac companion"></a>
+  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-companion-0.1.1/Yonder-Windows-Setup.exe"><img src="reports/media/download-windows.svg" width="188" alt="Download the Windows x64 installer"></a>
+  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-companion-0.1.1/Yonder-Mac-Apple-Silicon.zip"><img src="reports/media/download-apple-silicon.svg" width="188" alt="Download the Apple Silicon Mac companion"></a>
+  <a href="https://github.com/PinousCEO/MetaVR_Hack/releases/download/yonder-companion-0.1.1/Yonder-Mac-Intel.zip"><img src="reports/media/download-intel.svg" width="188" alt="Download the Intel Mac companion"></a>
 </p>
 
 On a Mac, open **Apple menu → About This Mac**. Choose **Apple Silicon** for an Apple M-series chip or **Intel** for an Intel processor. Both Mac kits include the Quest APK.
 
-[Windows setup](#windows-setup) · [Mac setup](#mac-setup) · [Release notes and checksums](https://github.com/PinousCEO/MetaVR_Hack/releases/tag/yonder-0.1.0)
+[Windows setup](#windows-setup) · [Mac setup](#mac-setup) · [Updated companions](https://github.com/PinousCEO/MetaVR_Hack/releases/tag/yonder-companion-0.1.1) · [Competition build](https://github.com/PinousCEO/MetaVR_Hack/releases/tag/yonder-0.1.0)
 
 <p align="center"><img src="reports/media/yonder-cover.jpg" width="580" alt="Nilo stepping through a glowing doorway in a real monitor toward an outstretched hand"></p>
 
@@ -26,6 +26,10 @@ I built Yonder for the days I spend working alone. When I need a new tool, I can
 1. Extract the entire ZIP. In the **Yonder TV** folder, open **Start-Yonder.command**. Move the browser window to the Mac display or an HDMI-connected TV and choose **Use this display**.
 2. If Yonder is new to your headset, use **Install-Quest.command** to sideload the bundled APK by USB. After installation, disconnect the cable.
 3. Open **Yonder** on Quest while the Mac and headset are on the same Wi-Fi. Allow incoming connections on the Mac if prompted. Enter the six-digit code on Quest if asked, then look at the display to calibrate it. [Full Mac and TV guide](Companion/LivingPartner.Mac/README.md)
+
+### Your first session
+
+Open **First session guide** in the Windows connection window or Mac TV settings. Start by locating one monitor, pointing at it and saying **"Hey, Nilo, enter the screen."** Then say **"Hey, Nilo, come back."** Once you have tried the crossing, use the guide for object creation, screen assistance, games and reconnecting after sleep. The guide is included with the companion and opens before pairing.
 
 ### Windows setup
 

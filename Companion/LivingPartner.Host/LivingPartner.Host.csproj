@@ -33,6 +33,7 @@
   <ItemGroup>
     <!-- The marketplace's page, its font and its sticker art: served by the host from the folder next to the exe (/market). -->
     <Content Include="web\**\*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="../LivingPartner.Mac/wwwroot/guide.html" Link="guide.html" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../../Play-Demon-Gate.cmd" Link="Play-Demon-Gate.cmd" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="..\LivingPartner.Mac\wwwroot\table\**\*" Link="web\table\%(RecursiveDir)%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />
     <Content Include="../LivingPartner.Mac/wwwroot/art/demon-*;../LivingPartner.Mac/wwwroot/art/swarm-meshes.json" Link="web/demon-art/%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" CopyToPublishDirectory="PreserveNewest" />

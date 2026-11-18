@@ -3,7 +3,7 @@ const el = id => document.getElementById(id);
 let state, previousGame = false, registered = false, nextPoll, lastScreen;
 const full = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
 const post = async (path, value) => {
-  const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:value === undefined ? undefined : JSON.stringify(value)});
+  const r = await fetch(path, {method:"POST", headers:{"Content-Type":"application/json"}, body:value === undefined ? undefined : JSON.stringify(value), signal:AbortSignal.timeout(15000)});
   if (!r.ok) { const message = await r.text(); throw new Error(message.replace(/^"|"$/g, "") || "Check the Mac connection."); }
 };
 async function act(cmd) {
@@ -82,6 +82,7 @@ document.addEventListener("webkitfullscreenchange", updateScreen);
 window.addEventListener("resize", updateScreen);
 el("display").onchange=updateScreen; el("inches").onchange=updateScreen;
 function draw(s) {
+  if (state?.connected && !s.connected) fold(false);
   state=s;
   const table=el("gomoku-board"),showTable=s.active&&s.tableMonitor===el("display").value;
   if(showTable&&!table.getAttribute("src"))table.src="/table/";
@@ -113,11 +114,11 @@ function draw(s) {
 async function poll() {
   clearTimeout(nextPoll);
   try {
-    const response=await fetch("/state",{cache:"no-store"}); if(!response.ok) throw new Error();
+    const response=await fetch("/state",{cache:"no-store",signal:AbortSignal.timeout(5000)}); if(!response.ok) throw new Error();
     const s=await response.json();
     if (full() && !s.active) { lastScreen=null; await updateScreen(); }
     draw(s);
-  } catch { el("connection").textContent="Reconnecting to your Mac"; }
+  } catch { fold(false); el("connection").textContent="Reconnecting to your Mac"; }
   nextPoll=setTimeout(poll,document.hidden?750:state?.game?40:state?.portal?60:150);
 }
 async function loadDisplays() {
