@@ -172,6 +172,9 @@ public sealed class Maker
             if (i.model.Length > 0 && !Exists(i.model)) i.model = "";
             if (i.icon.Length > 0 && !Exists(i.icon)) i.icon = "";
             // a sculpted shape from the state file is checked like one fresh from the model: the headset builds whatever it is sent
+            if (i.model.Length == 0 && WorldRules.IsFirewood(i.name) && i.parts?.Count == 8
+                && i.parts[0]?.color == "#B98B63" && i.parts[1]?.color == "#E9C99A" && i.parts[2]?.color == "#8C6A5D")
+                i.parts = WorldRules.Sculpt(WorldRules.FirewoodShape(), out _).parts;
             if (i.parts != null && i.parts.Count > 0) i.parts = WorldRules.ValidateParts(i.parts, ref i.seat, ref i.top, out _);
             if (i.parts == null) { i.parts = new List<ShapePart>(); i.seat = 0; i.top = 0; }
         }
@@ -600,7 +603,8 @@ Fill in:
                 var item = job.item;
                 StartIcon(ai, id, idea != null && idea.iconPrompt.Length > 0 ? idea.iconPrompt : what, file => { if (W.items.Contains(item)) { item.icon = file; Changed(); } else DeleteFile(file); });
             }
-            if (tripo != null)
+            bool firewood = WorldRules.IsFirewood(idea?.name) || WorldRules.IsFirewood(asked);
+            if (!firewood && tripo != null)
                 try
                 {
                     var sw = System.Diagnostics.Stopwatch.StartNew();
@@ -618,7 +622,8 @@ Fill in:
             // model, out of simple parts in the look of the built-in shapes. Needs to know what the thing is (a).
             if (glbFile.Length == 0)
             {
-                if (idea != null) job.sculpture = await Sculptor.SculptAsync(ai, id, idea, asked, ct, p => _core.Post(() => OnProgress(job, p)));
+                if (firewood) job.sculpture = WorldRules.Sculpt(WorldRules.FirewoodShape(), out _);
+                else if (idea != null) job.sculpture = await Sculptor.SculptAsync(ai, id, idea, asked, ct, p => _core.Post(() => OnProgress(job, p)));
                 if (job.sculpture == null) Log.Info($"world: {id} keeps the built-in shape ({(tripo == null ? "no Tripo key" : "no generated model")}, {(ai == null ? "no OpenAI key to sculpt it with" : idea == null ? "not understood, so not sculpted" : "sculpting it did not work")})");
             }
             // the shape is done; the script may still be on its way

@@ -7,6 +7,14 @@ namespace LivingPartner.Tests;
 /// <summary>"밤비야, 여기 어떤 폴더가 있어?": where the user means (hand, gaze, the last seconds, the fallback) and what is cut out of the display for the model.</summary>
 public class LookTests
 {
+    [Theory]
+    [InlineData("밤비야 이 화면에 카카오톡을 읽어줘", true)]
+    [InlineData("read the messages on this screen", true)]
+    [InlineData("카톡 첨부 파일 읽어 줘", false)]
+    [InlineData("카카오톡 열어 줘", false)]
+    public void Reads_visible_messages_from_the_display(string words, bool expected) =>
+        Assert.Equal(expected, ScreenReading.Requested(words));
+
     const double Hz = 15.0;
     static PointerSample Hand(double t, float u, float v, string mon = "A", bool pinch = false) => new() { t = t, monitorId = mon, u = u, v = v, valid = true, pinch = pinch };
     static PointerSample Gaze(double t, float u, float v, string mon = "B") => new() { t = t, valid = false, gazeValid = true, gazeMonitorId = mon, gazeU = u, gazeV = v };

@@ -20,7 +20,6 @@ header h1 { margin: 0; font-size: clamp(24px,4.5vh,55px); font-weight: normal; l
   background: radial-gradient(at 35% 30%,#6c5060,#352332 85%);
 }
 #who[data-turn="2"]::before { background: radial-gradient(at 35% 30%,#fffaf0,#e6c9a3 87%); }
-#count { font-variant-numeric: tabular-nums; color: #684e4b; }
 #board {
   position: relative; width: min(91vw,76vh); aspect-ratio: 1; border-radius: 4.5%;
   background: linear-gradient(145deg,#ffe3a4,#f8d28a 80%);
@@ -40,12 +39,11 @@ button:disabled { opacity: .55; cursor: default; }
   background: #fff3d9; border: 2px solid #785449; border-radius: 1.6em; padding: clamp(1.15rem,3vw,2.6rem);
   box-shadow: 0 .25em #dab185, .3em .6em 1.2em #694a3c40;
 }
-#setup h2 { margin: 0; font-size: 1.85em; font-weight: normal; }
 #setup p { margin: .6em 0; }
 #setup label { display: block; margin: 1em 0 .25em; }
 #setup select,#start { width: 100%; }
 #start { margin-top: .55rem; background: var(--honey); }
-#help { min-height: 1.3em; }
+#help:empty { display: none; }
 [hidden] { display: none !important; }
 @media (max-aspect-ratio: 1/1) {
   main { grid-template-rows: 14% minmax(0,1fr) 17%; }

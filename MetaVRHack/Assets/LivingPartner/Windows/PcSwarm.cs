@@ -26,6 +26,7 @@ namespace LivingPartner.Windows
         public const int SwarmLayer = 5;                    // (Unity's built-in "UI" layer: nothing else of this app is on it)
 
         SwarmGlass _swg; double _swgAt = -100, _swgAckAt; LayeredOverlay _ovSwarm; float _swgIdle, _swgGlow; int _swgFrame, _swgRing; bool _swgSaid;
+        readonly FxQuad[] _swgShots = new FxQuad[SwarmSim.MaxBolts];
         Mesh[] _swgMesh, _swgFlash;
         readonly SwarmGlass _swgAck = new SwarmGlass { on = true, count = -1 };
         readonly int[] _swgId = new int[SwarmGlass.Max], _swgKind = new int[SwarmGlass.Max], _swgShownKind = new int[SwarmGlass.Max];
@@ -113,7 +114,7 @@ namespace LivingPartner.Windows
                     float rad = SwarmKind.Radius[_swgKind[i]];
                     if (on || rings)
                     {
-                        _swgRingAt[_swgRing] = origin + new Vector3(_swgU[i] * Mathf.Max(0.01f, hw - rad), _swgV[i] * Mathf.Max(0.01f, hh - rad), 0.4f);
+                        _swgRingAt[_swgRing] = origin + new Vector3(_swgU[i] * hw, _swgV[i] * hh, 0.4f);
                         _swgRingSize[_swgRing] = rad * (_swgKind[i] == SwarmKind.Boss ? 5f : 6.5f); _swgRingT[_swgRing] = 0f; _swgRing = (_swgRing + 1) % _swgRingT.Length;
                         _swgGlow = 1f;
                     }
@@ -129,12 +130,28 @@ namespace LivingPartner.Windows
                 _swgIn[i] = Mathf.Min(1f, _swgIn[i] + dt * 3.5f); _swgPhase[i] += dt;
                 float press = _swgPress[i], ph = _swgPhase[i];
                 float wob = Mathf.Sin(ph * (kind == SwarmKind.Boss ? 16f : 11f)) * 0.07f * press;
-                float s = radius * 2f * (kind == SwarmKind.Boss ? 0.25f + 0.75f * press : 0.74f + 0.34f * press) * (1f + wob) * Mathf.Max(0.001f, Ui.Pop(_swgIn[i]));
+                float s = radius * 2f * press * (1f + wob) * Mathf.Max(0.001f, Ui.Pop(_swgIn[i]));
                 Transform t = v.monsters[i];
                 // (further back while it mills about, right at the glass when it presses: the nearer ones are drawn over the others)
-                t.SetPositionAndRotation(origin + new Vector3(_swgU[i] * Mathf.Max(0.01f, hw - radius), _swgV[i] * Mathf.Max(0.01f, hh - radius) + Mathf.Sin(ph * 5f) * 0.004f, 0.9f - 0.4f * press + i * 0.004f),
+                t.SetPositionAndRotation(origin + new Vector3(_swgU[i] * hw, _swgV[i] * hh, 0.9f - 0.4f * press + i * 0.004f),
                     Quaternion.Euler(Mathf.Sin(ph * 2.3f) * 8f, Mathf.Sin(ph * 1.7f) * 14f, Mathf.Sin(ph * 3.1f) * 9f));
                 t.localScale = new Vector3(s, s * (1f + 0.06f * Mathf.Sin(ph * 6f)), s);
+            }
+            for (int i = 0; i < _swgShots.Length; i++)
+            {
+                var shot = _swgShots[i];
+                bool visible = on && i < _swg.shotCount && i < (_swg.shotU?.Length ?? 0)
+                    && i < (_swg.shotV?.Length ?? 0) && i < (_swg.shotRadius?.Length ?? 0);
+                if (!visible) { if (shot != null) shot.enabled = false; continue; }
+                if (shot == null)
+                {
+                    shot = _swgShots[i] = Instantiate(v.rings[0], v.root.transform);
+                    shot.mode = 8; shot.param = new Vector4(3.4f, 0, 0, 0);
+                    shot.SetColors(new Color(1f, 0.63f, 0.21f), new Color(1f, 0.98f, 0.8f));
+                }
+                shot.transform.position = origin + new Vector3(_swg.shotU[i] * hw, _swg.shotV[i] * hh, 0.2f);
+                shot.transform.localScale = Vector3.one * (_swg.shotRadius[i] * 4f);
+                shot.enabled = true;
             }
             // ---- rings where they came out, the glow of a crowd
             for (int i = 0; i < _swgRingT.Length; i++)

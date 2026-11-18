@@ -91,9 +91,8 @@ namespace LivingPartner.MR
             if (old == null || old.round != state.round || old.revision != state.revision || old.turn != state.turn)
             {
                 _gomokuCaptureEpoch++; _gomokuAimShown = false; _gomokuLastAimAt = -1f; _gomokuCameraStatus = ""; _gomokuImageTime = 0;
-                if (state.turn == 1) Caption(_gomokuCameraAllowed ? "흑돌 차례예요." : "흑돌 차례예요. TV의 교차점을 가리키고 핀치하세요.\n백돌 차례에는 카메라로 상대의 손을 읽어요.", _gomokuCameraAllowed ? 1.5f : 5f);
-                else if (state.turn == 2) Caption("백돌 차례예요. 상대의 검지와 TV를 함께 바라봐 주세요.", 3.5f);
-                else Caption("대국이 끝났어요. 결과는 TV에서 확인하세요.", 4f);
+                if (old == null || old.round != state.round)
+                    Caption("흑돌은 교차점을 가리키고 핀치하세요.", 3f);
             }
             _gomoku = state; _gomokuRequestedUntil = 0f;
         }

@@ -29,7 +29,7 @@ window.demonModels = async function(canvas) {
     return {mode:"painted mesh",draw(monsters,view) {
       ctx.clearRect(0,0,canvas.width,canvas.height);
       for(const m of [...monsters].sort((a,b)=>b[4]-a[4])){
-        const p=view.project(m[2],m[3],m[4]),s=m[5]*p[2]*2.1*(m[7]===1?.65+.35*m[8]:1);
+        const p=view.project(m[2],m[3],m[4]),s=m[5]*p[2]*2.1;
         const tile=tiles[m[1]][Math.round(1+Math.sin(m[6]*2))];
         ctx.drawImage(tile,p[0]-s*.74,p[1]-s*.76,s*1.48,s*1.48);
       }
@@ -86,7 +86,7 @@ window.demonModels = async function(canvas) {
       gl.uniform1f(uniforms.tumble,.085*Math.cos(m[6]*3));gl.uniform1f(uniforms.flash,Math.min(1,m[9]*7));
       const amplitude=m[1]===1?.19:m[1]===5?.075:m[1]===0?.08:0;
       gl.uniform1f(uniforms.wingLift,amplitude*Math.sin(m[6]*(m[1]===5?4.5:10)));
-      gl.uniform1f(uniforms.size,m[5]*2.12*(m[7]===1?.65+.35*m[8]:1));
+      gl.uniform1f(uniforms.size,m[5]*2.12);
       gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER,model.index);gl.drawElements(gl.TRIANGLES,model.count,gl.UNSIGNED_SHORT,0);
     }
   }};

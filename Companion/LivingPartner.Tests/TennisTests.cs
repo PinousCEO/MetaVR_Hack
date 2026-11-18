@@ -15,6 +15,31 @@ public class TennisTests
     }
     static readonly Vector3 Eye = new(0.03f, 0.12f, -0.62f);
 
+    [Fact]
+    public void Saving_a_keeper_shot_ends_its_flight_and_scores_exactly_once()
+    {
+        var match = new TennisReferee();
+        match.Start(Court(), "keeper", Eye, 0);
+        match.Tick(2.5);
+        var s = match.State;
+        var kick = s.shot;
+        Assert.NotNull(kick);
+        for (double t = 2.5; t < 5; t += 1.0 / 90)
+        {
+            var ball = Tennis.Evaluate(s.court, kick, t);
+            if (!ball.Front || ball.dead) continue;
+            var hand = new GameCommand { seq = kick.seq, t = t, eye = Eye, normal = Vector3.UnitZ };
+            Assert.True(match.Hit(hand, t));
+            Assert.Equal("saved", s.note);
+            Assert.Equal("point", s.phase);
+            Assert.Null(s.shot);
+            Assert.False(match.Hit(hand, t));
+            Assert.Equal(1, s.scoreUser);
+            return;
+        }
+        Assert.Fail("The incoming shot never reached the goalkeeper.");
+    }
+
     [Theory]
     [InlineData(0f)]
     [InlineData(12f)]

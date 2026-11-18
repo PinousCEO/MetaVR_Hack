@@ -1,6 +1,7 @@
 #!/bin/zsh
 set -eu
 cd -- "${0:A:h}"
+"./Install-Quest.command" --prepare >/dev/null 2>&1 &
 if [[ "$(curl --silent --max-time 1 http://127.0.0.1:47610/health || true)" == "Bambi Mac Companion" ]]; then
     /usr/bin/open http://127.0.0.1:47610
     exit 0

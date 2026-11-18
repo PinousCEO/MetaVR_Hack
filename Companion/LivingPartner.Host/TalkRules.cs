@@ -277,3 +277,14 @@ public static class PlayRules
 
     static readonly Regex PartnerRx = new(@"밤비|밤별|\bbambi\b", RegexOptions.IgnoreCase);
 }
+
+public static class ScreenReading
+{
+    public static bool Requested(string words)
+    {
+        string t = Regex.Replace((words ?? "").ToLowerInvariant(), @"\s+", "");
+        if (!t.Contains("읽") && !Regex.IsMatch(words ?? "", @"\bread\b", RegexOptions.IgnoreCase)) return false;
+        if (Regex.IsMatch(t, "파일|첨부|문서|file|document|attachment|\\.pdf")) return false;
+        return Regex.IsMatch(t, "화면|카카오톡|카톡|채팅|대화창|메시지|메세지|screen|kakaotalk|chat|messages?");
+    }
+}

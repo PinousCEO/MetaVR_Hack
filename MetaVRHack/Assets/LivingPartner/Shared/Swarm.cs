@@ -26,14 +26,14 @@ namespace LivingPartner.Shared
 
     public static class SwarmAug
     {
-        public const int Rapid = 0, Twin = 1, Pierce = 2, Explode = 3, Chain = 4, Orbit = 5, Slow = 6, Big = 7, Heal = 8, Magnet = 9, Buddy = 10, Shield = 11, Count = 12;
-        public static readonly string[] Names = { "Quick Sparks", "Twin Bolts", "Needle Light", "Pop Bloom", "Chain Spark", "Star Ring", "Sleepy Mist", "Big Bolts", "Honey Tea", "Gem Magnet", "Bambi Helps", "Palm Shield" };
+        public const int Rapid = 0, Twin = 1, Pierce = 2, Explode = 3, Chain = 4, Orbit = 5, Slow = 6, Big = 7, Heal = 8, Magnet = 9, Comet = 10, Count = 11;
+        public static readonly string[] Names = { "속사", "쌍발", "관통", "꽃불", "연쇄 번개", "별 고리", "감속 안개", "거대 탄환", "꿀차", "보석 자석", "유성탄" };
         public static readonly string[] Lines =
         {
-            "Bolts fire faster", "One more bolt per shot", "Bolts pass through", "Bolts burst and splash", "Hits jump to a neighbour", "Stars circle your hand",
-            "Monsters near you slow", "Bigger, harder bolts", "Heal two hearts", "Gems rush in, worth more", "Bambi throws stars too", "Wider shield, stronger parry",
+            "발사 간격 단축", "탄환 한 발 추가", "적을 뚫고 날아갑니다", "명중 시 주변 폭발", "근처 적에게 번개 전이", "손 주위를 도는 별",
+            "가까운 적의 이동 감속", "탄환 크기와 피해 증가", "생명 두 칸 회복", "보석 흡수 범위와 경험치 증가", "조준 중 가까운 적에게 추가 발사",
         };
-        public static readonly int[] Max = { 5, 2, 3, 3, 3, 3, 3, 3, 99, 3, 3, 3 };
+        public static readonly int[] Max = { 5, 2, 3, 3, 3, 3, 3, 3, 99, 3, 3 };
     }
 
     public static class SwarmPhase { public const int Idle = 0, Intro = 1, Play = 2, Choosing = 3, Over = 4; }
@@ -41,8 +41,8 @@ namespace LivingPartner.Shared
 
     public static class SwarmEv
     {
-        public const int Emerge = 1, Hit = 2, Pop = 3, Fire = 4, Gem = 5, HeartLost = 6, LevelUp = 7, Choices = 8, Chosen = 9, BuddyThrow = 10, BossWarn = 11, BossOut = 12,
-            Win = 13, Lose = 14, ShieldBlock = 15, Explosion = 16, Chain = 17, Surge = 18, OrbitHit = 19, Started = 20;
+        public const int Emerge = 1, Hit = 2, Pop = 3, Fire = 4, Gem = 5, HeartLost = 6, LevelUp = 7, Choices = 8, Chosen = 9, CometFire = 10, BossWarn = 11, BossOut = 12,
+            Win = 13, Lose = 14, Explosion = 16, Chain = 17, Surge = 18, OrbitHit = 19, Started = 20;
     }
 
     /// <summary>Where the game is played: the rectangle the monsters come out of, and the desk.</summary>
@@ -59,8 +59,6 @@ namespace LivingPartner.Shared
         public Vector3 target;                          // where the monsters go: the user's chest
         public bool aimValid; public Vector3 aimOrigin, aimDir;      // the pointing finger: its tip and its (unit) direction
         public bool handValid; public Vector3 hand;     // the hand the stars circle
-        public bool shieldValid; public Vector3 shieldPos;           // the open left palm
-        public bool buddyValid; public Vector3 buddyPos;             // where the partner stands (its stars start there)
     }
 
     public struct SwarmMonster
@@ -100,15 +98,13 @@ namespace LivingPartner.Shared
         public int bossIndex = -1;
         public int alive;
 
-        bool _offerBuddy;
-        uint _rng; int _nextId; float _spawnT, _fireT, _buddyT, _orbitA, _nextSurge, _introT;
+        uint _rng; int _nextId; float _spawnT, _fireT, _cometT, _orbitA, _nextSurge, _introT;
         float _gemExtra;
 
         public int XpNeed => 4 + 3 * (level - 1);
         public float FireInterval => BaseFire * (float)Math.Pow(0.80, aug[SwarmAug.Rapid]);
         public float BoltDamage => 2f + aug[SwarmAug.Big];
         public float BoltRadius => 0.016f * (1f + 0.5f * aug[SwarmAug.Big]);
-        public float ShieldRadius => 0.085f + 0.025f * aug[SwarmAug.Shield];
         public float SlowRadius => aug[SwarmAug.Slow] > 0 ? 0.36f + 0.06f * aug[SwarmAug.Slow] : 0f;
         public float IntroLeft => phase == SwarmPhase.Intro ? Math.Max(0f, IntroSeconds - _introT) : 0f;
 
@@ -116,9 +112,8 @@ namespace LivingPartner.Shared
         float Rnd() { _rng ^= _rng << 13; _rng ^= _rng >> 17; _rng ^= _rng << 5; return (_rng & 0xFFFFFF) / 16777216f; }
         float Rnd(float a, float b) => a + (b - a) * Rnd();
 
-        public void Start(uint seed, SwarmArena a, bool offerBuddy = true)
+        public void Start(uint seed, SwarmArena a)
         {
-            _offerBuddy = offerBuddy;
             arena = a;
             _rng = seed == 0 ? 2463534242u : seed; _nextId = 1;
             for (int i = 0; i < MaxMonsters; i++) monsters[i] = default;
@@ -129,7 +124,7 @@ namespace LivingPartner.Shared
             phase = SwarmPhase.Intro; time = 0f; slow = 1f; iframes = 0f; _introT = 0f;
             hearts = maxHearts = StartHearts; level = 1; xp = 0; kills = 0; score = 0; pendingChoices = 0; surges = 0;
             won = bossSpawned = bossOut = bossDead = false; bossIndex = -1; alive = 0;
-            _spawnT = 8.5f; _fireT = 0.2f; _buddyT = 1f; _orbitA = 0f; _nextSurge = 24f; _gemExtra = 0f;
+            _spawnT = 8.5f; _fireT = 0.2f; _cometT = 1f; _orbitA = 0f; _nextSurge = 24f; _gemExtra = 0f;
             // the first crowd gathers behind the glass and comes out together
             for (int i = 0; i < 8; i++) SpawnInside(i == 2 || i == 6 ? SwarmKind.Flyer : i == 5 ? SwarmKind.Splitter : SwarmKind.Hopper, IntroSeconds + 0.07f * i, 1);
             Push(SwarmEv.Started, a.center);
@@ -166,10 +161,15 @@ namespace LivingPartner.Shared
             return i;
         }
 
+        public float StageDepth => Math.Max(0.90f, arena.halfW * 3.2f);
+
         Vector3 InsidePos(in SwarmMonster m)
         {
             float w = Math.Max(0.01f, arena.halfW - m.radius), h = Math.Max(0.01f, arena.halfH - m.radius);
-            return arena.center + arena.right * (m.u * w) + arena.up * (m.v * h);
+            float remaining = 1f - M.Clamp01(m.t / m.wait);
+            float gait = m.kind == SwarmKind.Flyer ? M.Sin(m.phase * 4f) : Math.Abs(M.Sin(m.phase * 7f));
+            return arena.center + arena.right * (m.u * w) + arena.up * (m.v * h + gait * h * 0.12f * remaining)
+                - arena.outward * (remaining * StageDepth);
         }
 
         int SpawnChase(int kind, Vector3 at)
@@ -209,7 +209,7 @@ namespace LivingPartner.Shared
             {
                 _nextSurge += 21f; surges++;
                 int n = Math.Min(10, 5 + surges);
-                for (int k = 0; k < n; k++) SpawnInside(PickKind(), 1.7f + 0.03f * k, 1);
+                for (int k = 0; k < n; k++) SpawnInside(PickKind(), 2.6f + 0.06f * k, 1);
                 Push(SwarmEv.Surge, arena.center, n);
             }
             _spawnT -= dt;
@@ -218,7 +218,7 @@ namespace LivingPartner.Shared
                 float every = M.Lerp(3.4f, 0.70f, M.Clamp01(time / (BossAt - 10f)));
                 if (bossSpawned) every = 1.5f;
                 _spawnT += every;
-                if (alive < MaxMonsters - 10) SpawnInside(PickKind(), 0.75f, 0);
+                if (alive < MaxMonsters - 10) SpawnInside(PickKind(), Rnd(2.2f, 3.2f), 0);
             }
         }
 
@@ -250,7 +250,7 @@ namespace LivingPartner.Shared
                 {
                     float dur = m.kind == SwarmKind.Boss ? 2.4f : 0.38f, k = M.Clamp01(m.t / dur);
                     m.grow = k;
-                    m.pos = m.from + arena.outward * ((m.kind == SwarmKind.Boss ? 0.24f : 0.09f) * M.EaseOut(k) + m.radius * 0.3f);
+                    m.pos = m.from + arena.outward * ((m.kind == SwarmKind.Boss ? 0.24f : 0.09f) * M.EaseOut(k));
                     if (k >= 1f) { m.state = SwarmState.Chase; m.t = 0f; m.grow = 1f; }
                     continue;
                 }
@@ -293,18 +293,6 @@ namespace LivingPartner.Shared
                     m.t = 0f;
                     for (int k = 0; k < 2; k++) SpawnChase(SwarmKind.Mini, m.pos + arena.right * ((k == 0 ? -1f : 1f) * (m.radius + 0.03f)) + arena.outward * 0.03f);
                 }
-                // A palm intercepts an arriving demon before a hit to the player's chest on the same tick.
-                float reach = m.radius + ShieldRadius;
-                if (inp.shieldValid && m.touchCd <= 0f && Vector3.DistanceSquared(m.pos, inp.shieldPos) <= reach * reach)
-                {
-                    m.touchCd = 0.45f;
-                    Vector3 away = M.SafeNormalize(m.pos - inp.target, -arena.outward);
-                    m.pos += away * (m.kind == SwarmKind.Boss ? 0.06f : 0.20f);
-                    Push(SwarmEv.ShieldBlock, inp.shieldPos, m.kind);
-                    Damage(i, 2f + 2f * aug[SwarmAug.Shield], m.pos, away);
-                    if (phase == SwarmPhase.Over) return;
-                    continue;
-                }
                 // ---- it got to the user
                 if (dist < ArriveRadius + m.radius)
                 {
@@ -332,7 +320,7 @@ namespace LivingPartner.Shared
         void Damage(int i, float dmg, Vector3 at, Vector3 push)
         {
             ref SwarmMonster m = ref monsters[i];
-            if (!m.alive || m.state == SwarmState.Inside) return;
+            if (!m.alive) return;
             m.hp -= dmg; m.flash = 0.10f;
             if (m.kind != SwarmKind.Boss && m.state == SwarmState.Chase) m.pos += push * (m.kind == SwarmKind.Tank ? 0.006f : 0.022f);
             if (m.hp > 0f) { Push(SwarmEv.Hit, at, m.kind, i); return; }
@@ -346,8 +334,9 @@ namespace LivingPartner.Shared
             m.alive = false; alive--;
             kills++; score += SwarmKind.Points[kind];
             Push(SwarmEv.Pop, pos, kind, 0);
-            if (SwarmKind.Xp[kind] > 0) SpawnGem(pos, SwarmKind.Xp[kind]);
-            if (kind == SwarmKind.Splitter)
+            if (m.state == SwarmState.Inside) xp += SwarmKind.Xp[kind];
+            else if (SwarmKind.Xp[kind] > 0) SpawnGem(pos, SwarmKind.Xp[kind]);
+            if (kind == SwarmKind.Splitter && m.state != SwarmState.Inside)
                 for (int k = 0; k < 2; k++) SpawnChase(SwarmKind.Mini, pos + arena.right * ((k == 0 ? -1f : 1f) * 0.035f) + Vector3.UnitY * 0.01f);
             if (kind == SwarmKind.Boss) { bossDead = true; End(true); }
         }
@@ -388,7 +377,7 @@ namespace LivingPartner.Shared
             for (int i = 0; i < MaxMonsters; i++)
             {
                 ref SwarmMonster m = ref monsters[i];
-                if (!m.alive || m.state == SwarmState.Inside || i == notA || i == notB) continue;
+                if (!m.alive || i == notA || i == notB) continue;
                 float d = (m.pos - from).LengthSquared();
                 if (d < bd) { bd = d; best = i; }
             }
@@ -403,7 +392,7 @@ namespace LivingPartner.Shared
                 bolts[i] = new SwarmBolt
                 {
                     alive = true, star = star, pos = pos, prev = pos, dir = dir, speed = star ? 2.2f : BoltSpeed, radius = star ? 0.022f : BoltRadius,
-                    damage = star ? 3f + aug[SwarmAug.Buddy] : BoltDamage, life = 1.3f, pierce = star ? 0 : aug[SwarmAug.Pierce], lastHit = -1,
+                    damage = star ? 3f + aug[SwarmAug.Comet] : BoltDamage, life = Math.Max(1.3f, (Vector3.Distance(pos, arena.center) + StageDepth + 0.5f) / (star ? 2.2f : BoltSpeed)), pierce = star ? 0 : aug[SwarmAug.Pierce], lastHit = -1,
                 };
                 return;
             }
@@ -422,7 +411,7 @@ namespace LivingPartner.Shared
                 for (int i = 0; i < MaxMonsters; i++)
                 {
                     ref SwarmMonster m = ref monsters[i];
-                    if (!m.alive || m.state == SwarmState.Inside) continue;
+                    if (!m.alive) continue;
                     bool taken = false; for (int q = 0; q < found; q++) if (_picked[q] == i) taken = true;
                     if (taken) continue;
                     Vector3 to = m.pos - inp.aimOrigin; float d = to.Length();
@@ -463,12 +452,20 @@ namespace LivingPartner.Shared
                 ref SwarmBolt bo = ref bolts[b];
                 if (!bo.alive) continue;
                 bo.prev = bo.pos; bo.pos += bo.dir * (bo.speed * dt); bo.life -= dt;
+                float startDistance = Vector3.Dot(bo.prev - arena.center, arena.outward);
+                float after = Vector3.Dot(bo.pos - arena.center, arena.outward);
+                if (startDistance >= 0f && after < 0f)
+                {
+                    Vector3 cross = Vector3.Lerp(bo.prev, bo.pos, startDistance / (startDistance - after)) - arena.center;
+                    if (Math.Abs(Vector3.Dot(cross, arena.right)) > arena.halfW || Math.Abs(Vector3.Dot(cross, arena.up)) > arena.halfH)
+                    { bo.alive = false; continue; }
+                }
                 if (bo.life <= 0f) { bo.alive = false; continue; }
                 for (int i = 0; i < MaxMonsters; i++)
                 {
                     ref SwarmMonster m = ref monsters[i];
-                    if (!m.alive || m.state == SwarmState.Inside || m.id == bo.lastHit) continue;
-                    float r = m.radius * (0.5f + 0.5f * m.grow) + bo.radius;
+                    if (!m.alive || m.id == bo.lastHit) continue;
+                    float r = m.radius + bo.radius;
                     if (SegDist2(bo.prev, bo.pos, m.pos) > r * r) continue;
                     Vector3 at = m.pos - bo.dir * m.radius;
                     bo.lastHit = m.id;
@@ -481,7 +478,7 @@ namespace LivingPartner.Shared
                             Push(SwarmEv.Explosion, at, 0, 0, R);
                             for (int j = 0; j < MaxMonsters; j++)
                             {
-                                if (j == i || !monsters[j].alive || monsters[j].state == SwarmState.Inside) continue;
+                                if (j == i || !monsters[j].alive) continue;
                                 Vector3 d = monsters[j].pos - at;
                                 if (d.Length() < R + monsters[j].radius) Damage(j, 1f + explode, monsters[j].pos, M.SafeNormalize(d, bo.dir));
                             }
@@ -557,20 +554,20 @@ namespace LivingPartner.Shared
                     }
                 }
             }
-            // ---- the partner throws stars
-            if (aug[SwarmAug.Buddy] > 0 && inp.buddyValid)
+            // A second shot seeks the closest target from the casting hand.
+            if (aug[SwarmAug.Comet] > 0 && inp.aimValid)
             {
-                _buddyT -= dt;
-                if (_buddyT <= 0f)
+                _cometT -= dt;
+                if (_cometT <= 0f)
                 {
-                    int nx = Nearest(inp.target, 3f, -1, -1);
-                    if (nx < 0) _buddyT = 0.2f;
+                    int nx = Nearest(inp.aimOrigin, StageDepth + Vector3.Distance(inp.aimOrigin, arena.center) + 1f, -1, -1);
+                    if (nx < 0) _cometT = 0.2f;
                     else
                     {
-                        _buddyT = 1.9f - 0.4f * aug[SwarmAug.Buddy];
-                        Vector3 from = inp.buddyPos;
+                        _cometT = 1.9f - 0.4f * aug[SwarmAug.Comet];
+                        Vector3 from = inp.aimOrigin;
                         AddBolt(from, M.SafeNormalize(monsters[nx].pos - from, arena.outward * -1f), true);
-                        Push(SwarmEv.BuddyThrow, from, 0, 0, 0f, monsters[nx].pos);
+                        Push(SwarmEv.CometFire, from, 0, 0, 0f, monsters[nx].pos);
                     }
                 }
             }
@@ -583,7 +580,7 @@ namespace LivingPartner.Shared
             for (int guard = 0; guard < 200 && n < 3; guard++)
             {
                 int a = (int)(Rnd() * SwarmAug.Count); if (a >= SwarmAug.Count) a = SwarmAug.Count - 1;
-                if ((!_offerBuddy && a == SwarmAug.Buddy) || aug[a] >= SwarmAug.Max[a]) continue;
+                if (aug[a] >= SwarmAug.Max[a]) continue;
                 if (a == SwarmAug.Heal && hearts >= maxHearts) continue;
                 bool dup = false; for (int k = 0; k < n; k++) if (choices[k] == a) dup = true;
                 if (dup) continue;
@@ -669,6 +666,8 @@ namespace LivingPartner.Shared
         public int level, hearts, maxHearts, score, xp, need;
         public float elapsed;
         public bool won;
+        public int shotCount;
+        public float[] shotU = new float[SwarmSim.MaxBolts], shotV = new float[SwarmSim.MaxBolts], shotRadius = new float[SwarmSim.MaxBolts];
         public int[] choices = new int[3]; // Index into SwarmAug, valid only in the Choosing phase.
         public float halfW, halfH;                                                          // half the lit screen in metres, as the headset measured it (the monsters are as large inside as they are outside)
         // (count = -1: the PC client's answer, back through the host to the headset about twice a second - "I am drawing them")

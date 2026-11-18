@@ -92,8 +92,14 @@ public static class Program
         // (one host per data folder: a trial host with a folder of its own, LP_HOME, may run next to the real one)
         string instance = "Local\\LivingAIPartner.Host" + (HostPaths.Trial ? "." + Convert.ToHexString(System.Security.Cryptography.SHA256.HashData(Encoding.UTF8.GetBytes(HostPaths.Root.ToLowerInvariant())))[..12] : "");
         using var showConnection = new EventWaitHandle(false,EventResetMode.AutoReset,instance + ".ShowConnection");
+        using var connectUsb = new EventWaitHandle(false,EventResetMode.AutoReset,instance + ".ConnectUsb");
         using var mutex = new Mutex(true, instance, out bool first);
-        if (!first) { if (!args.Contains("--no-tray")) showConnection.Set(); return; }
+        if (!first)
+        {
+            if (args.Contains("--usb-dev")) connectUsb.Set();
+            else if (!args.Contains("--no-tray")) showConnection.Set();
+            return;
+        }
         Win32.EnsureDpiAware();
         _loopbackOnly = args.Contains("--loopback-only");
         _noClient = args.Contains("--no-client");
@@ -120,12 +126,17 @@ public static class Program
         if (interactive)
         {
             BuildTray();
-            if (!Core.NoAutoOpen) ShowConnection();
+            if (!Core.NoAutoOpen && !Core.UsbDev) ShowConnection();
         }
         var timer = new System.Windows.Forms.Timer { Interval = 2000 };
         timer.Tick += (_, _) =>
         {
             UpdateTrayText(); WatchClient();
+            if (connectUsb.WaitOne(0))
+            {
+                Core.Post(Core.EnableUsb);
+                if (_connection is { IsDisposed: false }) _connection.Hide();
+            }
             if (interactive && showConnection.WaitOne(0)) ShowConnection();
             if (_connection is { IsDisposed:false, Visible:true }) _connection.RefreshStatus();
         };

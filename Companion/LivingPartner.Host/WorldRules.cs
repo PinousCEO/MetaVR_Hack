@@ -914,6 +914,43 @@ public static class WorldRules
         return moved;
     }
 
+    public static bool IsFirewood(string title)
+    {
+        string t = (title ?? "").Trim().ToLowerInvariant();
+        return Regex.IsMatch(t, @"^(?:장작(?:\s*더미)?|(?:a |some )?(?:stack of |pile of )?firewood)(?:[.!?]|\s*(?:을|를)?\s*(?:만들어|만들자)|$)");
+    }
+
+    public static JObject FirewoodShape()
+    {
+        var parts = new List<ShapePart>();
+        void Log(float x, float y, float z, float length, float radius, bool across, string bark)
+        {
+            void Slice(float along, float rise, float width, float span, string color)
+            {
+                parts.Add(new ShapePart { shape = "cylinder", x = x + (across ? along : 0), y = y + rise,
+                    z = z + (across ? 0 : along), sx = width, sy = span, sz = width,
+                    rx = across ? 0 : 90, rz = across ? 90 : 0, color = color });
+            }
+            Slice(0, 0, radius * 2, length, bark);
+            foreach (int end in new[] { -1, 1 })
+            {
+                float cut = end * length * .5f;
+                Slice(cut, 0, radius * 1.80f, .018f, "#E5AE73");
+                Slice(cut + end * .009f, .008f, radius * 1.10f, .012f, "#A56B43");
+                Slice(cut + end * .016f, .009f, radius * .83f, .009f, "#E8B982");
+            }
+            parts.Add(new ShapePart { shape = "box", x = x, y = y + radius * .84f, z = z,
+                sx = across ? length * .93f : radius * .88f, sy = radius * .24f,
+                sz = across ? radius * .88f : length * .93f, round = .10f, color = "#BE8759" });
+        }
+        Log(-.008f,.097f,-.173f,.87f,.098f,true,"#654136");
+        Log(.035f,.102f,.008f,.79f,.103f,true,"#835438");
+        Log(-.025f,.096f,.192f,.92f,.097f,true,"#704838");
+        Log(-.162f,.278f,.010f,.70f,.094f,false,"#895939");
+        Log(.129f,.281f,-.012f,.75f,.097f,false,"#664236");
+        return new JObject { ["title"] = "장작", ["parts"] = JArray.FromObject(parts) };
+    }
+
     /// <summary>
     /// Worked examples the sculptor is shown (Sculptor.cs), each the whole answer as it should come back. They are
     /// kept here, as data, so that the tests can hold them to the rules they teach: every part touching, the longest

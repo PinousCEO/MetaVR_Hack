@@ -22,7 +22,7 @@ Connect the TV to the MacBook and open `Bambi TV/Start-Bambi.command`. Choose **
 - First run: Windows Firewall asks about `LivingPartner.Host.exe`. Allow **private networks**.
 - A tray icon appears. Right-click it for: status, **Pair a headset (code …)**, Diagnostics, Portal debug overlay, Quiet mode, Stop current task / transition, Restart character client, Open logs folder, Quit.
 - Local diagnostics (no secrets): `http://127.0.0.1:47610/status`, or `lpctl status`.
-- The Companion window shows the pairing code while waiting and a screen calibration button once connected. Opening the launcher again brings this window back.
+- With an authorized Quest on USB, the launcher forwards the connection and the headset app connects automatically. Double-click the tray icon to open screen calibration or the game menu. On Wi-Fi the Companion window displays the first-time pairing code.
 
 ## 2. Install and pair the Quest app
 
@@ -36,6 +36,8 @@ adb install -r dist\LivingAIPartner-Quest\LivingAIPartner.apk
    - Beacon blocked on your network? Use USB: `adb reverse tcp:47610 tcp:47610` and restart the app.
 
 ### 2.1 With the USB cable in (development)
+
+Starting the companion with an authorized Quest on USB checks the bundled APK. The launcher installs an updated build before you put on the headset if the game is closed.
 
 ```powershell
 .\tools\Start-Quest.ps1 -Install -Watch 600     # install the APK, forward the port, start the host, wait until the headset is WORN, start the app, follow it

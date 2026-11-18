@@ -39,17 +39,15 @@ namespace LivingPartner.Shared
             var ball = Tennis.Evaluate(s.court, s.shot, g.t);
             if (ball.dead || !ball.Front) return false;
             eye = g.eye;
+            if (s.mode == "keeper") { Point(true, "saved", now); return true; }
             s.shot = Tennis.UserShot(s.court, ++seq, ball.pos, g.swing, g.normal, g.t);
             s.rally++; s.bestRally = Math.Max(s.rally,s.bestRally);
             planned = false; s.partnerHitAt = 0;
-            if (s.mode != "keeper")
-            {
-                planned = Tennis.PlanReturn(s.court, s.shot, partnerX, now, out double at, out Vector3 p)
-                    && random.NextDouble() >= Math.Min(.30,.08 + .02*s.rally);
-                s.partnerX = planned ? p.X : Clamp(Tennis.Evaluate(s.court,s.shot,g.t+1.4).pos.X*.6f,-s.court.width*.5f+.06f,s.court.width*.5f-.06f);
-                s.partnerZ = planned ? Clamp(p.Z+.02f,.12f,s.court.depth-.07f) : Tennis.Baseline(s.court);
-                s.partnerHitAt = planned ? at : 0;
-            }
+            planned = Tennis.PlanReturn(s.court, s.shot, partnerX, now, out double at, out Vector3 p)
+                && random.NextDouble() >= Math.Min(.30,.08 + .02*s.rally);
+            s.partnerX = planned ? p.X : Clamp(Tennis.Evaluate(s.court,s.shot,g.t+1.4).pos.X*.6f,-s.court.width*.5f+.06f,s.court.width*.5f-.06f);
+            s.partnerZ = planned ? Clamp(p.Z+.02f,.12f,s.court.depth-.07f) : Tennis.Baseline(s.court);
+            s.partnerHitAt = planned ? at : 0;
             Publish(); return true;
         }
         void Point(bool user, string why, double now)
@@ -76,11 +74,7 @@ namespace LivingPartner.Shared
             else if (s.phase=="rally" && s.shot!=null)
             {
                 var b=Tennis.Evaluate(s.court,s.shot,now);
-                if (s.mode=="keeper" && s.shot.by=="user")
-                {
-                    if (b.crossed && b.pos.Z>=Math.Min(.13f,s.court.depth*.45f) || b.dead || now>s.shot.t0+4) Point(true,"saved",now);
-                }
-                else if (planned && s.shot.by=="user" && now>=s.partnerHitAt)
+                if (planned && s.shot.by=="user" && now>=s.partnerHitAt)
                 {
                     float spread = Math.Min(1f,.5f+.08f*s.rally);
                     s.shot=Tennis.PartnerShot(s.court,++seq,b.pos,eye,(float)(random.NextDouble()*2-1)*spread,now);

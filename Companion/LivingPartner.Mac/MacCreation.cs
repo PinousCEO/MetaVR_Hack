@@ -165,6 +165,11 @@ sealed partial class Stage
             answer = await model.AskJsonAsync(SculptureDesign.Brief + "\nInclude a short object title in the user's language.",
                 SightRules.SculptNote(what, seen.modelPrompt), attachments, ShapeSchema(), 12000, ct);
         }
+        else if (WorldRules.IsFirewood(name) || WorldRules.IsFirewood(words))
+        {
+            name = "장작";
+            answer = WorldRules.FirewoodShape();
+        }
         else if (model == null)
         {
             int pattern = kind.id switch { "chair" => 0, "lamp" => 1, "plant" => 2, _ => -1 };

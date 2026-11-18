@@ -450,26 +450,15 @@ namespace LivingPartner.MR
             return true;
         }
 
-        bool _pairBodyPlain; string _pairErrLogged = ""; float _pairErrLogAt;
-
         void UpdatePairing(float dt)
         {
             var p = _pair.panel;
-            if (UpdateWelcome(dt)) { p.Hide(); return; }      // the card with "Play now" / "Connect my PC" is up instead, or there is no PC at all (MrLocalHost)
-            bool need = _link.NeedsPairing || (!_link.Connected && _snap == null);
-            if (!need) { p.Hide(); return; }
+            if (UpdateWelcome(dt) || !_link.Connected || !_link.NeedsPairing) { p.Hide(); return; }
             p.Show();
             FaceUser(p.transform, Input.HeadPos + Input.HeadRot * new Vector3(0, -0.08f, 0.48f));
-            p.title.text = _link.NeedsPairing ? "컴퓨터에 표시된 6자리 코드 입력" : "밤비 Companion 연결 중";
-            if (_link.NeedsPairing) { p.body.text = "Code: " + _pairEntry.PadRight(6, '·'); _pairBodyPlain = false; }
-            else
-            {
-                // (what the user can do about it; the link's own words - an address, an exception's name - go to the log, a line when they change)
-                if (!_pairBodyPlain) { _pairBodyPlain = true; p.body.SetWrapped("Mac은 Start-Bambi.command, Windows는 Start-LivingPartner를 실행해 주세요.", p.width - 0.018f); }
-                string err = _link.LastError ?? "";
-                if (err != _pairErrLogged && Time.time >= _pairErrLogAt) { _pairErrLogged = err; _pairErrLogAt = Time.time + 5f; Debug.Log($"[MR] looking for the PC: {_link.CurrentUrl} {err}"); }
-            }
-            if (_link.NeedsPairing) UpdateButtons(p, dt); else p.Animate(dt, Time.time);
+            p.title.text = "컴퓨터에 표시된 6자리 코드 입력";
+            p.body.text = "Code: " + _pairEntry.PadRight(6, '·');
+            UpdateButtons(p, dt);
         }
 
         // ------------------------------------------------------------------ monitor calibration (manual, saved, re-usable)

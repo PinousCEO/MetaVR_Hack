@@ -256,7 +256,7 @@ namespace LivingPartner.Character
                         timeout.CancelAfter(2500);
                         await ws.ConnectAsync(new Uri(url), timeout.Token).ConfigureAwait(false);
                     }
-                    _ws = ws; CurrentUrl = url;
+                    _ws = ws; CurrentUrl = url; urlIndex = 0;
                     while (_out.TryDequeue(out _)) { }
                     SendHello();
                     _mainThread.Enqueue(() => { if (ct.IsCancellationRequested) return; Connected = true; _fastPings = 8; _nextPing = 0; ReconnectCount++; OnConnectionChanged?.Invoke(true); });      // (cancelled: the app went local meanwhile)
@@ -272,7 +272,7 @@ namespace LivingPartner.Character
                     bool was = _ws == ws;
                     if (was) _ws = null;      // (not the socket of a loop that was started after this one was cancelled: GoLocal, then LeaveLocal)
                     try { ws.Dispose(); } catch { }
-                    if (was) _mainThread.Enqueue(() => { if (Connected && !Local && !ct.IsCancellationRequested) { Connected = false; OnConnectionChanged?.Invoke(false); } });
+                    if (was) _mainThread.Enqueue(() => { if (Connected && !Local && !ct.IsCancellationRequested) { Connected = false; NeedsPairing = false; OnConnectionChanged?.Invoke(false); } });
                 }
                 await SafeDelay(backoff, ct);
                 backoff = Math.Min(backoff * 2, 3000);

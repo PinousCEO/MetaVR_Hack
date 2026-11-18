@@ -8,6 +8,26 @@ namespace LivingPartner.Tests;
 public class SwarmTests
 {
     [Fact]
+    public void Bolts_cross_the_display_and_damage_a_demon_before_it_emerges()
+    {
+        var s = New();
+        for (int i = 1; i < s.monsters.Length; i++) s.monsters[i].alive = false;
+        ref var demon = ref s.monsters[0];
+        demon.du = demon.dv = demon.u = demon.v = 0;
+        float health = demon.hp;
+        bool crossed = false;
+        for (int i = 0; i < 120 && demon.hp == health; i++)
+        {
+            s.Step(Dt, Aim(demon.pos));
+            foreach (var bolt in s.bolts)
+                if (bolt.alive && Vector3.Dot(bolt.pos - s.arena.center, s.arena.outward) < 0) crossed = true;
+        }
+        Assert.True(crossed);
+        Assert.Equal(SwarmState.Inside, demon.state);
+        Assert.True(demon.hp < health);
+    }
+
+    [Fact]
     public void A_calibrated_living_room_TV_under_the_gaze_wins_over_a_nearby_side_monitor()
     {
         float Rank(Vector3 center, float width, float height, Vector3 normal, bool occupied) =>
@@ -19,7 +39,7 @@ public class SwarmTests
     }
 
     const float Dt = 1f / 72f;
-    static readonly Vector3 Chest = new(0f, 1.05f, 0f), Finger = new(0.14f, 0.98f, 0.30f), Bambi = new(-0.2f, 0.75f, 0.35f);
+    static readonly Vector3 Chest = new(0f, 1.05f, 0f), Finger = new(0.14f, 0.98f, 0.30f);
 
     static SwarmArena Arena() => new SwarmArena
     {
@@ -33,13 +53,13 @@ public class SwarmTests
         return s;
     }
 
-    static SwarmInput Idle() => new SwarmInput { target = Chest, buddyValid = true, buddyPos = Bambi };
-    static SwarmInput Aim(Vector3 at) => new SwarmInput { target = Chest, aimValid = true, aimOrigin = Finger, aimDir = Vector3.Normalize(at - Finger), handValid = true, hand = Finger - new Vector3(0, 0.03f, 0.08f), buddyValid = true, buddyPos = Bambi };
+    static SwarmInput Idle() => new SwarmInput { target = Chest };
+    static SwarmInput Aim(Vector3 at) => new SwarmInput { target = Chest, aimValid = true, aimOrigin = Finger, aimDir = Vector3.Normalize(at - Finger), handValid = true, hand = Finger - new Vector3(0, 0.03f, 0.08f) };
 
     /// <summary>A player: points at the monster nearest to the chest, turning the finger at `turn` per second; takes the cards in the order of `likes`.</summary>
     sealed class Bot
     {
-        public float turn = 6f; public int[] likes = System.Array.Empty<int>(); public bool shield;
+        public float turn = 6f; public int[] likes = System.Array.Empty<int>();
         Vector3 _dir = Vector3.UnitZ;
         public float elapsed;
         public SwarmInput Input(SwarmSim s)
@@ -55,7 +75,6 @@ public class SwarmTests
             Vector3 want = best >= 0 ? Vector3.Normalize(s.monsters[best].pos - Finger) : Vector3.Normalize(s.arena.center - Finger);
             _dir = Vector3.Normalize(Vector3.Lerp(_dir, want, System.Math.Min(1f, turn * Dt)));
             var inp = Aim(Finger + _dir);
-            if (shield) { inp.shieldValid = true; inp.shieldPos = Chest + new Vector3(-0.12f, -0.05f, 0.22f); }
             return inp;
         }
         public void Run(SwarmSim s, float seconds)
@@ -86,7 +105,8 @@ public class SwarmTests
         Assert.Equal(8, Count(s, SwarmState.Inside));
         var a = Arena();
         int emerged = 0; float firstOut = -1, lastOut = -1, t = 0;
-        var inp = Aim(a.center);
+        var inp = Idle();
+        Assert.True(Vector3.Dot(s.monsters[0].pos - a.center, a.outward) < -0.8f);
         for (; t < 5f; t += Dt)
         {
             s.Step(Dt, inp);
@@ -94,11 +114,11 @@ public class SwarmTests
             foreach (var m in s.monsters)
             {
                 if (!m.alive || m.state != SwarmState.Inside) continue;
-                // behind the glass they stay inside the rectangle, on its plane - and nothing can hit them there
+                // behind the glass they stay inside the rectangle, across the entire approach
                 Vector3 d = m.pos - a.center;
                 Assert.InRange(Vector3.Dot(d, a.right), -a.halfW, a.halfW);
                 Assert.InRange(Vector3.Dot(d, a.up), -a.halfH, a.halfH);
-                Assert.InRange(Vector3.Dot(d, a.outward), -0.001f, 0.001f);
+                Assert.InRange(Vector3.Dot(d, a.outward), -s.StageDepth - 0.001f, 0.001f);
                 Assert.Equal(m.maxHp, m.hp);
             }
             if (t < SwarmSim.IntroSeconds - 0.1f) Assert.Equal(0, emerged);
@@ -161,7 +181,7 @@ public class SwarmTests
     public void A_good_player_wins_and_the_run_takes_about_three_minutes()
     {
         var s = New(42);
-        var bot = new Bot { turn = 14f, shield = true, likes = new[] { SwarmAug.Twin, SwarmAug.Rapid, SwarmAug.Big, SwarmAug.Explode, SwarmAug.Chain, SwarmAug.Pierce, SwarmAug.Orbit, SwarmAug.Buddy } };
+        var bot = new Bot { turn = 14f, likes = new[] { SwarmAug.Twin, SwarmAug.Rapid, SwarmAug.Big, SwarmAug.Explode, SwarmAug.Chain, SwarmAug.Pierce, SwarmAug.Orbit, SwarmAug.Comet } };
         bot.Run(s, 400f);
         Assert.Equal(SwarmPhase.Over, s.phase);
         Assert.True(s.won, $"lost at {s.time:0} s, level {s.level}, {s.kills} popped, boss out {s.bossOut}");
@@ -310,7 +330,7 @@ public class SwarmTests
     }
 
     [Fact]
-    public void Star_ring_sleepy_mist_palm_shield_and_bambi_do_their_part()
+    public void Orbit_mist_and_player_cast_comets_apply_their_effects()
     {
         // stars circle the hand and bonk what they touch
         var s = New(); Play(s); s.aug[SwarmAug.Orbit] = 1;
@@ -331,25 +351,10 @@ public class SwarmTests
         }
         Assert.True(Travel(2) < Travel(0) * 0.7f);
 
-        // The starting palm blocks immediately. Its augment increases reach and damage.
-        bool Blocks(int shield)
-        {
-            var q = New(); Play(q); q.aug[SwarmAug.Shield] = shield;
-            var i2 = Idle(); i2.shieldValid = true; i2.shieldPos = Chest + new Vector3(0, 0, 0.25f);
-            q.Put(SwarmKind.Tank, Chest + new Vector3(0, 0, 0.45f));
-            bool blocked = false;
-            for (float t = 0; t < 6f && q.hearts == SwarmSim.StartHearts; t += Dt) { q.Step(Dt, i2); for (int e = 0; e < q.eventCount; e++) if (q.events[e].type == SwarmEv.ShieldBlock) blocked = true; }
-            return blocked;
-        }
-        Assert.True(Blocks(0)); Assert.True(Blocks(1));
-        var defense = New(); float basic = defense.ShieldRadius; defense.aug[SwarmAug.Shield] = 1;
-        Assert.True(defense.ShieldRadius > basic);
-
-        // Bambi throws stars at what is out
-        var b = New(); Play(b); b.aug[SwarmAug.Buddy] = 1;
+        var b = New(); Play(b); b.aug[SwarmAug.Comet] = 1;
         int target = b.Put(SwarmKind.Boss, new Vector3(0.2f, 1.0f, 0.6f)); int throws = 0;
-        var bi = Idle();
-        for (float t = 0; t < 4f; t += Dt) { b.Step(Dt, bi); b.monsters[target].pos = new Vector3(0.2f, 1.0f, 0.6f); for (int e = 0; e < b.eventCount; e++) if (b.events[e].type == SwarmEv.BuddyThrow) throws++; }
+        var bi = Aim(b.monsters[target].pos);
+        for (float t = 0; t < 4f; t += Dt) { b.Step(Dt, bi); b.monsters[target].pos = new Vector3(0.2f, 1.0f, 0.6f); for (int e = 0; e < b.eventCount; e++) if (b.events[e].type == SwarmEv.CometFire) throws++; }
         Assert.InRange(throws, 2, 4);
         Assert.True(b.monsters[target].hp < b.monsters[target].maxHp);
     }

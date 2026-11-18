@@ -251,7 +251,8 @@ namespace LivingPartner.MR
 
             // ---- the ball
             var shot = _tnLocal ?? _tn.shot;
-            bool inPlay = shot != null && _tn.phase == "rally";
+            bool keeper = _tn.mode == "keeper";
+            bool inPlay = shot != null && _tn.phase == "rally" && !(keeper && shot.seq == _tnStruckSeq);
             Vector3 right = Input.HeadRot * Vector3.right; right.y = 0; right = right.sqrMagnitude > 1e-4f ? right.normalized : Vector3.right;
             if (inPlay && shot.by == "partner" && shot.seq != _tnStruckSeq)
             {
@@ -269,7 +270,7 @@ namespace LivingPartner.MR
                         var palm = SN.Vector3.Lerp(prevPalm[h], _tnPalm[h], f);
                         if (!Tennis.PaddleHits(sk.pos, palm, normal[h], Tennis.BallRadius(_tn.mode))) continue;
                         _tnStruckSeq = shot.seq;
-                        if (_tn.mode != "stars") _tnLocal = Tennis.UserShot(c, shot.seq + 1, sk.pos, _tnPalmVel[h], normal[h], tk);      // stars: a hand on the ball is a catch, nothing flies back
+                        if (!keeper && _tn.mode != "stars") _tnLocal = Tennis.UserShot(c, shot.seq + 1, sk.pos, _tnPalmVel[h], normal[h], tk);      // stars: a hand on the ball is a catch, nothing flies back
                         _link.Send(Msg.GameCommand, new GameCommand { cmd = "hit", seq = shot.seq, pos = sk.pos, swing = _tnPalmVel[h], normal = normal[h], t = tk, eye = mv.frame.ToLocal(Conv.N(Input.HeadPos)) });
                         _sparks.Burst(Conv.U(mv.frame.ToWorld(sk.pos)), right, Vector3.up, _tn.mode == "stars" ? 0.05f : 0.035f, _tn.mode == "stars" ? 12 : 7);
                         _tnHitFlash = 1f;

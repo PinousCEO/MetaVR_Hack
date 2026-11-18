@@ -2,12 +2,11 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>밤비의 오목판</title>
 <link rel="stylesheet" href="/table/board.css"><script type="module" src="/table/board.mjs"></script></head>
 <body><main>
-  <header><h1>오목</h1><p id="who" role="status">대국 준비</p><span id="count"></span></header>
+  <header><h1>오목</h1><p id="who" role="status"></p></header>
   <div id="board"><canvas aria-label="15줄 오목판"></canvas></div>
   <section id="setup">
-    <h2>둘이서 오목</h2><p>한 사람은 Quest를 쓰고, 다른 사람은 TV를 가리켜 돌을 놓아요. 가로·세로·대각선으로 다섯 개를 이으면 승리합니다.</p>
-    <label for="monitor">이 창이 있는 TV</label><select id="monitor"></select>
+    <label for="monitor">화면</label><select id="monitor"></select>
     <button id="start">이 TV에서 시작</button><p id="help" role="status"></p>
   </section>
-  <footer><p id="guide" role="status"></p><div><button id="restart" hidden>다시 두기</button><button id="close" hidden>대국 종료</button></div></footer>
+  <footer><p id="guide" role="status"></p><div><button id="restart" hidden>다시 두기</button><button id="close" hidden>종료</button></div></footer>
 </main></body></html>

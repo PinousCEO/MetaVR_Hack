@@ -81,8 +81,8 @@ public sealed partial class TaskManager
     string StartLook(LookSpot spot, string words, string how)
     {
         bool ko = ReplyLanguage(words) == "Korean";
-        if (!ReviewEnabled) return "I can't look at screens yet: that needs an AI key on the PC.";
-        if (_looking) return "";
+        if (!ReviewEnabled) return ko ? "화면을 읽으려면 PC에 화면 인식용 API 키가 필요해." : "Reading the screen needs an AI key on the PC.";
+        if (_looking) return ko ? "지금 화면을 읽고 있어. 다 읽으면 말해 줄게." : "I’m still reading the screen.";
         var mons = _core.Desktop.Monitors;
         var m = ScreenMath.FindMonitor(mons, spot.monitorId) ?? mons.FirstOrDefault(x => x.primary) ?? mons.FirstOrDefault();
         if (m == null) return ko ? "화면을 못 찾겠어." : "I can't find a screen to look at.";

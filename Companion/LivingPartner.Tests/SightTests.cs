@@ -14,6 +14,20 @@ namespace LivingPartner.Tests;
 /// </summary>
 public class SightTests
 {
+    [Fact]
+    public void Firewood_logs_and_cut_ends_build_as_one_grounded_mesh()
+    {
+        var wood = WorldRules.Sculpt(WorldRules.FirewoodShape(), out string error);
+        Assert.True(wood != null, error);
+        Assert.Empty(wood.loose);
+        Assert.Equal(5, wood.parts.Count(p => p.shape == "box"));
+        Assert.Contains(wood.parts, p => p.rx == 90);
+        Assert.Contains(wood.parts, p => p.rz == 90);
+        Assert.True(PartMesh.Build(wood.parts).indices.Length > 0);
+        Assert.True(WorldRules.IsFirewood("장작. 장작에서 불이 활활 타올라야 돼."));
+        Assert.False(WorldRules.IsFirewood("장작 난로"));
+    }
+
     static ShapePart Part(string shape, float x, float y, float z, float sx, float sy, float sz, string color = "#F4A9A0", float round = 0, float rx = 0, float ry = 0, float rz = 0) =>
         new ShapePart { shape = shape, x = x, y = y, z = z, sx = sx, sy = sy, sz = sz, color = color, round = round, rx = rx, ry = ry, rz = rz };
 

@@ -9,10 +9,10 @@
     connectTab();addEventListener("pageshow",connectTab);
     addEventListener("pagehide",()=>{presence?.close();presence=null;});
   }
-  const ids=["속사","쌍발","관통","꽃 폭발","연쇄 번개","별 고리","감속 안개","거대 탄환","꿀차","보석 자석","","수호 방패"];
-  const notes=["발사 간격이 줄어요","한 발을 더 쏴요","탄환이 다음 적까지 뚫어요","명중한 곳에서 꽃불이 터져요","근처 악마에게 번개가 옮겨가요","조준점 주변을 별이 지켜요","가까운 악마의 발이 느려져요","탄환이 더 커지고 강해져요","생명을 두 칸 회복해요","경험치 보석이 빠르게 모여요","","방패가 넓어지고 반격이 강해져요"];
+  const ids=["속사","쌍발","관통","꽃 폭발","연쇄 번개","별 고리","감속 안개","거대 탄환","꿀차","보석 자석","유성탄"];
+  const notes=["발사 간격이 줄어요","한 발을 더 쏴요","탄환이 다음 적까지 뚫어요","명중한 곳에서 꽃불이 터져요","근처 악마에게 번개가 옮겨가요","조준점 주변을 별이 지켜요","가까운 악마의 발이 느려져요","탄환이 더 커지고 강해져요","생명을 두 칸 회복해요","경험치 보석이 빠르게 모여요","조준 중 가까운 적에게 유성탄을 발사해요"];
   let mesh,ws,awaiting=false,restart=false,paused=false,pick=null,frame,previous,received=0,choiceKey="",saved=false,serial=0;
-  let startBest=0,cueUntil=0,lastSound=0,ac,fx=[],held=new Set(),left=false,right=false,x=0,y=0;
+  let startBest=0,cueUntil=0,lastSound=0,ac,fx=[],held=new Set(),left=false,x=0,y=0;
   const wand=new Image();
   wand.src="/demon-gate/art/demon-wand.png";
   const ground=$("ground"),shade=ground.getContext("2d");
@@ -37,12 +37,12 @@
     o.connect(g);g.connect(ac.destination);o.start(at);o.stop(at+duration);
   }
   function controls(){return {x,y,aspect:innerWidth/innerHeight,move:(held.has("KeyD")||held.has("ArrowRight")?1:0)-(held.has("KeyA")||held.has("ArrowLeft")?1:0),
-    fire:left||held.has("KeyF"),shield:right||held.has("Space"),pause:paused,pick,restart};}
+    fire:left||held.has("KeyF"),pause:paused,pick,restart};}
   function transmit(){
     if(!ws||ws.readyState!==WebSocket.OPEN||awaiting)return;
     const input=controls();ws.send(JSON.stringify(input));awaiting=true;pick=null;restart=false;
   }
-  function resetInputs(){held.clear();left=false;right=false;}
+  function resetInputs(){held.clear();left=false;}
   function pause(on){
     if(!frame||frame.phase===4||frame.phase===3)return;
     paused=on;resetInputs();$("break").hidden=!on;stage.classList.toggle("fighting",!on);
@@ -55,7 +55,7 @@
     const cards=$("cards");cards.replaceChildren();
     for(const [slot,id] of f.choices.entries()){
       const b=document.createElement("button"),img=new Image(),title=document.createElement("b"),desc=document.createElement("small"),key=document.createElement("kbd");
-      img.src="/demon-gate/art/demon-charm-"+String(id+1).padStart(2,"0")+".png";img.alt="";
+      img.src="/demon-gate/art/demon-charm-"+String(id===10?3:id+1).padStart(2,"0")+".png";img.alt="";
       title.textContent=ids[id];desc.textContent=notes[id];key.textContent="숫자 "+(slot+1);b.append(img,title,desc,key);b.onclick=()=>choose(slot);cards.append(b);
     }
     cards.firstElementChild?.focus();sound(600,.3,"sine",.06,1.6);
@@ -105,15 +105,15 @@
   $("start").onclick=$("again").onclick=play;$("pause").onclick=()=>pause(true);$("resume").onclick=()=>pause(false);
   function aim(e){x=Math.max(-1,Math.min(1,2*e.clientX/innerWidth-1));y=Math.max(-1,Math.min(1,1-2*e.clientY/innerHeight));}
   canvas.onpointermove=aim;
-  canvas.onpointerdown=e=>{if(paused||!frame||frame.phase>2)return;aim(e);canvas.setPointerCapture(e.pointerId);if(e.button===0)left=true;if(e.button===2)right=true;e.preventDefault();};
-  window.addEventListener("pointerup",e=>{if(e.button===0)left=false;if(e.button===2)right=false;});
+  canvas.onpointerdown=e=>{if(paused||!frame||frame.phase>2)return;aim(e);canvas.setPointerCapture(e.pointerId);if(e.button===0)left=true;e.preventDefault();};
+  window.addEventListener("pointerup",e=>{if(e.button===0)left=false;});
   canvas.onpointercancel=resetInputs;canvas.oncontextmenu=e=>e.preventDefault();
   addEventListener("keydown",e=>{
     if(!frame)return;
     if(e.code==="Escape"&&!e.repeat){pause(!paused);return;}
     if(frame.phase===3&&/^Digit[123]$/.test(e.code)){e.preventDefault();choose(+e.code.slice(-1)-1);return;}
     if(paused||frame.phase>2)return;
-    if(["Space","ArrowLeft","ArrowRight","KeyA","KeyD","KeyF"].includes(e.code)){e.preventDefault();held.add(e.code);}
+    if(["ArrowLeft","ArrowRight","KeyA","KeyD","KeyF"].includes(e.code)){e.preventDefault();held.add(e.code);}
   });
   addEventListener("keyup",e=>held.delete(e.code));addEventListener("blur",()=>{resetInputs();pause(true);});
   document.addEventListener("visibilitychange",()=>{if(document.hidden){resetInputs();pause(true);}});
@@ -177,11 +177,6 @@
     if(frame.phase<3&&!paused){
       const cx=(x+1)*w*.5,cy=(1-y)*h*.5,r=11*d;
       drawWand(t,w,h,d);
-      const shield=right||held.has("Space");if(shield){const radius=frame.shieldRadius*h/(.55*.8);
-        brush.beginPath();brush.arc(cx,cy,radius,0,Math.PI*2);brush.fillStyle="#ffe2a212";brush.fill();
-        brush.strokeStyle="#fff0c2";brush.lineWidth=2*d;
-        for(let n=0;n<6;n++){const a=n*Math.PI/3+t*.0002;brush.beginPath();brush.arc(cx,cy,radius,a,a+.72);brush.stroke();}
-      }
       ring([cx,cy],r,"#29202ac9",4*d);ring([cx,cy],r,"#fff0c4",1.6*d);
       for(let n=0;n<4;n++){const a=Math.PI*n/2;line([cx+Math.cos(a)*(r+2*d),cy+Math.sin(a)*(r+2*d)],[cx+Math.cos(a)*(r+7*d),cy+Math.sin(a)*(r+7*d)],"#f9e5af",2*d);}
     }
@@ -189,7 +184,7 @@
   }
   // Decode the card art during the title screen so every offered charm appears on its first frame.
   const charmArt=ids.map((name,id)=>{if(!name)return Promise.resolve();
-    const image=new Image();image.src="/demon-gate/art/demon-charm-"+String(id+1).padStart(2,"0")+".png";
+    const image=new Image();image.src="/demon-gate/art/demon-charm-"+String(id===10?3:id+1).padStart(2,"0")+".png";
     return image.decode?image.decode():Promise.resolve();
   });
   size();Promise.all([demonModels(actors),...charmArt]).then(([renderer])=>{mesh=renderer;$("start").disabled=false;$("start").textContent="혼자 시작";}).catch(error=>{$("error").textContent=error.message;});

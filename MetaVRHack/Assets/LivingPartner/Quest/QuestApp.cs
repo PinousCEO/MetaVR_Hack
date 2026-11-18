@@ -150,11 +150,12 @@ namespace LivingPartner.Quest
         // ------------------------------------------------------------------ host discovery
         List<string> Urls()
         {
-            var list = new List<string>();
-            lock (_discovered) list.AddRange(_discovered);
+            // An authorized cable can connect immediately, even if a remembered Wi-Fi host is offline.
+            var list = new List<string> { $"ws://127.0.0.1:{Proto.DefaultPort}/ws" };
+            lock (_discovered)
+                foreach (string url in _discovered) if (!list.Contains(url)) list.Add(url);
             string last = _lastUrl;
             if (!string.IsNullOrEmpty(last) && !list.Contains(last)) list.Add(last);
-            list.Add($"ws://127.0.0.1:{Proto.DefaultPort}/ws");   // USB development: adb reverse tcp:47610 tcp:47610
             return list;
         }
         string _lastUrl = "";

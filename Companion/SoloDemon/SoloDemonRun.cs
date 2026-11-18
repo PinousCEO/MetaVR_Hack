@@ -3,7 +3,7 @@ using LivingPartner.Shared;
 
 namespace LivingPartner.Demon;
 
-public sealed record SoloControls(float X = 0, float Y = 0, float Aspect = 1.77f, int Move = 0, bool Fire = false, bool Shield = false, bool Pause = false, int? Pick = null, bool Restart = false);
+public sealed record SoloControls(float X = 0, float Y = 0, float Aspect = 1.77f, int Move = 0, bool Fire = false, bool Pause = false, int? Pick = null, bool Restart = false);
 
 /// <summary>One desktop player facing the gate. Independent sessions share only the Quest game's geometry and simulation rules.</summary>
 public sealed class SoloDemonRun
@@ -18,7 +18,7 @@ public sealed class SoloDemonRun
         Sim.Start(seed, new SwarmArena {
             center = new Vector3(0, 1.06f, .87f), right = Vector3.UnitX, up = Vector3.UnitY, outward = -Vector3.UnitZ,
             halfW = .46f, halfH = .19f, deskY = .90f, pace = .90f
-        }, offerBuddy: false);
+        });
     }
 
     public void Advance(SoloControls input, float elapsed)
@@ -35,10 +35,10 @@ public sealed class SoloDemonRun
             if (Sim.phase == SwarmPhase.Choosing || Sim.phase == SwarmPhase.Over) break;
             PlayerX = Math.Clamp(PlayerX + Math.Clamp(input.Move,-1,1)*dt*.46f,-.36f,.36f);
             var camera = new Vector3(PlayerX,CameraY,CameraZ);
-            var shield = camera + direction * (.55f / direction.Z);
+            var hand = camera + direction * (.55f / direction.Z);
             Sim.Step(dt, new SwarmInput {
                 aimOrigin = camera, aimDir = direction, aimValid = input.Fire,
-                target = new Vector3(PlayerX,1.02f,0), handValid = true, hand = shield, shieldPos = shield, shieldValid = input.Shield
+                target = new Vector3(PlayerX,1.02f,0), handValid = true, hand = hand
             });
             for (int i=0;i<Sim.eventCount;i++) {
                 var e=Sim.events[i];
@@ -61,7 +61,7 @@ public sealed class SoloDemonRun
         for (int i=0;i<Sim.orbitCount;i++) { var p=Sim.orbit[i]; orbit.Add(new[]{p.X,p.Y,p.Z}); }
         return new {
             phase=Sim.phase, time=Sim.time, intro=Sim.IntroLeft, hp=Sim.hearts, maxHp=Sim.maxHearts, level=Sim.level, xp=Sim.xp, need=Sim.XpNeed,
-            score=Sim.score, kills=Sim.kills, won=Sim.won, boss=Sim.bossSpawned, bossAt=SwarmSim.BossAt, playerX=PlayerX, shieldRadius=Sim.ShieldRadius,
+            score=Sim.score, kills=Sim.kills, won=Sim.won, boss=Sim.bossSpawned, bossAt=SwarmSim.BossAt, playerX=PlayerX,
             choices=Sim.phase==SwarmPhase.Choosing?Sim.choices:Array.Empty<int>(), upgrades=Sim.aug,
             monsters,bolts,gems,orbit,effects
         };

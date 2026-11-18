@@ -23,9 +23,9 @@ static class Displays
     [DllImport(CoreGraphics)][return: MarshalAs(UnmanagedType.I1)] static extern bool CGRequestScreenCaptureAccess();
 
     // Capture a small rectangle in global Quartz display points; Retina and negative screen origins are supported.
-    public static async Task<byte[]> CaptureSpotAsync(string displayId, float u, float v, CancellationToken ct)
+    public static async Task<byte[]> CaptureSpotAsync(string displayId, float u, float v, CancellationToken ct, bool wholeDisplay = false)
     {
-        if (!OperatingSystem.IsMacOS()) throw new InvalidOperationException("실제 Mac 화면에서 아이콘을 가리켜 주세요.");
+        if (!OperatingSystem.IsMacOS()) throw new InvalidOperationException("이 기능은 Mac의 화면 기록 권한이 필요해요.");
         if (!float.IsFinite(u) || !float.IsFinite(v) || u < 0 || u > 1 || v < 0 || v > 1)
             throw new InvalidOperationException("바꾸려는 아이콘을 다시 가리켜 주세요.");
         if (!CGPreflightScreenCaptureAccess() && !CGRequestScreenCaptureAccess())
@@ -35,7 +35,7 @@ static class Displays
         if (displayId == "mac-tv")
         {
             var outside = active.Where(d => d.Name == "외부 디스플레이").ToArray();
-            if (outside.Length > 1) throw new InvalidOperationException("TV 설정에서 아이콘이 있는 실제 디스플레이를 선택해 주세요.");
+            if (outside.Length > 1) throw new InvalidOperationException("TV 설정에서 읽을 디스플레이를 선택해 주세요.");
             id = outside.Length == 1 ? uint.Parse(outside[0].Id[4..]) : CGMainDisplayID();
         }
         else if (!active.Any(d => d.Id == displayId) || !uint.TryParse(displayId[4..], out id))
@@ -46,12 +46,14 @@ static class Displays
         int size = Math.Clamp(Math.Min(width,height)/6,96,260);
         int x = (int)Math.Round(bounds.x) + Math.Clamp((int)Math.Round(u * width) - size/2, 0, width-size);
         int y = (int)Math.Round(bounds.y) + Math.Clamp((int)Math.Round(v * height) - size/2, 0, height-size);
-        string directory = Directory.CreateTempSubdirectory("bambi-icon-").FullName;
+        if (wholeDisplay) { x = (int)Math.Round(bounds.x); y = (int)Math.Round(bounds.y); }
+        else { width = size; height = size; }
+        string directory = Directory.CreateTempSubdirectory("bambi-screen-").FullName;
         string file = Path.Combine(directory,"spot.png");
         try
         {
             var start = new ProcessStartInfo("/usr/sbin/screencapture")
-            { UseShellExecute=false, RedirectStandardError=true, ArgumentList={"-x","-t","png","-R",$"{x},{y},{size},{size}",file} };
+            { UseShellExecute=false, RedirectStandardError=true, ArgumentList={"-x","-t","png","-R",$"{x},{y},{width},{height}",file} };
             using var request = Process.Start(start);
             if (request == null) throw new InvalidOperationException("화면을 캡처할 수 없어요.");
             using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);

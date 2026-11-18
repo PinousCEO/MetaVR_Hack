@@ -131,13 +131,13 @@
     }
   }
   const stateText={1:'왼손바닥으로 막고 오른손 검지로 조준하세요',2:'문을 빠져나온 악마는 방 안에서 막으세요',3:'헤드셋에서 세 가지 강화 중 하나를 고르세요',4:'전투가 끝났어요'};
-  const charms=['속사','쌍발','관통','폭발','연쇄 번개','별 고리','감속 안개','거대 탄환','회복','보석 자석','밤비의 지원','손바닥 방패'];
+  const charms=['속사','쌍발','관통','폭발','연쇄 번개','별 고리','감속 안개','거대 탄환','회복','보석 자석','유성탄'];
   function drawChoices(choices){
     const key=choices.join(',');
     if(choiceKey===key)return;choiceKey=key;
     const list=byId('swarm-choices');list.hidden=!choices.length;list.replaceChildren();
     for(const n of choices){
-      const item=document.createElement('li'),icon=new Image();icon.alt='';icon.src='/art/demon-charm-'+String(n+1).padStart(2,'0')+'.png';
+      const item=document.createElement('li'),icon=new Image();icon.alt='';icon.src='/art/demon-charm-'+String(n===10?3:n+1).padStart(2,'0')+'.png';
       item.append(icon,document.createTextNode(charms[n]));list.append(item);
     }
   }
@@ -158,16 +158,21 @@
       if(meshes){
         for(const f of figures.values()){
           const t=time*.001+f.id*.37,k=1-Math.exp(-dt*14);f.x+=(f.tx-f.x)*k;f.y+=(f.ty-f.y)*k;f.p+=(f.press-f.p)*k;
-          const r=f.radius,depth=(1-f.p)*.13+r*.7;
-          const size=2*r*(f.kind===5?.28+.72*f.p:.82+.29*f.p);
-          drawMesh(meshes[f.kind],f.x*(hw-r),f.y*(hh-r)+.003*Math.sin(4*t),depth,size,.25*Math.sin(t*1.8),.12*Math.sin(t*2.3),0);
+          const stride=Math.sin(t*7);
+          drawMesh(meshes[f.kind],f.x*hw,f.y*hh,0,2*f.radius*f.p,.22*Math.sin(t*2),.14*stride,0);
+        }
+        for(const shot of g.shots||[]){
+          const [x,y]=project(shot.u*hw,shot.v*hh,0,hw,hh,eye);
+          const r=Math.max(1,shot.r*w/(2*hw));
+          paint.fillStyle='#ffb45fa8';paint.beginPath();paint.arc(x,y,2*r,0,2*Math.PI);paint.fill();
+          paint.fillStyle='#fff4c9';paint.beginPath();paint.arc(x,y,r,0,2*Math.PI);paint.fill();
         }
         if(time-lastAck>450 && !gl.isContextLost() && document.visibilityState==='visible' && (document.fullscreenElement || document.webkitFullscreenElement)){
           lastAck=time;fetch('/swarm/visible',{method:'POST'}).catch(()=>{});
         }
       }
       for(let i=sparks.length-1;i>=0;i--){const p=sparks[i],age=(time-p.at)/500;if(age>=1){sparks.splice(i,1);continue;}
-        const pos=project(p.x*(hw-p.r),p.y*(hh-p.r),0,hw,hh,eye);paint.strokeStyle='rgba(255,200,104,'+(1-age)+')';paint.lineWidth=(1-age)*h*.01;
+        const pos=project(p.x*hw,p.y*hh,0,hw,hh,eye);paint.strokeStyle='rgba(255,200,104,'+(1-age)+')';paint.lineWidth=(1-age)*h*.01;
         paint.beginPath();paint.ellipse(...pos,Math.max(1,p.r/hw*w*(.35+age)),Math.max(1,p.r/hh*h*(.35+age)),0,0,2*Math.PI);paint.stroke();}
     }else if(g.ball){
       const age=Math.min(1,(time-received)/70),a=previousBall||g.ball;

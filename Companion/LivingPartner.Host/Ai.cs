@@ -538,6 +538,8 @@ public sealed class Conversation
             Log.Info($"conversation: '{u.text.Trim()}' is a question with no order to go anywhere in it and the model chose {turn.action}: looking instead");
             turn.action = _core.Tasks.ReviewEnabled ? "lookAtScreen" : "none";
         }
+        if ((turn.action is "readFile" or "none" or "pcOperate") && ScreenReading.Requested(u.text))
+            turn.action = "lookAtScreen";
         HeardAs(u, turn.action);        // (H1) what was made of what was heard: the action taken, "" for a plain answer
         if (string.IsNullOrWhiteSpace(turn.reply)) turn.reply = LastLanguage == "Korean" ? "응!" : "Okay!";
         _turns++;

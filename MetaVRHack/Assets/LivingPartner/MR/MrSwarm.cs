@@ -36,7 +36,7 @@ namespace LivingPartner.MR
         Vector3 _swCenter, _swRight, _swUp, _swOut; float _swHalfW, _swHalfH, _swFar = 1f;
         Quaternion _swGlassRot = Quaternion.identity;
         Vector3 _swAimDir, _swAimFrom; bool _swAimSet, _swAiming;
-        float _swClockScale = 1f, _swBannerT = -1f, _swBannerLife = 1.6f, _swVig = -1f, _swOuchT = -1f, _swOverT = -1f, _swGlow, _swCombo, _swComboAt, _swShieldFlash;
+        float _swClockScale = 1f, _swBannerT = -1f, _swBannerLife = 1.6f, _swVig = -1f, _swOuchT = -1f, _swOverT = -1f, _swGlow, _swCombo, _swComboAt;
         int _swBot; Vector2 _swBotAim; bool _swBotFixed; Vector3 _swBotDir;
         int _swHearts = -1, _swLevel = -1, _swClock = -1, _swXp = -1, _swBossHp = -1, _swBest; bool _swNewBest, _swResultUp;
         Vector3 _swCardsAt, _swCardsRight; float _swCardsT;
@@ -60,7 +60,7 @@ namespace LivingPartner.MR
             if (w == null) return;
             if (w.games == null) w.games = new List<GamePackDef>();
             foreach (var g in w.games) if (g != null && g.template == SwarmRules.Template) return;
-            if (_swPack == null) _swPack = new GamePackDef { id = SwarmRules.PackId, template = SwarmRules.Template, title = SwarmRules.Title, howTo = "Raise your left palm to block. Aim your right finger to cast. Pick a charm each level." };
+            if (_swPack == null) _swPack = new GamePackDef { id = SwarmRules.PackId, template = SwarmRules.Template, title = SwarmRules.Title, howTo = "검지로 조준하면 발사합니다." };
             w.games.Insert(0, _swPack);
         }
 
@@ -149,7 +149,7 @@ namespace LivingPartner.MR
             v.hud.localScale = Vector3.one * _swFar;
             foreach (var c in v.cards) c.Hide();
             v.result.Hide();
-            SwarmBanner("Left palm to block   ·   Point to cast", 4.0f);
+            SwarmBanner("검지로 조준", 2f);
             Sfx("squeak", _swCenter, 0.6f);
             if (_ch.owner == Env.Mr && _mode == Mode.Free) { _motor.Face(YawTo(_swCenter - _pos)); _emoteForced = Emote.Startle; _emoteT = 1.2f; }
             Debug.Log($"[MR] swarm: a run begins ({how}); they come out of {(mv != null ? "the screen " + mv.desc.id : "the window on the desk")} {dist:0.00} m away, {(_swHalfW * 200f):0} x {(_swHalfH * 200f):0} cm; best so far {_swBest}");
@@ -286,19 +286,17 @@ namespace LivingPartner.MR
                     case SwarmEv.Choices: SwarmShowCards(); break;
                     case SwarmEv.Chosen:
                         Sfx2D("coin", 0.6f);
-                        SwarmBanner(SwarmAug.Names[ev.a] + (SwarmAug.Max[ev.a] < 50 && ev.b > 1 ? "  Lv " + ev.b : "") + "\n" + SwarmAug.Lines[ev.a], 1.8f);
-                        if (ev.a == SwarmAug.Buddy && partnerOut) { _emoteForced = Emote.Happy; _emoteT = 1.2f; }
+                        SwarmBanner(SwarmAug.Names[ev.a] + (SwarmAug.Max[ev.a] < 50 && ev.b > 1 ? "  Lv " + ev.b : ""), 1.2f);
                         break;
-                    case SwarmEv.BuddyThrow:
-                        if (partnerOut) { _emoteForced = Emote.Wave; _emoteT = 0.45f; }
+                    case SwarmEv.CometFire:
                         SwSfx(5, "whoosh", p, 0.25f, 1.5f, 0.2f);
                         break;
                     case SwarmEv.Surge:
-                        SwarmBanner("A swarm is gathering!", 1.8f);
+
                         Sfx("squeak", _swCenter, 0.5f, 0.8f);
                         break;
                     case SwarmEv.BossWarn:
-                        SwarmBanner("The Thorn Regent is breaking through!", 4.0f);
+                        SwarmBanner("가시 왕", 2.0f);
                         Sfx("error", _swCenter, 0.8f, 0.6f);
                         if (partnerOut) { _emoteForced = Emote.Cower; _emoteT = 2.5f; }
                         Debug.Log($"[MR] swarm: the boss is squeezing out at {_sw.time:0} s (level {_sw.level}, {_sw.kills} popped, {_sw.hearts} hearts)");
@@ -308,7 +306,6 @@ namespace LivingPartner.MR
                         _sparks.Burst(p + _swOut * 0.05f, _swRight, _swUp, 0.10f, 16);
                         Sfx("land", p, 0.9f, 0.7f); _swGlow = 1f;
                         break;
-                    case SwarmEv.ShieldBlock: _swShieldFlash = 1f; SwPuff(p, 0.10f, SwSky, 0.25f); SwSfx(6, "bounce", p, 0.6f); break;
                     case SwarmEv.Explosion: SwRipple(p, ev.f * 2.2f, SwHoney, 0.30f); SwPuff(p, ev.f * 1.5f, new Color(1f, 0.90f, 0.62f, 1f), 0.26f); break;
                     case SwarmEv.Chain:
                         _swChains[_swChainNext] = new SwFx { t = 0f, life = 0.16f, pos = p, pos2 = Conv.U(ev.pos2) };
@@ -344,15 +341,15 @@ namespace LivingPartner.MR
             for (int i = 0; i < 3; i++)
             {
                 int a = _sw.choices[i];
-                v.cardIcons[i].SetTexture(v.augArt[a]);
+                v.cardIcons[i].SetTexture(v.augArt[a == SwarmAug.Comet ? SwarmAug.Pierce : a]);
                 v.cardNames[i].text = SwarmAug.Names[a];
                 v.cardLines[i].SetWrapped(SwarmAug.Lines[a], 0.088f);
-                v.cardLevels[i].text = a == SwarmAug.Heal ? "now" : _sw.aug[a] == 0 ? "new" : "Lv " + (_sw.aug[a] + 1);
+                v.cardLevels[i].text = a == SwarmAug.Heal || _sw.aug[a] == 0 ? "" : "Lv " + (_sw.aug[a] + 1);
                 Color c = SwarmCardColor(a);
                 v.cardBadges[i].SetColors(c, Color.Lerp(c, Color.white, 0.35f));
                 v.cards[i].Hide(); v.cards[i].Show(0.07f * i);
             }
-            SwarmBanner("LEVEL " + _sw.level + "!  Choose one", 2.5f);
+
             Sfx2D("open", 0.6f);
             Debug.Log($"[MR] swarm: level {_sw.level} at {_sw.time:0} s - the cards: {SwarmAug.Names[_sw.choices[0]]} | {SwarmAug.Names[_sw.choices[1]]} | {SwarmAug.Names[_sw.choices[2]]}");
         }
@@ -389,7 +386,7 @@ namespace LivingPartner.MR
                     for (int i = 0; i < SwarmSim.MaxMonsters; i++)
                     {
                         ref SwarmMonster m = ref _sw.monsters[i];
-                        if (!m.alive || m.state == SwarmState.Inside) continue;
+                        if (!m.alive) continue;
                         float d2 = (Conv.U(m.pos) - chest).sqrMagnitude;
                         if (d2 < bd) { bd = d2; want = Conv.U(m.pos); }
                     }
@@ -404,7 +401,6 @@ namespace LivingPartner.MR
                     var hs = h == 0 ? Input.Right : Input.Left;
                     if (!hs.tracked || hs.palmUp) continue;
                     if (_mode == Mode.OnHand && h == _rideHand) continue;
-                    if (h == 1 && HandSpread(hs) >= 0.45f) continue;      // the open left palm is the shield
                     Vector3 d = hs.rayDir.sqrMagnitude > 0.5f ? hs.rayDir : hs.indexTip - hs.wrist;
                     if (d.sqrMagnitude < 1e-5f) continue;
                     d.Normalize();
@@ -420,21 +416,6 @@ namespace LivingPartner.MR
             }
             else _swAimSet = false;
             _swAiming = aim;
-            // An outward-facing left palm blocks from the first wave. Palm-up still opens the Stop menu.
-            bool shield = false; Vector3 shieldAt = default, shieldN = -_swOut, shieldUp = Vector3.up;
-            {
-                var l = Input.Left;
-                if (_swBot != 0) { shield = true; shieldAt = head + headRot * new Vector3(-0.14f, -0.22f, 0.27f); }
-                else if (l.tracked && !l.pinch && !l.palmUp && HandSpread(l) >= 0.45f)
-                {
-                    shield = true; shieldAt = l.palmPos + l.palmNormal * 0.02f;
-                    if (l.palmNormal.sqrMagnitude > 0.5f) shieldN = l.palmNormal;
-                    if (l.palmForward.sqrMagnitude > 0.5f) shieldUp = l.palmForward;
-                }
-                if (shield) { inp.shieldValid = true; inp.shieldPos = Conv.N(shieldAt); }
-            }
-            inp.buddyValid = true; inp.buddyPos = Conv.N(partnerOut ? _rig.HeadTopWorld : _swCenter + _swOut * 0.03f);
-
             // ---- the game moves on
             if (_sw.phase == SwarmPhase.Choosing) { _swCardsT += dt; if (_swBot == 2 && _swCardsT > 4f) SwarmChoose(0, "the scripted hand"); }
             float left = Mathf.Min(dt, 0.05f) * _swClockScale; int guard = 0;
@@ -465,17 +446,13 @@ namespace LivingPartner.MR
                 if (m.state == SwarmState.Inside)
                 {
                     inside++;
-                    // behind the glass: flat against it, smaller; in its last half second it presses up to the glass and wobbles
-                    float press = m.kind == SwarmKind.Boss ? Mathf.Clamp01(m.t / m.wait) : Mathf.Clamp01((m.t - (m.wait - 0.6f)) / 0.6f);
-                    float wob = Mathf.Sin(m.phase * (m.kind == SwarmKind.Boss ? 16f : 11f)) * 0.07f * press;
-                    float s = size * (m.kind == SwarmKind.Boss ? 0.25f + 0.75f * press : 0.70f + 0.30f * press) * (1f + wob);
-                    t.SetPositionAndRotation(pos - _swOut * (0.025f * (1f - press)) + _swUp * (Mathf.Sin(m.phase * 5f) * 0.004f),
-                        _swGlassRot * Quaternion.Euler(0f, Mathf.Sin(m.phase * 1.7f) * 17f, Mathf.Sin(m.phase * 3.1f) * 8f));
-                    t.localScale = Vector3.one * s;
+                    float stride = Mathf.Sin(m.phase * 7f);
+                    t.SetPositionAndRotation(pos, _swGlassRot * Quaternion.Euler(stride * 8f, m.du * 16f, stride * 9f));
+                    t.localScale = new Vector3(size, size * (1f + stride * 0.045f), size);
                 }
                 else if (m.state == SwarmState.Emerging)
                 {
-                    float k = m.grow, s = size * (0.75f + 0.25f * Ui.Pop(k));
+                    float k = m.grow, s = size;
                     Vector3 to = pos - head;
                     t.SetPositionAndRotation(pos, Quaternion.Slerp(_swGlassRot, Quaternion.LookRotation(to.sqrMagnitude > 1e-6f ? to : -_swOut, Vector3.up), k));
                     t.localScale = new Vector3(s, s * (1f + 0.13f * Mathf.Sin(k * Mathf.PI)), s);
@@ -527,7 +504,7 @@ namespace LivingPartner.MR
             {
                 ref SwarmBolt b = ref _sw.bolts[i];
                 var g = v.boltGlow[i]; var st = v.boltStreak[i];
-                if (!b.alive) { if (g.enabled) { g.enabled = false; st.enabled = false; } continue; }
+                if (!b.alive || (pcDraws && Vector3.Dot(Conv.U(b.pos) - _swCenter, _swOut) < 0f)) { if (g.enabled) { g.enabled = false; st.enabled = false; } continue; }
                 Vector3 pos = Conv.U(b.pos), bd = Conv.U(b.dir);
                 if (!g.enabled) g.enabled = true;
                 float size = b.radius * (b.star ? 4.6f : 5.2f);
@@ -609,7 +586,7 @@ namespace LivingPartner.MR
                 for (int i = 0; i < SwarmSim.MaxMonsters; i++)
                 {
                     ref SwarmMonster m = ref _sw.monsters[i];
-                    if (!m.alive || m.state == SwarmState.Inside) continue;
+                    if (!m.alive) continue;
                     SN.Vector3 to = m.pos - o; float d = to.Length();
                     if (d < 0.02f) continue;
                     float ang = Mathf.Acos(Mathf.Clamp(SN.Vector3.Dot(to / d, ad), -1f, 1f));
@@ -641,17 +618,6 @@ namespace LivingPartner.MR
             }
             if (v.aimLine.enabled != line) { v.aimLine.enabled = line; v.reticle.enabled = line; v.reticleDot.enabled = line; }
 
-            // ---- the shield on the open left palm, the mist round the user
-            _swShieldFlash = Mathf.MoveTowards(_swShieldFlash, 0f, dt * 3.5f);
-            bool sOn = shield && playing;
-            if (v.shieldDisc.enabled != sOn) { v.shieldDisc.enabled = sOn; v.shieldRing.enabled = sOn; }
-            if (sOn)
-            {
-                float sz = _sw.ShieldRadius * 2f * (1f + 0.15f * _swShieldFlash);
-                Quaternion sr = Quaternion.LookRotation(shieldN, shieldUp);
-                v.shieldDisc.transform.SetPositionAndRotation(shieldAt, sr); v.shieldDisc.transform.localScale = Vector3.one * sz;
-                v.shieldRing.transform.SetPositionAndRotation(shieldAt + shieldN * 0.002f, sr); v.shieldRing.transform.localScale = Vector3.one * (sz / 0.90f);
-            }
             bool mist = _sw.SlowRadius > 0f && playing;
             if (v.mist.enabled != mist) v.mist.enabled = mist;
             if (mist)
@@ -803,6 +769,16 @@ namespace LivingPartner.MR
 
 
         /// <summary>Ten times a second, to the PC through the host: what is behind the glass of which screen (Windows/PcSwarm.cs draws it).</summary>
+        void SwarmProject(Vector3 point, out float u, out float v, out float scale)
+        {
+            Vector3 eye = Input.HeadPos - _swCenter, local = point - _swCenter;
+            float front = Mathf.Max(0.04f, Vector3.Dot(eye, _swOut));
+            scale = front / (front + Mathf.Max(0f, -Vector3.Dot(local, _swOut)));
+            Vector3 surface = eye + (local - eye) * scale;
+            u = Vector3.Dot(surface, _swRight) / _swHalfW;
+            v = Vector3.Dot(surface, _swUp) / _swHalfH;
+        }
+
         void SwarmSendState(bool ended)
         {
             if (_link == null || !_link.Connected || LocalMode) return;
@@ -810,7 +786,7 @@ namespace LivingPartner.MR
             bool on = _swOn && _swMon != null && !ended;
             if (!on) { if (_swSentOn) { _swSentOn = false; _swState.on = false; _swState.count = 0; _link.Send(Msg.SwarmState, _swState); } return; }
             if (now < _swNextSend) return;
-            _swNextSend = now + 0.1;
+            _swNextSend = now + 1.0 / 25.0;
             _swSentOn = true;
             var s = _swState;
             s.on = true; s.monitorId = _swMon.desc.id; s.phase = _sw.phase; s.count = 0; s.bursts = _swBursts; s.halfW = _swHalfW; s.halfH = _swHalfH;
@@ -822,7 +798,18 @@ namespace LivingPartner.MR
                 ref SwarmMonster m = ref _sw.monsters[i];
                 if (!m.alive || m.state != SwarmState.Inside) continue;
                 int k = s.count++;
-                s.id[k] = m.id; s.kind[k] = m.kind; s.u[k] = m.u; s.v[k] = m.v; s.press[k] = m.kind == SwarmKind.Boss ? Mathf.Clamp01(m.t / m.wait) : Mathf.Clamp01((m.t - (m.wait - 0.6f)) / 0.6f);
+                s.id[k] = m.id; s.kind[k] = m.kind;
+                SwarmProject(Conv.U(m.pos), out s.u[k], out s.v[k], out s.press[k]);
+            }
+            s.shotCount = 0;
+            foreach (var bolt in _sw.bolts)
+            {
+                if (!bolt.alive) continue;
+                Vector3 pos = Conv.U(bolt.pos);
+                if (Vector3.Dot(pos - _swCenter, _swOut) >= 0f) continue;
+                int k = s.shotCount++;
+                SwarmProject(pos, out s.shotU[k], out s.shotV[k], out float scale);
+                s.shotRadius[k] = bolt.radius * scale;
             }
             _link.Send(Msg.SwarmState, s);
         }

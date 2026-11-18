@@ -25,19 +25,35 @@ if (!$adb) {
 }
 $usb = $false
 if ($adb) {
-    $devices = @(& $adb devices 2>$null | Where-Object { $_ -match '\sdevice\s*$' })
-    if ($devices.Count -eq 1) {
-        $serial = ($devices[0] -split '\s+')[0]
-        if ((& $adb -s $serial shell getprop ro.product.model 2>$null) -match 'Quest') {
-            & $adb -s $serial reverse tcp:47610 tcp:47610 | Out-Null
-            $usb = $LASTEXITCODE -eq 0
-        }
+    $serial = & $adb -d get-serialno 2>$null
+    if ($LASTEXITCODE -eq 0 -and $serial -and ((& $adb -s $serial shell getprop ro.product.model 2>$null) -match 'Quest')) {
+        & $adb -s $serial reverse tcp:47610 tcp:47610 | Out-Null
+        $usb = $LASTEXITCODE -eq 0
     }
 }
 $a = @("--client", "`"$client`"")
 if ($LoopbackOnly) { $a += "--loopback-only" }
 if ($usb) { $a += "--usb-dev" }
 if ($Monitor) { $a += @("--client-args", "`"-lp-monitor $Monitor`"") }
-Start-Process -FilePath $hostExe -ArgumentList $a
-Write-Host "The Bambi Companion window shows the Quest connection or pairing code. Run this launcher again to bring the window forward."
+if ($usb) {
+    Start-Process -FilePath $hostExe -ArgumentList $a -WindowStyle Hidden
+    Write-Host "USB forwarding is ready. The headset app connects automatically."
+    $apk = Join-Path (Split-Path (Split-Path $client -Parent) -Parent) "LivingAIPartner-Quest\LivingAIPartner.apk"
+    if (Test-Path -LiteralPath $apk) {
+        $package = "com.livingaipartner.quest"
+        $remote = (& $adb -s $serial shell pm path $package 2>$null) | Where-Object { $_ -match '^package:/.*/base\.apk$' } | Select-Object -First 1
+        $installed = if ($remote) { ((& $adb -s $serial shell sha256sum ($remote.Substring(8).Trim()) 2>$null) -split '\s+')[0] }
+        if ($installed -ne (Get-FileHash -LiteralPath $apk -Algorithm SHA256).Hash) {
+            if (& $adb -s $serial shell pidof $package 2>$null) {
+                Write-Host "A new Quest build is available. Close the game and run this launcher to install it."
+            } else {
+                & $adb -s $serial install -r $apk
+                if ($LASTEXITCODE -ne 0) { Write-Warning "Quest installation failed. The companion is running." }
+            }
+        }
+    }
+} else {
+    Start-Process -FilePath $hostExe -ArgumentList $a
+    Write-Host "The Bambi Companion window shows the Quest connection or pairing code."
+}
 if (-not $LoopbackOnly) { Write-Host "The first run asks Windows Firewall for permission on private networks: allow it so the headset can connect." }

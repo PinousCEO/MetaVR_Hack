@@ -638,11 +638,8 @@ namespace LivingPartner.MR
         {
             if (_introDone) return;
             _introT += dt;
-            bool ready = hostOk && (_mons.Count > 0 || _introT > 9f) && _introT > 4.8f;      // long enough for the show to be seen
-            if (ready || _introT > 40f) _introGone += dt; else _introGone = 0f;
+            if (hostOk || _introT >= 4.8f || _introGone > 0f) _introGone += dt;
             float show = Mathf.Clamp01(_introT / 0.6f) * (1f - Mathf.Clamp01(_introGone / 0.7f));
-            // (The PC asks for its pairing code: the numpad comes up right where the show is, and at the very first start
-            // the show would be drawn over it for up to 40 seconds. It ends at once.)
             if (_introGone > 0.75f || _link.NeedsPairing || Input.Simulated && _introT > 0.1f && !_introSim)
             {
                 _introDone = true;
@@ -663,7 +660,7 @@ namespace LivingPartner.MR
             _introRing.transform.SetPositionAndRotation(_introAt + face * new Vector3(0, 0, 0.01f), face * Quaternion.Euler(0, 0, _introT * 50f));
             _introRing.transform.localScale = Vector3.one * (0.34f * pop);
             _introRing.SetColors(new Color(1f, 0.84f, 0.42f, 0.9f * show), new Color(1f, 0.96f, 0.86f, 0.9f * show));
-            string line = !hostOk ? "Looking for your PC ..." : _mons.Count == 0 && !LocalMode ? "Finding your screens ..." : "Ready!";
+            string line = !hostOk ? "" : _mons.Count == 0 && !LocalMode ? "Finding your screens ..." : "Ready!";
             Place(_introLine, _introAt - Vector3.up * 0.098f, show > 0.4f ? line : "");
             _introBg.enabled = _introLine.text.Length > 0;
             _introBg.transform.SetPositionAndRotation(_introLine.transform.position + _introLine.transform.forward * 0.002f, _introLine.transform.rotation);

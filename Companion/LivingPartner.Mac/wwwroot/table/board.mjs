@@ -71,12 +71,11 @@ function update(s){
   if((s.waiting||s.active)&&options.some(d=>d.id===s.monitorId))select.value=s.monitorId;
   const playing=s.active&&full()&&select.value===s.monitorId&&layoutReady;
   el('setup').hidden=playing;el('start').disabled=!options.length||!s.connected;
-  el('who').textContent=s.active?(s.turn===1?'흑 · 헤드셋 착용자':s.turn===2?'백 · 맞은편 사람':s.status):'대국 준비';
+  el('who').textContent=s.active?(s.turn===1?'흑 차례':s.turn===2?'백 차례':s.status):'';
   el('who').dataset.turn=s.active?s.turn:0;
-  el('count').textContent=s.active?s.moves+'수':'';
   el('close').hidden=!playing;el('restart').hidden=!playing||s.turn!==0;
-  el('guide').textContent=playing?(s.turn===2&&(s.guestNotice||visionError)||s.status):'';
-  el('help').textContent=!s.connected?'Quest와 컴패니언을 먼저 연결하세요.':!options.length?'Quest에서 TV 화면의 위치를 확인하세요.':s.waiting?s.status:'이 창을 실제 TV로 옮기고 시작하세요.';
+  el('guide').textContent=playing&&s.turn===2?(s.guestNotice||visionError||(s.moves===1?'원하는 칸을 1초 가리키세요.':'')):'';
+  el('help').textContent=!s.connected?'Quest와 컴패니언을 먼저 연결하세요.':!options.length?'Quest에서 TV 화면의 위치를 확인하세요.':s.waiting?s.status:'';
   boardPaint(s);
 }
 async function detect(s){

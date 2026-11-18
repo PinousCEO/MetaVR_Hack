@@ -118,10 +118,10 @@ public sealed class TennisGame
         if (b.dead || !b.Front) return;                                           // it was not there to be struck
         _eye = g.eye;
         if (S.mode == "stars") { Point("user", "caught", now); return; }          // a hand on the ball: caught
+        if (S.mode == "keeper") { Point("user", "saved", now); return; }
         // the host places the stroke where ITS ball was at that moment: the same function the client used
         S.shot = Tennis.UserShot(S.court, ++_seq, b.pos, g.swing, g.normal, g.t);
         S.rally++; S.bestRally = Math.Max(S.bestRally, S.rally);
-        if (S.mode == "keeper") { _planned = false; S.partnerHitAt = 0; Publish(); return; }
         _planned = Tennis.PlanReturn(S.court, S.shot, _px, now, out double at, out _planPos);
         // nobody returns everything: now and then it swings and misses, more often in a long rally
         if (_planned && _rng.NextDouble() < Math.Min(0.30, 0.08 + 0.02 * S.rally)) _planned = false;
@@ -179,13 +179,6 @@ public sealed class TennisGame
             case "rally":
             {
                 if (S.shot == null) { Phase("ready", now); S.serveAt = now + 1.2; S.partnerHitAt = S.serveAt; Publish(); break; }
-                if (S.mode == "keeper" && S.shot.by == "user")
-                {
-                    var rebound = Tennis.Evaluate(S.court, S.shot, now);
-                    if ((rebound.crossed && rebound.pos.Z >= Math.Min(0.13f, S.court.depth * 0.45f)) || rebound.dead || now > S.shot.t0 + 4)
-                        Point("user", "saved", now);
-                    break;
-                }
                 if (S.shot.by == "user" && _planned && now >= S.partnerHitAt)
                 {
                     // the partner's stroke, from where the ball is at this moment

@@ -86,7 +86,6 @@ namespace LivingPartner.MR
             _local.Status = line => _lcStatus = line;
             _link.GoLocal(_local.Handle);
             _lc = LcState.Local; _lcSince = Time.time; _lcHello = false; _ldAsked = false; _ldAsking = false;
-            if (!_introDone) _introT = Mathf.Max(_introT, 9.01f);      // the opening has nothing to wait for
             Debug.Log($"[MR] local: playing without the PC ({why}): {_local.StartNote}; {_local.Line()}; kept in {path}");
         }
 
@@ -137,11 +136,14 @@ namespace LivingPartner.MR
                     return true;
                 case LcState.Ask:
                     if (found) { _lc = LcState.Pc; p.Hide(); Debug.Log("[MR] local: the PC has come up - everything as it was"); return false; }
-                    if (!_introDone && _introT < 40f) _introT = 40.01f;      // the opening makes room for the card
                     ShowWelcome(dt, true);
                     return true;
-                default:      // Pc: the pairing as it was; while it is still looking (or asks for its code) a small card beside it still offers Play now
-                    if (!(_link.NeedsPairing || (!_link.Connected && _snap == null))) { p.Hide(); return false; }
+                default:
+                    if (!_link.Connected && _snap == null)
+                    {
+                        _lc = LcState.Probing; _lcT = 0f;
+                    }
+                    if (!_link.Connected || !_link.NeedsPairing) { p.Hide(); return false; }
                     ShowWelcome(dt, false);
                     return false;
             }
@@ -192,7 +194,6 @@ namespace LivingPartner.MR
                 case ActLook: MenuSay("Reading your screen needs the PC app"); return true;
                 case ActMarket: MenuSay(LocalWorld.NeedsPc); return true;
                 case ActScreen:      // (here it is labelled "Connect PC": out of the local world, into the pairing as it was - the card beside it still offers Play now)
-                    MenuSay("Looking for your PC ...");
                     _lcLeave = true;      // (at the start of the next frame - LocalTick: not from inside the fan's own buttons)
                     return true;
                 case ActFind: LocalFindDesk("the menu"); MenuSay("Put your hand flat on the desk"); MenuComet(at); return true;

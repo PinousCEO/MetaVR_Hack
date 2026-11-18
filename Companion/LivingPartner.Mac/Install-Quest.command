@@ -54,6 +54,18 @@ if [ -z "$selected" ]; then
     exit 1
 fi
 
+pkg=com.livingaipartner.quest
+remote=$("$adb_path" -s "$selected" shell pm path "$pkg" | tr -d '\r' | sed -n 's/^package:\(.*\/base\.apk\)$/\1/p' | head -n 1)
+if [ -n "$remote" ]; then
+    installed=$("$adb_path" -s "$selected" shell sha256sum "$remote" | awk '{print $1}')
+    bundled=$(shasum -a 256 "$apk" | awk '{print $1}')
+    if [ "$installed" = "$bundled" ]; then
+        printf '%s\n' '최신 버전이 설치되어 있습니다.'
+        exit 0
+    fi
+    if [ "${1:-}" = "--prepare" ] && "$adb_path" -s "$selected" shell pidof "$pkg" >/dev/null 2>&1; then exit 0; fi
+fi
+
 printf '%s\n' 'Living AI Partner를 설치하거나 기존 앱을 업데이트합니다.'
 if "$adb_path" -s "$selected" install -r "$apk"; then
     printf '%s\n' '설치했습니다. Quest 앱 라이브러리의 알 수 없는 출처에서 Living AI Partner를 여세요.'

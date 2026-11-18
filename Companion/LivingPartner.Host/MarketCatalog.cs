@@ -317,7 +317,7 @@ public static class MarketSeed
     static readonly Dictionary<string, string> Drawings = new()
     {
         ["game-keeper"] = "A white and black soccer ball in front of a white soccer goal net, two orange keeper gloves below it",
-        [SwarmRules.PackId] = "A horned demon emerging from a stone portal, amber eyes and a violet spell shield in a dark dungeon arch",
+        [SwarmRules.PackId] = "A horned demon emerging from a stone portal, amber eyes and a falling comet in a dark dungeon arch",
         [StarterGames.GomokuId] = "Black and ivory stones resting on a small maple go board",
         ["game-tennis"] = "a small tennis racket leaning at an angle, coral-red frame, cream strings and a wood-brown grip, with a bright yellow-green tennis ball resting against its strings",
         ["game-rps"] = "three chubby cartoon hands bunched together as one group: a fist (rock) in rose, an open palm (paper) in cream and a hand holding out two fingers (scissors) in sky blue",

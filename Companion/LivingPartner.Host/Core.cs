@@ -11,7 +11,7 @@ public sealed class Client
     public Guid Id = Guid.NewGuid();
     public WebSocket Ws;
     public string Role = "", ClientId = "", Device = "";
-    public bool Authed, Loopback;
+    public bool Authed, Loopback, WaitingForUsb;
     public string Remote = "";
     public readonly Channel<Outgoing> Outbox = Channel.CreateBounded<Outgoing>(new BoundedChannelOptions(512) { FullMode = BoundedChannelFullMode.DropOldest });
     /// <summary>
@@ -90,7 +90,15 @@ public sealed class Core
     /// PC the headset's owner has authorised for USB debugging can set that up) is accepted without typing the pairing
     /// code. For development with the cable in; a headset on the network still has to be paired.
     /// </summary>
-    public readonly bool UsbDev = Environment.GetCommandLineArgs().Contains("--usb-dev");
+    public bool UsbDev { get; private set; } = Environment.GetCommandLineArgs().Contains("--usb-dev");
+
+    public void EnableUsb()
+    {
+        if (UsbDev) return;
+        UsbDev = true;
+        foreach (var client in Clients.Values.Where(c => !c.Authed && c.WaitingForUsb))
+            client.Ws.Abort();  // The headset reconnects and sends its hello over the newly forwarded port.
+    }
     double _lastRejectLog = -100, _calibSaidAt = -1000, _flashAt = -1000;
     public readonly ScreenFlash Flash = new();
     public PcStatus Pc;
@@ -415,6 +423,7 @@ public sealed class Core
                 bool usbHeadset = UsbDev && c.Loopback && h.role == Roles.Quest;       // adb reverse: the headset arrives as a local connection
                 if (!usbHeadset && !Auth.CheckToken(h.token, c.Loopback))
                 {
+                    c.WaitingForUsb = c.Loopback && h.role == Roles.Quest;
                     if (HostClock.Now - _lastRejectLog > 10) { _lastRejectLog = HostClock.Now; Log.Info($"client turned away (not paired): role={h.role} device={h.deviceName} remote={c.Remote} loopback={c.Loopback} token sent={!string.IsNullOrEmpty(h.token)}"); }
                     Send(c, Msg.Reject, new Reject { reason = "pairing-required" }); return;
                 }
